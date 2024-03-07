@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2024 Paysafe Group
+  -->
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/paymentSuccessfulLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/paymentSuccessfulCheckImg"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginStart="@dimen/app_padding"
+        android:layout_marginBottom="@dimen/app_padding"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_check_circle"
+        app:layout_constraintBottom_toTopOf="@+id/paymentSuccessfulTitleLabel"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/paymentSuccessfulTitleLabel"
+        android:layout_width="@dimen/no_size"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/app_padding"
+        android:layout_marginEnd="@dimen/app_padding"
+        android:layout_marginBottom="32dp"
+        android:fontFamily="@font/source_sans_pro_bold"
+        android:letterSpacing="0.01"
+        android:lineSpacingExtra="-1sp"
+        android:text="Thank you for your order"
+        android:textColor="@color/grid_product_main"
+        android:textSize="28sp"
+        app:layout_constraintBottom_toTopOf="@+id/paymentSuccessfulMainInfoPanel"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/paymentSuccessfulMainInfoPanel"
+        android:layout_width="@dimen/no_size"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/app_padding"
+        android:paddingEnd="@dimen/app_padding"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/paymentSuccessfulSentConfirmLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/source_sans_pro"
+            android:letterSpacing="-0.02"
+            android:lineSpacingExtra="1sp"
+            android:text="We sent an order confirmation to:"
+            android:textColor="@color/grid_product_main"
+            android:textSize="17sp" />
+
+        <TextView
+            android:id="@+id/paymentSuccessfulEmail"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/source_sans_pro_bold"
+            android:letterSpacing="-0.02"
+            android:lineSpacingExtra="1sp"
+            android:text="carlos.monge@gmail.com"
+            android:textColor="@color/grid_product_main"
+            android:textSize="17sp" />
+
+        <TextView
+            android:id="@+id/paymentSuccessfulOrderNumberLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:fontFamily="@font/source_sans_pro"
+            android:letterSpacing="-0.02"
+            android:lineSpacingExtra="1sp"
+            android:text="Your order number is:"
+            android:textColor="@color/grid_product_main"
+            android:textSize="17sp" />
+
+        <TextView
+            android:id="@+id/paymentSuccessfulOrderNumber"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/source_sans_pro_bold"
+            android:letterSpacing="-0.02"
+            android:lineSpacingExtra="1sp"
+            android:text="376378"
+            android:textColor="@color/grid_product_main"
+            android:textSize="17sp" />
+
+        <TextView
+            android:id="@+id/paymentSuccessfulTicketDeliverLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:fontFamily="@font/source_sans_pro"
+            android:letterSpacing="-0.02"
+            android:lineSpacingExtra="1sp"
+            android:text="Your ticket will deliver:"
+            android:textColor="@color/grid_product_main"
+            android:textSize="17sp" />
+
+        <TextView
+            android:id="@+id/paymentSuccessfulTicketDeliver"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/source_sans_pro_bold"
+            android:letterSpacing="-0.02"
+            android:lineSpacingExtra="1sp"
+            android:text="Next 24 hours"
+            android:textColor="@color/grid_product_main"
+            android:textSize="17sp" />
+
+    </LinearLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/paymentSuccessfulKeepShoppingButton"
+        style="@style/Widget.MaterialComponents.Button"
+        android:layout_width="@dimen/no_size"
+        android:layout_height="50dp"
+        android:layout_marginStart="@dimen/app_padding"
+        android:layout_marginEnd="@dimen/app_padding"
+        android:layout_marginBottom="32dp"
+        android:backgroundTint="@color/grid_product_new_bg"
+        android:letterSpacing="-0.02"
+        android:text="Keep shopping"
+        android:textAllCaps="false"
+        android:textSize="15sp"
+        app:cornerRadius="25dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

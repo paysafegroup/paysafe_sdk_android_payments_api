@@ -1,0 +1,13 @@
+<!--
+  ~ Copyright (c) 2024 Paysafe Group
+  -->
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+  <path
+      android:pathData="M15.975,22.191L17.941,20.225L9.716,12L17.941,3.775L15.975,1.809L5.784,12L15.975,22.191Z"
+      android:fillColor="@color/grid_product_main"/>
+</vector>

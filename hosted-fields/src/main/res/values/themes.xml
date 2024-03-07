@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2024 Paysafe Group
+  -->
+
+<resources>
+
+    <style name="PSTheme">
+        <item name="psBackgroundColor">@color/ps_card_background</item>
+        <item name="psBorderColor">@color/ps_card_border</item>
+        <item name="psFocusedBorderColor">@color/ps_card_focused_border</item>
+        <item name="psBorderCornerRadius">@dimen/ps_card_border_corner_radius</item>
+        <item name="psErrorColor">@color/ps_card_error</item>
+        <item name="psTextInputColor">@color/ps_card_text_input</item>
+        <item name="psTextInputFontSize">@dimen/ps_card_text_input_font_size</item>
+        <item name="psTextInputFontFamily">@null</item>
+        <item name="psPlaceholderColor">@color/ps_card_placeholder</item>
+        <item name="psPlaceholderFontSize">@dimen/ps_card_placeholder_font_size</item>
+        <item name="psPlaceholderFontFamily">@null</item>
+        <item name="psHintColor">@color/ps_card_hint</item>
+        <item name="psHintFontSize">@dimen/ps_card_hint_font_size</item>
+        <item name="psHintFontFamily">@null</item>
+        <item name="psExpiryPickerButtonBackgroundColor">@color/ps_expiry_picker_button_background</item>
+        <item name="psExpiryPickerButtonTextColor">@color/ps_expiry_picker_button_text</item>
+    </style>
+
+</resources>

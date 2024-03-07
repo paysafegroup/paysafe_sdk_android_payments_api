@@ -1,0 +1,17 @@
+<!--
+  ~ Copyright (c) 2024 Paysafe Group
+  -->
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="60dp"
+    android:height="60dp"
+    android:viewportWidth="60"
+    android:viewportHeight="60">
+  <group>
+    <clip-path
+        android:pathData="M0,0h60v60h-60z"/>
+    <path
+        android:pathData="M30,5C16.2,5 5,16.2 5,30C5,43.8 16.2,55 30,55C43.8,55 55,43.8 55,30C55,16.2 43.8,5 30,5ZM30,50C18.975,50 10,41.025 10,30C10,18.975 18.975,10 30,10C41.025,10 50,18.975 50,30C50,41.025 41.025,50 30,50ZM41.475,18.95L25,35.425L18.525,28.975L15,32.5L25,42.5L45,22.5L41.475,18.95Z"
+        android:fillColor="#5BBB2A"/>
+  </group>
+</vector>

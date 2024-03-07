@@ -1,0 +1,22 @@
+<!--
+  ~ Copyright (c) 2024 Paysafe Group
+  -->
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="29dp"
+    android:height="18dp"
+    android:viewportWidth="29"
+    android:viewportHeight="18">
+  <path
+      android:pathData="M18.42,1.925H10.579V16.075H18.42V1.925Z"
+      android:fillColor="#FF5F00"/>
+  <path
+      android:pathData="M11.077,9C11.077,6.125 12.422,3.575 14.488,1.925C12.969,0.725 11.052,0 8.961,0C4.008,0 0,4.025 0,9C0,13.975 4.008,18 8.961,18C11.052,18 12.969,17.275 14.488,16.075C12.422,14.425 11.077,11.875 11.077,9Z"
+      android:fillColor="#EB001B"/>
+  <path
+      android:pathData="M29,9C29,13.975 24.992,18 20.039,18C17.948,18 16.031,17.275 14.512,16.075C16.603,14.425 17.923,11.875 17.923,9C17.923,6.125 16.579,3.575 14.512,1.925C16.031,0.725 17.948,0 20.039,0C24.992,0 29,4.025 29,9Z"
+      android:fillColor="#F79E1B"/>
+  <path
+      android:pathData="M28.154,14.575V14.275H28.278V14.225H27.979V14.275H28.104V14.575H28.154ZM28.726,14.575V14.225H28.627L28.527,14.475L28.428,14.225H28.328V14.575H28.403V14.3L28.502,14.525H28.577L28.677,14.3V14.575H28.726Z"
+      android:fillColor="#F79E1B"/>
+</vector>

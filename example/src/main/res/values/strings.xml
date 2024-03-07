@@ -1,0 +1,19 @@
+<!--
+  ~ Copyright (c) 2024 Paysafe Group
+  -->
+
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">PaysafeAndroidSDK</string>
+    <string name="sample_app">Sample App</string>
+
+    <string name="product_categories">Product Categories</string>
+    <string name="lottery_tickets">Lottery Tickets</string>
+    <string name="raffle_draws">Raffle Draws</string>
+    <string name="bingo_games">Bingo Games</string>
+    <string name="trivia_quizes" tools:ignore="Typos">Trivia &amp; Quizes</string>
+
+    <string name="product_new">New</string>
+    <string name="products_grid">Products Grid</string>
+    <string name="product_detail">Product Detail</string>
+    <string name="product_checkout">Product Checkout</string>
+</resources>
