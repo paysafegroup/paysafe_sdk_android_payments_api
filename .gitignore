@@ -1,0 +1,89 @@
+.DS_Store
+
+### Gradle template
+.gradle
+**/build/
+!src/**/build/
+
+# Ignore Gradle GUI config
+gradle-app.setting
+
+# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
+!gradle-wrapper.jar
+
+# Avoid ignore Gradle wrappper properties
+!gradle-wrapper.properties
+
+# Cache of project
+.gradletasknamecache
+
+# Eclipse Gradle plugin generated files
+# Eclipse Core
+.project
+# JDT-specific (Eclipse Java Development Tools)
+.classpath
+
+### Android template
+# Gradle files
+.gradle/
+build/
+
+# Local configuration file (sdk path, etc)
+local.properties
+private-keys.properties
+
+# Log/OS Files
+*.log
+
+# Android Studio generated files and folders
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+output.json
+
+# IntelliJ
+*.iml
+.idea/
+misc.xml
+deploymentTargetDropDown.xml
+render.experimental.xml
+
+# Keystore files
+*.jks
+*.keystore
+
+# Google Services (e.g. APIs or Firebase)
+google-services.json
+
+# Keystore File
+paysafe-sample-keystore.jks
+
+# Android Profiling
+*.hprof
+
+# Fastlane
+fastlane/**
+
+# Reports
+reports/
+
+tokenization/src/test/**/*
+threedsecure/src/test/**/*
+paysafe-core/src/test/**/*
+paypale/src/test/**/*
+hosted-fields/src/test/**/*
+google-pay/src/test/**/*
+
+
+.gitlab-ci.yml
+bitrise.yml
+Gemfile
+Gemfile.lock
+github_ignore
+sonar-project.properties
+.ruby-version
+github_ignore
+Pluginfile
+.gradle/**
+.bundle/**
