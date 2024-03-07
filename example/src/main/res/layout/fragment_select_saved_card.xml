@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2024 Paysafe Group
+  -->
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/selectSavedCardLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/selectSavedCardBackImg"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginStart="@dimen/app_padding"
+        android:layout_marginTop="33dp"
+        android:foreground="?android:attr/selectableItemBackground"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_chevron_left"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/selectSavedCardTitleLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/app_padding"
+        android:layout_marginTop="28dp"
+        android:fontFamily="@font/source_sans_pro_bold"
+        android:letterSpacing="0.01"
+        android:lineSpacingExtra="-1sp"
+        android:text="Payment method"
+        android:textColor="@color/grid_product_main"
+        android:textSize="28sp"
+        app:layout_constraintStart_toEndOf="@id/selectSavedCardBackImg"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <FrameLayout
+        android:id="@+id/selectSavedCardAddNewCard"
+        android:layout_width="@dimen/no_size"
+        android:layout_height="80dp"
+        android:layout_marginStart="@dimen/app_padding"
+        android:layout_marginTop="40dp"
+        android:layout_marginEnd="@dimen/app_padding"
+        android:background="@drawable/bg_payment_data_display"
+        android:foreground="?android:attr/selectableItemBackground"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/selectSavedCardTitleLabel">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="24dp"
+            android:importantForAccessibility="no"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_add_plus" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="61dp"
+            android:fontFamily="@font/source_sans_pro"
+            android:letterSpacing="-0.02"
+            android:lineSpacingExtra="1sp"
+            android:text="Add New Card"
+            android:textColor="@color/grid_product_main"
+            android:textSize="17sp" />
+
+    </FrameLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerSavedCardsList"
+        android:layout_width="@dimen/no_size"
+        android:layout_height="@dimen/no_size"
+        android:layout_marginTop="@dimen/app_padding"
+        android:clipToPadding="false"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/app_padding"
+        android:paddingEnd="@dimen/app_padding"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/selectSavedCardAddNewCard"
+        tools:itemCount="2"
+        tools:listitem="@layout/rv_saved_card_item" />
+
+    <ProgressBar
+        android:id="@+id/savedCardsProgressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/selectSavedCardAddNewCard"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2024 Paysafe Group
+  -->
+
+<resources>
+    <color name="ps_card_background">#FF000000</color>
+    <color name="ps_card_border">#FFD3D3D3</color>
+    <color name="ps_card_focused_border">#FFFFFFFF</color>
+    <color name="ps_card_error">#FFAA0000</color>
+    <color name="ps_card_text_input">#FFFFFFFF</color>
+    <color name="ps_card_placeholder">#FFFFFFFF</color>
+    <color name="ps_card_hint">#FFD3D3D3</color>
+    <color name="ps_expiry_picker_button_background">#FFFFFFFF</color>
+    <color name="ps_expiry_picker_button_text">#FF000000</color>
+</resources>

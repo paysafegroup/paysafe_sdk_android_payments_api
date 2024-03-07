@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2024 Paysafe Group
+  -->
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/checkoutProductLabel"
+            android:layout_width="@dimen/no_size"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/app_padding"
+            android:layout_marginTop="28dp"
+            android:fontFamily="@font/source_sans_pro_bold"
+            android:letterSpacing="0.01"
+            android:lineSpacingExtra="-1sp"
+            android:text="Checkout"
+            android:textColor="@color/grid_product_main"
+            android:textSize="28sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/close"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginTop="30dp"
+            android:layout_marginEnd="@dimen/app_padding"
+            android:contentDescription="close"
+            android:foreground="?android:attr/selectableItemBackground"
+            android:importantForAccessibility="no"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_close"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <FrameLayout
+            android:id="@+id/checkoutProductImgBg"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginStart="@dimen/app_padding"
+            android:layout_marginTop="24dp"
+            android:background="@color/product_bg_in_checkout"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/checkoutProductLabel">
+
+            <ImageView
+                android:id="@+id/checkoutProductImg"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                android:scaleType="centerCrop"
+                tools:src="@drawable/ic_calendar" />
+
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/checkoutProductNameText"
+            android:layout_width="@dimen/no_size"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/app_padding"
+            android:layout_marginEnd="@dimen/app_padding"
+            android:fontFamily="@font/source_sans_pro"
+            android:letterSpacing="-0.01"
+            android:lineSpacingExtra="1sp"
+            android:textColor="@color/grid_product_main"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toEndOf="@id/checkoutProductImgBg"
+            app:layout_constraintTop_toTopOf="@id/checkoutProductImgBg"
+            tools:text="Draw Games" />
+
+        <TextView
+            android:id="@+id/checkoutProductDateText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/app_padding"
+            android:fontFamily="@font/source_sans_pro_light"
+            android:letterSpacing="-0.02"
+            android:lineSpacingExtra="1sp"
+            android:textColor="@color/grid_product_date"
+            android:textSize="17sp"
+            app:layout_constraintStart_toEndOf="@id/checkoutProductImgBg"
+            app:layout_constraintTop_toBottomOf="@id/checkoutProductNameText"
+            tools:text="Aug 28, 2023 - 3PM" />
+
+        <View
+            android:id="@+id/checkoutFirstDivider"
+            android:layout_width="@dimen/no_size"
+            android:layout_height="1dp"
+            android:layout_marginTop="24dp"
+            android:background="@color/checkout_divider"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/checkoutProductImgBg" />
+
+        <LinearLayout
+            android:id="@+id/checkoutSelectPaymentMethod"
+            android:layout_width="@dimen/no_size"
+            android:layout_height="52dp"
+            android:gravity="center_vertical"
+            android:layoutDirection="rtl"
+            android:orientation="horizontal"
+            android:paddingTop="@dimen/app_padding"
+            android:paddingBottom="@dimen/app_padding"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/checkoutFirstDivider">
+
+            <TextView
+                android:id="@+id/selectPaymentMethod"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/app_padding"
+                android:contentDescription="Select payment method"
+                android:drawablePadding="@dimen/app_padding"
+                android:fontFamily="@font/source_sans_pro_light"
+                android:foreground="?android:attr/selectableItemBackground"
+                android:text="Select payment method"
+                android:textColor="@color/grid_product_new_bg"
+                android:textSize="15sp"
+                app:drawableRightCompat="@drawable/ic_chevron_right"
+                app:drawableTint="@color/grid_product_new_bg" />
+
+            <TextView
+                android:id="@+id/paymentMethodLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/app_padding"
+                android:ellipsize="end"
+                android:fontFamily="@font/source_sans_pro_light"
+                android:maxLines="1"
+                android:text="Payment method"
+                android:textColor="@color/grid_product_date"
+                android:textSize="15sp" />
+
+        </LinearLayout>
+
+        <View
+            android:id="@+id/checkoutSecondDivider"
+            android:layout_width="@dimen/no_size"
+            android:layout_height="1dp"
+            android:background="@color/checkout_divider"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/checkoutSelectPaymentMethod" />
+
+        <LinearLayout
+            android:id="@+id/checkoutSelectBillingAddress"
+            android:layout_width="@dimen/no_size"
+            android:layout_height="wrap_content"
+            android:foreground="?android:attr/selectableItemBackground"
+            android:gravity="center_vertical"
+            android:layoutDirection="rtl"
+            android:orientation="horizontal"
+            android:paddingTop="@dimen/app_padding"
+            android:paddingBottom="@dimen/app_padding"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/checkoutSecondDivider">
+
+            <TextView
+                android:id="@+id/billingAddressText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/app_padding"
+                android:drawablePadding="@dimen/app_padding"
+                android:fontFamily="@font/source_sans_pro_light"
+                android:maxLines="4"
+                android:textAlignment="textEnd"
+                android:textColor="@color/grid_product_main"
+                android:textSize="15sp"
+                app:drawableRightCompat="@drawable/ic_chevron_right"
+                tools:text="CARLOS\nMONGE BONILLA\n11350 NW 25TH ST\nSWEETWATER, FL, 33172" />
+
+            <TextView
+                android:id="@+id/billingAddressLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/app_padding"
+                android:ellipsize="end"
+                android:fontFamily="@font/source_sans_pro_light"
+                android:maxLines="1"
+                android:text="Billing address"
+                android:textColor="@color/grid_product_date"
+                android:textSize="15sp" />
+
+        </LinearLayout>
+
+        <View
+            android:id="@+id/checkoutThirdDivider"
+            android:layout_width="@dimen/no_size"
+            android:layout_height="1dp"
+            android:background="@color/checkout_divider"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/checkoutSelectBillingAddress" />
+
+        <FrameLayout
+            android:id="@+id/checkoutPromoCode"
+            android:layout_width="@dimen/no_size"
+            android:layout_height="52dp"
+            android:foreground="?android:attr/selectableItemBackground"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/checkoutThirdDivider">
+
+            <TextView
+                android:id="@+id/promoCodeLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|start"
+                android:layout_marginStart="@dimen/app_padding"
+                android:fontFamily="@font/source_sans_pro_light"
+                android:text="Promo code"
+                android:textColor="@color/grid_product_date"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/pickDiscountLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|end"
+                android:layout_marginEnd="@dimen/app_padding"
+                android:drawablePadding="@dimen/app_padding"
+                android:fontFamily="@font/source_sans_pro_light"
+                android:text="Pick discount"
+                android:textColor="@color/grid_product_new_bg"
+                android:textSize="15sp"
+                app:drawableRightCompat="@drawable/ic_chevron_right"
+                app:drawableTint="@color/grid_product_new_bg" />
+
+        </FrameLayout>
+
+        <View
+            android:id="@+id/checkoutFourthDivider"
+            android:layout_width="@dimen/no_size"
+            android:layout_height="1dp"
+            android:background="@color/checkout_divider"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/checkoutPromoCode" />
+
+        <FrameLayout
+            android:id="@+id/checkoutTotal"
+            android:layout_width="@dimen/no_size"
+            android:layout_height="52dp"
+            android:foreground="?android:attr/selectableItemBackground"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/checkoutFourthDivider">
+
+            <TextView
+                android:id="@+id/checkoutTotalLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|start"
+                android:layout_marginStart="@dimen/app_padding"
+                android:fontFamily="@font/source_sans_pro_light"
+                android:text="Total"
+                android:textColor="@color/grid_product_date"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/checkoutTotalValueText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|end"
+                android:layout_marginEnd="@dimen/app_padding"
+                android:drawablePadding="@dimen/app_padding"
+                android:fontFamily="@font/source_sans_pro_light"
+                android:textColor="@color/grid_product_main"
+                android:textSize="15sp"
+                app:drawableRightCompat="@drawable/ic_chevron_right"
+                tools:text="$140.00" />
+
+        </FrameLayout>
+
+        <View
+            android:id="@+id/checkoutFifthDivider"
+            android:layout_width="@dimen/no_size"
+            android:layout_height="1dp"
+            android:background="@color/checkout_divider"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/checkoutTotal" />
+
+        <TextView
+            android:id="@+id/checkoutTermsAndPrivacyOneLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/app_padding"
+            android:layout_marginTop="@dimen/app_padding"
+            android:fontFamily="@font/source_sans_pro_light"
+            android:text="By placing an order you agree to our"
+            android:textColor="@color/grid_product_main"
+            android:textSize="13sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/checkoutFifthDivider" />
+
+        <TextView
+            android:id="@+id/checkoutTermsAndPrivacyTwoLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/app_padding"
+            android:fontFamily="@font/source_sans_pro"
+            android:foreground="?android:attr/selectableItemBackground"
+            android:text="Terms and Conditions - Privacy Policy"
+            android:textColor="@color/grid_product_new_bg"
+            android:textSize="13sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/checkoutTermsAndPrivacyOneLabel" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/checkoutPlaceOrderButton"
+            style="@style/Widget.MaterialComponents.Button"
+            android:layout_width="@dimen/no_size"
+            android:layout_height="50dp"
+            android:layout_marginStart="@dimen/app_padding"
+            android:layout_marginTop="28dp"
+            android:layout_marginEnd="@dimen/app_padding"
+            android:layout_marginBottom="@dimen/app_padding"
+            android:backgroundTint="@color/grid_product_new_bg"
+            android:enabled="false"
+            android:letterSpacing="-0.02"
+            android:text="Place order"
+            android:textAllCaps="false"
+            android:textSize="15sp"
+            app:cornerRadius="25dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/checkoutTermsAndPrivacyTwoLabel" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/checkoutCancelOrderButton"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:letterSpacing="-0.02"
+            android:text="Cancel order"
+            android:textAllCaps="false"
+            android:textColor="@color/grid_product_new_bg"
+            android:textSize="15sp"
+            app:cornerRadius="25dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/checkoutPlaceOrderButton"
+            app:strokeColor="@android:color/transparent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</ScrollView>

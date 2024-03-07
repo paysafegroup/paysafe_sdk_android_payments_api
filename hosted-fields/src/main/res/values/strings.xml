@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2024 Paysafe Group
+  -->
+
+<resources>
+    <string name="card_number_placeholder">Card number</string>
+    <string name="card_holder_name_placeholder">Name on card</string>
+    <string name="card_cvv_placeholder">CVV Number</string>
+    <string name="card_expiry_date_placeholder">Expiry date</string>
+
+    <string name="card_number_hint">XXXX XXXX XXXX XXXX</string>
+    <string name="card_holder_name_hint" />
+    <string name="card_expiry_date_hint">MM   YY</string>
+    <string name="card_cvv_hint" />
+
+    <string name="expiry_date_dialog_title">Select Expiry Date</string>
+    <string name="expiry_date_dialog_confirm_button">OK</string>
+    <string name="expiry_date_dialog_cancel_button">Cancel</string>
+</resources>

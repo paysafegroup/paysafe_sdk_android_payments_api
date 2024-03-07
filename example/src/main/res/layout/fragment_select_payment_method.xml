@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2024 Paysafe Group
+  -->
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/selectPayMethodLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="@dimen/app_padding">
+
+        <ImageView
+            android:id="@+id/selectPayMethodBackImg"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="@dimen/app_padding"
+            android:layout_marginTop="33dp"
+            android:foreground="?android:attr/selectableItemBackground"
+            android:importantForAccessibility="no"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_chevron_left"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/selectPayMethodTitleLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/app_padding"
+            android:layout_marginTop="28dp"
+            android:fontFamily="@font/source_sans_pro_bold"
+            android:letterSpacing="0.01"
+            android:lineSpacingExtra="-1sp"
+            android:text="Payment method"
+            android:textColor="@color/grid_product_main"
+            android:textSize="28sp"
+            app:layout_constraintStart_toEndOf="@id/selectPayMethodBackImg"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <FrameLayout
+            android:id="@+id/selectPayMethodCreditCard"
+            android:layout_width="@dimen/no_size"
+            android:layout_height="80dp"
+            android:layout_marginStart="@dimen/app_padding"
+            android:layout_marginTop="40dp"
+            android:layout_marginEnd="@dimen/app_padding"
+            android:background="@drawable/bg_payment_data_display"
+            android:foreground="?android:attr/selectableItemBackground"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/selectPayMethodTitleLabel">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="25dp"
+                android:importantForAccessibility="no"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_credit_card" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="61dp"
+                android:fontFamily="@font/source_sans_pro"
+                android:letterSpacing="-0.02"
+                android:lineSpacingExtra="1sp"
+                android:text="Credit card"
+                android:textColor="@color/grid_product_main"
+                android:textSize="17sp" />
+
+        </FrameLayout>
+
+
+        <FrameLayout
+            android:id="@+id/selectPayMethodPayPal"
+            android:layout_width="@dimen/no_size"
+            android:layout_height="80dp"
+            android:layout_marginStart="@dimen/app_padding"
+            android:layout_marginTop="@dimen/app_padding"
+            android:layout_marginEnd="@dimen/app_padding"
+            android:background="@drawable/bg_payment_data_display"
+            android:foreground="?android:attr/selectableItemBackground"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/selectPayMethodCreditCard">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="25dp"
+                android:importantForAccessibility="no"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_paypal" />
+
+        </FrameLayout>
+
+        <com.paysafe.android.google_pay.button.PSGooglePayButton
+            android:id="@+id/selectPayMethodGooglePay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/app_padding"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="@dimen/app_padding"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/selectPayMethodPayPal" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</ScrollView>

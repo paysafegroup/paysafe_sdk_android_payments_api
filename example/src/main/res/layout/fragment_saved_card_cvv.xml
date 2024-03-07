@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2024 Paysafe Group
+  -->
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/savedCardCvvLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/savedCardCvvBackImg"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginStart="@dimen/app_padding"
+        android:layout_marginTop="33dp"
+        android:foreground="?android:attr/selectableItemBackground"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_chevron_left"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/savedCardCvvTitleLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/app_padding"
+        android:layout_marginTop="28dp"
+        android:fontFamily="@font/source_sans_pro_bold"
+        android:letterSpacing="0.01"
+        android:lineSpacingExtra="-1sp"
+        android:text="Credit card"
+        android:textColor="@color/grid_product_main"
+        android:textSize="28sp"
+        app:layout_constraintStart_toEndOf="@id/savedCardCvvBackImg"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/savedCardCvvCCardIcon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/app_padding"
+        android:layout_marginTop="61dp"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_credit_card"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/savedCardCvvBackImg" />
+
+    <ImageView
+        android:id="@+id/savedCardCvvCCardBrand"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="57dp"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop"
+        app:layout_constraintStart_toEndOf="@+id/savedCardCvvCCardIcon"
+        app:layout_constraintTop_toBottomOf="@+id/savedCardCvvTitleLabel"
+        tools:src="@drawable/ic_cc_mastercard" />
+
+    <TextView
+        android:id="@+id/savedCardCvvLastDigits"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="54dp"
+        android:fontFamily="@font/source_sans_pro_bold"
+        android:letterSpacing="-0.02"
+        android:lineSpacingExtra="1sp"
+        android:textColor="@color/grid_product_main"
+        android:textSize="17sp"
+        app:layout_constraintStart_toEndOf="@+id/savedCardCvvCCardBrand"
+        app:layout_constraintTop_toBottomOf="@+id/savedCardCvvTitleLabel"
+        tools:text="*2476" />
+
+    <TextView
+        android:id="@+id/savedCardCvvHolderName"
+        android:layout_width="@dimen/no_size"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="54dp"
+        android:layout_marginEnd="@dimen/app_padding"
+        android:ellipsize="end"
+        android:fontFamily="@font/source_sans_pro"
+        android:letterSpacing="-0.02"
+        android:lineSpacingExtra="1sp"
+        android:maxLines="1"
+        android:textColor="@color/grid_product_main"
+        android:textSize="17sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/savedCardCvvLastDigits"
+        app:layout_constraintTop_toBottomOf="@+id/savedCardCvvTitleLabel"
+        tools:text="Carlos Monge Bonilla" />
+
+    <TextView
+        android:id="@+id/savedCardCvvExpiryDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:fontFamily="@font/source_sans_pro"
+        android:letterSpacing="-0.02"
+        android:lineSpacingExtra="1sp"
+        android:textColor="@color/grid_product_main"
+        android:textSize="17sp"
+        app:layout_constraintStart_toEndOf="@+id/savedCardCvvLastDigits"
+        app:layout_constraintTop_toBottomOf="@+id/savedCardCvvHolderName"
+        tools:text="09-2028" />
+
+    <com.paysafe.android.hostedfields.cardnumber.PSCardNumberView
+        android:id="@+id/savedCardNumberVoid"
+        android:layout_width="@dimen/no_size"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        tools:ignore="MissingConstraints" />
+
+    <com.paysafe.android.hostedfields.holdername.PSCardholderNameView
+        android:id="@+id/savedCardHolderNameVoid"
+        android:layout_width="@dimen/no_size"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        tools:ignore="MissingConstraints" />
+
+    <com.paysafe.android.hostedfields.expirydate.PSExpiryDateTextView
+        android:id="@+id/savedCardDateVoid"
+        android:layout_width="@dimen/no_size"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        tools:ignore="MissingConstraints" />
+
+    <com.paysafe.android.hostedfields.cvv.PSCvvView
+        android:id="@+id/savedCardCvvField"
+        android:layout_width="@dimen/no_size"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/app_padding"
+        android:layout_marginTop="28dp"
+        android:layout_marginEnd="@dimen/app_padding"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/savedCardCvvExpiryDate" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/savedCardCvvPlaceOrderButton"
+        style="@style/Widget.MaterialComponents.Button"
+        android:layout_width="@dimen/no_size"
+        android:layout_height="50dp"
+        android:layout_marginStart="@dimen/app_padding"
+        android:layout_marginEnd="@dimen/app_padding"
+        android:backgroundTint="@color/grid_product_new_bg"
+        android:letterSpacing="-0.02"
+        android:text="Place order"
+        android:textAllCaps="false"
+        android:textSize="15sp"
+        app:cornerRadius="25dp"
+        app:layout_constraintBottom_toTopOf="@+id/savedCardCvvCancelButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/savedCardCvvCancelButton"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="50dp"
+        android:letterSpacing="-0.02"
+        android:text="Cancel"
+        android:textAllCaps="false"
+        android:textColor="@color/grid_product_new_bg"
+        android:textSize="15sp"
+        app:cornerRadius="25dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:strokeColor="@android:color/transparent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

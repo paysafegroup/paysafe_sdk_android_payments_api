@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2024 Paysafe Group
+  -->
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="60dp"
+    android:layout_height="60dp"
+    android:foreground="?android:attr/selectableItemBackground">
+
+    <TextView
+        android:id="@+id/quantityText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:textColor="@color/grid_product_main"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        tools:text="1" />
+
+    <View
+        android:id="@+id/quantitySelectedLine"
+        android:layout_width="30dp"
+        android:layout_height="3dp"
+        android:layout_gravity="bottom|center"
+        android:background="@color/grid_product_main" />
+
+</FrameLayout>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2024 Paysafe Group
+  -->
+
+<resources>
+    <dimen name="ps_card_border_corner_radius">0dp</dimen>
+    <dimen name="ps_card_text_input_font_size">16sp</dimen>
+    <dimen name="ps_card_placeholder_font_size">16sp</dimen>
+    <dimen name="ps_card_hint_font_size">16sp</dimen>
+</resources>

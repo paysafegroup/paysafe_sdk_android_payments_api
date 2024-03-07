@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2024 Paysafe Group
+  -->
+
+<resources>
+    <!-- Accessibility IDs -->
+    <item name="lotteryTickets" type="id" />
+    <item name="raffleDraws" type="id" />
+    <item name="bingoGames" type="id" />
+    <item name="triviaAndQuizes" type="id" />
+
+    <item name="drawGames" type="id" />
+    <item name="scratchOff" type="id" />
+    <item name="instantWin" type="id" />
+    <item name="raffles" type="id" />
+    <item name="luckyWheel" type="id" />
+    <item name="treasureHunt" type="id" />
+
+    <item name="quantityOne" type="id" />
+    <item name="quantityTwo" type="id" />
+    <item name="quantityThree" type="id" />
+    <item name="quantityFour" type="id" />
+    <item name="quantityFive" type="id" />
+    <item name="quantitySix" type="id" />
+    <item name="quantitySeven" type="id" />
+    <item name="quantityEight" type="id" />
+    <item name="quantityNine" type="id" />
+    <item name="quantityTen" type="id" />
+</resources>

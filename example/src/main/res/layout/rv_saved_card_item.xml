@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2024 Paysafe Group
+  -->
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="80dp"
+    android:background="@drawable/bg_payment_data_display"
+    android:foreground="?android:attr/selectableItemBackground">
+
+    <ImageView
+        android:id="@+id/savedCardCCardIcon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="25dp"
+        android:layout_marginTop="@dimen/app_padding"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_credit_card"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/savedCardCCardBrand"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop"
+        app:layout_constraintBottom_toBottomOf="@+id/savedCardCCardIcon"
+        app:layout_constraintStart_toEndOf="@+id/savedCardCCardIcon"
+        app:layout_constraintTop_toTopOf="@+id/savedCardCCardIcon"
+        tools:src="@drawable/ic_cc_mastercard" />
+
+    <TextView
+        android:id="@+id/savedCardLastDigits"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="8dp"
+        android:fontFamily="@font/source_sans_pro_bold"
+        android:letterSpacing="-0.02"
+        android:lineSpacingExtra="1sp"
+        android:textColor="@color/grid_product_main"
+        android:textSize="17sp"
+        app:layout_constraintBottom_toBottomOf="@+id/savedCardCCardBrand"
+        app:layout_constraintStart_toEndOf="@+id/savedCardCCardBrand"
+        app:layout_constraintTop_toTopOf="@+id/savedCardCCardBrand"
+        tools:text="*2476" />
+
+    <TextView
+        android:id="@+id/savedCardHolderName"
+        android:layout_width="@dimen/no_size"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="25dp"
+        android:ellipsize="end"
+        android:fontFamily="@font/source_sans_pro"
+        android:letterSpacing="-0.02"
+        android:lineSpacingExtra="1sp"
+        android:maxLines="1"
+        android:textColor="@color/grid_product_main"
+        android:textSize="17sp"
+        app:layout_constraintBottom_toBottomOf="@+id/savedCardLastDigits"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/savedCardLastDigits"
+        app:layout_constraintTop_toTopOf="@+id/savedCardLastDigits"
+        tools:text="Carlos Monge Bonilla" />
+
+    <TextView
+        android:id="@+id/savedCardExpiryDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:fontFamily="@font/source_sans_pro"
+        android:letterSpacing="-0.02"
+        android:lineSpacingExtra="1sp"
+        android:textColor="@color/grid_product_main"
+        android:textSize="17sp"
+        app:layout_constraintStart_toEndOf="@+id/savedCardLastDigits"
+        app:layout_constraintTop_toBottomOf="@+id/savedCardHolderName"
+        tools:text="09-2028" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

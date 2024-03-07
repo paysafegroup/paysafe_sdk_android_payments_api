@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2024 Paysafe Group
+  -->
+
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/app_navigation"
+    app:startDestination="@+id/nav_product_categories">
+
+    <fragment
+        android:id="@+id/nav_product_categories"
+        android:name="com.paysafe.example.categories.FragmentProductCategories"
+        android:label="@string/product_categories"
+        tools:layout="@layout/fragment_product_categories">
+        <action
+            android:id="@+id/action_categories_to_products_grid"
+            app:destination="@id/nav_products_grid" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_products_grid"
+        android:name="com.paysafe.example.grid.FragmentProductsGrid"
+        android:label="@string/products_grid"
+        tools:layout="@layout/fragment_products_grid">
+        <action
+            android:id="@+id/action_products_to_detail"
+            app:destination="@id/nav_product_detail" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_product_detail"
+        android:name="com.paysafe.example.product.FragmentProductDetail"
+        android:label="@string/product_detail"
+        tools:layout="@layout/fragment_product_detail">
+        <argument
+            android:name="selectedProduct"
+            app:argType="com.paysafe.example.grid.UiProductData" />
+        <action
+            android:id="@+id/action_product_to_checkout"
+            app:destination="@id/nav_product_checkout" />
+    </fragment>
+
+    <dialog
+        android:id="@+id/nav_product_checkout"
+        android:name="com.paysafe.example.checkout.FragmentProductCheckout"
+        android:label="@string/product_checkout"
+        tools:layout="@layout/fragment_product_checkout">
+        <argument
+            android:name="productForCheckout"
+            app:argType="com.paysafe.example.grid.UiProductData" />
+        <action
+            android:id="@+id/action_checkout_to_select_payment_method"
+            app:destination="@id/nav_select_payment_method" />
+    </dialog>
+
+    <fragment
+        android:id="@+id/nav_select_payment_method"
+        android:name="com.paysafe.example.select_payment_method.FragmentSelectPaymentMethod"
+        android:label="Select Payment Method"
+        tools:layout="@layout/fragment_select_payment_method">
+        <argument
+            android:name="productForCheckout"
+            app:argType="com.paysafe.example.grid.UiProductData" />
+        <action
+            android:id="@+id/action_select_payment_method_to_saved_card"
+            app:destination="@id/nav_select_saved_card" />
+        <action
+            android:id="@+id/action_nav_select_payment_method_to_nav_payment_successful"
+            app:destination="@id/nav_payment_successful" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_select_saved_card"
+        android:name="com.paysafe.example.savedcard.FragmentSelectSavedCard"
+        android:label="Select Saved Card"
+        tools:layout="@layout/fragment_select_saved_card">
+        <argument
+            android:name="productForCheckout"
+            app:argType="com.paysafe.example.grid.UiProductData" />
+        <action
+            android:id="@+id/action_add_new_credit_card"
+            app:destination="@id/nav_credit_card" />
+        <action
+            android:id="@+id/action_select_saved_card"
+            app:destination="@id/nav_saved_card_cvv" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_credit_card"
+        android:name="com.paysafe.example.creditcard.FragmentCreditCard"
+        android:label="Credit Card"
+        tools:layout="@layout/fragment_credit_card">
+        <argument
+            android:name="productToUseCreditCard"
+            app:argType="com.paysafe.example.grid.UiProductData" />
+        <action
+            android:id="@+id/action_newcc_to_payment_successful"
+            app:destination="@id/nav_payment_successful" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_saved_card_cvv"
+        android:name="com.paysafe.example.savedcard.FragmentSavedCardCvv"
+        android:label="Saved Card CVV"
+        tools:layout="@layout/fragment_saved_card_cvv">
+        <argument
+            android:name="productForCheckout"
+            app:argType="com.paysafe.example.grid.UiProductData" />
+        <argument
+            android:name="savedCardChosen"
+            app:argType="com.paysafe.example.savedcard.UiSavedCardData" />
+        <action
+            android:id="@+id/action_savedcvv_to_payment_successful"
+            app:destination="@id/nav_payment_successful" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_payment_successful"
+        android:name="com.paysafe.example.successful.FragmentPaymentSuccessful"
+        android:label="Payment Successful"
+        tools:layout="@layout/fragment_payment_successful">
+        <argument
+            android:name="displayAtEnd"
+            app:argType="com.paysafe.example.successful.SuccessDisplay" />
+        <action
+            android:id="@+id/action_dismiss_screen"
+            app:destination="@id/nav_product_categories"
+            app:launchSingleTop="true"
+            app:popUpTo="@+id/app_navigation"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+</navigation>

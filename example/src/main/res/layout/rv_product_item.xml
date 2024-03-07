@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2024 Paysafe Group
+  -->
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/base_item_bg"
+    android:foreground="?android:attr/selectableItemBackground"
+    android:minWidth="194dp"
+    android:minHeight="296dp"
+    tools:layout_height="296dp"
+    tools:layout_width="194dp">
+
+    <ImageView
+        android:id="@+id/productFavoriteImg"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:src="@drawable/ic_fav_outlined" />
+
+    <ImageView
+        android:id="@+id/productImg"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop"
+        app:layout_constraintBottom_toTopOf="@+id/productPriceLayout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ImageContrastCheck"
+        tools:layout_height="64dp"
+        tools:layout_width="64dp"
+        tools:src="@drawable/ic_calendar" />
+
+    <FrameLayout
+        android:id="@+id/productIsNew"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/app_padding"
+        android:layout_marginBottom="4dp"
+        android:background="@drawable/bg_isnew_product"
+        android:paddingHorizontal="8dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@+id/productPriceLayout"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:visibility="visible">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/source_sans_pro"
+            android:includeFontPadding="false"
+            android:letterSpacing="-0.01"
+            android:lineSpacingExtra="2sp"
+            android:paddingVertical="4dp"
+            android:text="@string/product_new"
+            android:textColor="@color/white"
+            android:textSize="13sp"
+            tools:ignore="TextContrastCheck" />
+
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/productPriceLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/app_padding"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/bg_price_product"
+        android:paddingHorizontal="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/productNameText"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <TextView
+            android:id="@+id/productPriceText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/source_sans_pro"
+            android:includeFontPadding="false"
+            android:letterSpacing="-0.02"
+            android:lineSpacingExtra="1sp"
+            android:paddingVertical="4dp"
+            android:textColor="@color/grid_product_main"
+            android:textSize="17sp"
+            tools:text="$140.00" />
+
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/productNameText"
+        android:layout_width="@dimen/no_size"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/app_padding"
+        android:layout_marginEnd="@dimen/app_padding"
+        android:layout_marginBottom="4dp"
+        android:ellipsize="end"
+        android:fontFamily="@font/source_sans_pro"
+        android:letterSpacing="0.02"
+        android:maxLines="1"
+        android:textColor="@color/grid_product_main"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toTopOf="@+id/productDateText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:text="Draw Games" />
+
+    <TextView
+        android:id="@+id/productDateText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/app_padding"
+        android:layout_marginBottom="@dimen/app_padding"
+        android:fontFamily="@font/source_sans_pro_light"
+        android:letterSpacing="-0.02"
+        android:textColor="@color/grid_product_date"
+        android:textSize="15sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:text="Aug 28, 2023 - 3PM" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

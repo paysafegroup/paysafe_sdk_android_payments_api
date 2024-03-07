@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2024 Paysafe Group
+  -->
+
+<resources>
+
+    <declare-styleable name="PSCardView">
+        <attr name="psBackgroundColor" format="color" />
+        <attr name="psBorderColor" format="color" />
+        <attr name="psFocusedBorderColor" format="color" />
+        <attr name="psBorderCornerRadius" format="dimension" />
+        <attr name="psErrorColor" format="color" />
+        <attr name="psTextInputColor" format="color" />
+        <attr name="psTextInputFontSize" format="dimension" />
+        <attr name="psTextInputFontFamily" format="string" />
+        <attr name="psPlaceholderColor" format="color" />
+        <attr name="psPlaceholderFontSize" format="dimension" />
+        <attr name="psPlaceholderFontFamily" format="string" />
+        <attr name="psHintColor" format="color" />
+        <attr name="psHintFontSize" format="dimension" />
+        <attr name="psHintFontFamily" format="string" />
+        <attr name="psExpiryPickerButtonBackgroundColor" format="color" />
+        <attr name="psExpiryPickerButtonTextColor" format="color" />
+        <attr name="psHint" format="string" />
+    </declare-styleable>
+
+    <declare-styleable name="PSCardNumberView">
+        <attr name="psSeparator" format="enum">
+            <enum name="whitespace" value="0" />
+            <enum name="none" value="1" />
+            <enum name="dash" value="2" />
+            <enum name="slash" value="3" />
+        </attr>
+    </declare-styleable>
+
+    <declare-styleable name="PSCvvView">
+        <attr name="psIsMasked" format="boolean" />
+    </declare-styleable>
+
+</resources>
