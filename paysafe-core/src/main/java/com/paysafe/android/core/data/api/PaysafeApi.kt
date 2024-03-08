@@ -34,6 +34,7 @@ abstract class PaysafeApi(val httpClient: PSHttpClient) {
 
     val json = Json {
         ignoreUnknownKeys = true
+        coerceInputValues = true
     }
 
     /**
