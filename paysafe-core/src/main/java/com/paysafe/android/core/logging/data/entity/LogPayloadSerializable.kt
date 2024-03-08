@@ -4,10 +4,17 @@
 
 package com.paysafe.android.core.logging.data.entity
 
+import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Serializer
+import kotlinx.serialization.json.JsonContentPolymorphicSerializer
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
-@Serializable
+@Serializable(with = LogPayloadSerializableSerializer::class)
 sealed class LogPayloadSerializable {
 
     @Serializable
@@ -28,4 +35,19 @@ sealed class LogPayloadSerializable {
 
     ) : LogPayloadSerializable()
 
+}
+
+@OptIn(ExperimentalSerializationApi::class)
+@Serializer(forClass = LogPayloadSerializable::class)
+private object LogPayloadSerializableSerializer :
+    JsonContentPolymorphicSerializer<LogPayloadSerializable>(LogPayloadSerializable::class) {
+    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<LogPayloadSerializable> {
+        // get type based on the values provided to SerialName for data class
+        val type = element.jsonObject["type"]?.jsonPrimitive?.content
+        return when (type) {
+            "Message" -> LogPayloadSerializable.Message.serializer()
+            "PayloadMessage" -> LogPayloadSerializable.PayloadMessage.serializer()
+            else -> throw Exception("ERROR: Serializer not implemented")
+        }
+    }
 }
