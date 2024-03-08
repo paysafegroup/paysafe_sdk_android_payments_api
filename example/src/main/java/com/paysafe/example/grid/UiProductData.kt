@@ -18,7 +18,7 @@ data class UiProductData(
     val name: String = "",
     val date: String = "",
     var quantity: String = "0",
-    var totalRaw: Int = 0,
+    var totalRaw: Double = 0.0,
     var totalToDisplay: String = "$0.00",
     val description: String = "",
     @IgnoredOnParcel val onClick: (Int) -> Unit = {}

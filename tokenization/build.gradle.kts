@@ -12,16 +12,6 @@ private val versionPropertiesFile = Properties().apply {
         throw Exception("Error: version.properties file does not exists.")
 }
 
-/*
-private val githubProperties = Properties().apply {
-    val file = File(rootProject.projectDir, "github.properties")
-    if (file.exists())
-        load(file.inputStream())
-    else
-        throw Exception("Error: version.properties file does not exists.")
-}
-*/
-
 // Function to read version from version.properties
 fun getVersionFromProperties(): String {
     val version = versionPropertiesFile["VERSION"] as String?
@@ -92,6 +82,7 @@ android {
 dependencies {
     api(project(":paysafe-core"))
     api(project(":threedsecure"))
+    
     // Tests
     testImplementation(Testing.jUnit)
     testImplementation(Testing.mockK)

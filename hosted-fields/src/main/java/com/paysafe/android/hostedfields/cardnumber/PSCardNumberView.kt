@@ -35,6 +35,7 @@ class PSCardNumberView @JvmOverloads constructor(
     private val _isValidLiveData = MutableLiveData(false)
     private val _cardTypeLiveData = MutableLiveData(PSCreditCardType.UNKNOWN)
     private val hintString = provideHint(attrs)
+    private val animateTopPlaceholderLabel = provideAnimateTopPlaceholderLabel(attrs)
     private val separator = provideSeparator(attrs)
 
     @get:JvmSynthetic
@@ -65,6 +66,7 @@ class PSCardNumberView @JvmOverloads constructor(
         ),
         labelText = placeholderString,
         placeholderText = hintString,
+        animateTopLabelText = animateTopPlaceholderLabel,
         cardNumberLiveData = PSCardNumberLiveData(
             cardTypeLiveData = _cardTypeLiveData,
             isValidLiveData = _isValidLiveData

@@ -76,6 +76,7 @@ private fun onHolderNameFocusChange(
 ) {
     if (focusState.isFocused) onEvent?.invoke(PSCardFieldInputEvent.FOCUS)
     val isInactive = !focusState.isFocused
+    holderNameState.isFocused = focusState.isFocused
     if (isInactive && holderNameState.alreadyShown) {
         holderNameState.isValidInUi = CardholderNameChecks.validations(holderNameState.value)
     }
@@ -87,8 +88,9 @@ private fun onHolderNameFocusChange(
 internal fun PSCardholderName(
     state: PSCardholderNameState,
     modifier: Modifier = Modifier,
-    labelText: String? = null,
+    labelText: String,
     placeholderText: String? = null,
+    animateTopLabelText: Boolean,
     isValidLiveData: MutableLiveData<Boolean>,
     psTheme: PSTheme,
     onEvent: ((PSCardFieldInputEvent) -> Unit)? = null,
@@ -102,11 +104,12 @@ internal fun PSCardholderName(
         value = state.value,
         onValueChange = onValueChange,
         label = {
-            TextLabelWithPSTheme(
-                labelText = labelText
-                    ?: stringResource(id = R.string.card_holder_name_placeholder),
-                psTheme = psTheme
-            )
+            if (animateTopLabelText) {
+                TextLabelWithPSTheme(
+                    labelText = labelText,
+                    psTheme = psTheme
+                )
+            }
         },
         placeholder = {
             TextPlaceholderWithPSTheme(
@@ -168,7 +171,9 @@ internal fun PreviewPSCardholderName(
     PSCardholderName(
         state = holderNameState,
         isValidLiveData = MutableLiveData(false),
+        animateTopLabelText = true,
         psTheme = provideDefaultPSTheme(),
+        labelText = "Name on card",
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 16.dp)

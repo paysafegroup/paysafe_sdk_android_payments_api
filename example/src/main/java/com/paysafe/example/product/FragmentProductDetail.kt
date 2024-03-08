@@ -119,13 +119,13 @@ class FragmentProductDetail : Fragment() {
             args.selectedProduct.price, newQuantity.toInt()
         )
         args.selectedProduct.totalRaw = args.selectedProduct.totalToDisplay
-            .replace("$", "").toInt()
+            .replace("$", "").toDouble()
     }
 
     private fun recalculateTotal(
         olderPrice: String,
         quantity: Int
-    ) = "$%.2f".format(olderPrice.replace("$", "").toFloat() * quantity)
+    ) = "$%.2f".format(olderPrice.replace("$", "").toDouble() * quantity)
 
     private fun onBuyItNowClick() {
         navController.navigate(

@@ -30,8 +30,9 @@ class PSCvvView @JvmOverloads constructor(
     private val cvvState = mutableStateOf(PSCvvStateImpl())
     private val _isValidLiveData = MutableLiveData(false)
     private val hintString = provideHint(attrs)
+    private val animateTopPlaceholderLabel = provideAnimateTopPlaceholderLabel(attrs)
     private val isMasked = provideIsMasked(attrs)
-    
+
     internal val data: String
         get() = cvvState.value.value
 
@@ -61,6 +62,7 @@ class PSCvvView @JvmOverloads constructor(
         modifier = Modifier.fillMaxWidth(),
         labelText = placeholderString,
         placeholderText = hintString,
+        animateTopLabelText = animateTopPlaceholderLabel,
         psTheme = psTheme,
         isMasked = isMasked,
         isValidLiveData = _isValidLiveData,

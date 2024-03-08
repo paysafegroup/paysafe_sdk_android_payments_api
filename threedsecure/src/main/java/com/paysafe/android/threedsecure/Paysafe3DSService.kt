@@ -21,13 +21,13 @@ interface Paysafe3DSService {
      * Initialize the 3DS challenge SDK.
      *
      * @param lifecycleOwner Context that owns a lifecycle. Most of the cases an [Activity].
-     * @param cardBin Card bank identification number.
+     * @param bin Bank identification number.
      * @param callback Result object with success/failure methods to handle 3DS initialization.
      */
     fun start(
         context: Context,
         lifecycleOwner: LifecycleOwner,
-        cardBin: String,
+        bin: String,
         accountId: String,
         threeDSRenderType: ThreeDSRenderType?,
         callback: PSResultCallback<String>

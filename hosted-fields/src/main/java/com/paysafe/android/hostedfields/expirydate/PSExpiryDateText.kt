@@ -76,6 +76,7 @@ private fun onExpiryDateFocusChange(
 ) {
     if (focusState.isFocused) onEvent?.invoke(PSCardFieldInputEvent.FOCUS)
     val isInactive = !focusState.isFocused
+    expiryDateState.isFocused = focusState.isFocused
     if (isInactive && expiryDateState.alreadyShown) {
         expiryDateState.isValidInUi = ExpiryDateChecks.validations(expiryDateState.value)
     }
@@ -88,8 +89,9 @@ private fun onExpiryDateFocusChange(
 fun PSExpiryDateText(
     state: PSExpiryDateState,
     modifier: Modifier = Modifier,
-    labelText: String? = null,
+    labelText: String,
     placeholderText: String? = null,
+    animateTopLabelText: Boolean,
     isValidLiveData: MutableLiveData<Boolean>,
     psTheme: PSTheme,
     onEvent: ((PSCardFieldInputEvent) -> Unit)? = null
@@ -104,11 +106,12 @@ fun PSExpiryDateText(
         onValueChange = onValueChange,
         // Texts //
         label = {
-            TextLabelWithPSTheme(
-                labelText = labelText
-                    ?: stringResource(id = R.string.card_expiry_date_placeholder),
-                psTheme = psTheme
-            )
+            if (animateTopLabelText) {
+                TextLabelWithPSTheme(
+                    labelText = labelText,
+                    psTheme = psTheme
+                )
+            }
         },
         placeholder = {
             TextPlaceholderWithPSTheme(
@@ -169,6 +172,8 @@ internal fun PreviewPSExpiryDateText(
 ) {
     PSExpiryDateText(
         state = expiryDateState,
+        animateTopLabelText = true,
+        labelText = "Expiry date",
         isValidLiveData = MutableLiveData(false),
         psTheme = provideDefaultPSTheme(),
         modifier = Modifier

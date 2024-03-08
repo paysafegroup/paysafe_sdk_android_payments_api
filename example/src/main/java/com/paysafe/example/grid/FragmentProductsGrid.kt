@@ -67,7 +67,7 @@ class FragmentProductsGrid : Fragment() {
             "Draw Games",
             "Aug 28, 2023 - 3PM",
             "1",
-            99,
+            0.99,
             "$0.99",
             "Draw Games offer an exhilarating opportunity to test your luck and win big by selecting a set of numbers",
             ::onProductClick
@@ -81,7 +81,7 @@ class FragmentProductsGrid : Fragment() {
             "Scratch Off",
             "Aug 28, 2023 - 3PM",
             "1",
-            99,
+            0.99,
             "$0.99",
             "",
             ::onProductClick
@@ -95,7 +95,7 @@ class FragmentProductsGrid : Fragment() {
             "Instant Win",
             "Aug 28, 2023 - 3PM",
             "1",
-            99,
+            0.99,
             "$0.99",
             "",
             ::onProductClick
@@ -109,7 +109,7 @@ class FragmentProductsGrid : Fragment() {
             "Raffles",
             "Aug 28, 2023 - 3PM",
             "1",
-            99,
+            0.99,
             "$0.99",
             "",
             ::onProductClick
@@ -123,7 +123,7 @@ class FragmentProductsGrid : Fragment() {
             "Lucky Wheel",
             "Aug 28, 2023 - 3PM",
             "1",
-            99,
+            0.99,
             "$0.99",
             "",
             ::onProductClick
@@ -137,7 +137,7 @@ class FragmentProductsGrid : Fragment() {
             "Treasure Hunt",
             "Aug 28, 2023 - 3PM",
             "1",
-            99,
+            0.99,
             "$0.99",
             "",
             ::onProductClick

@@ -180,7 +180,7 @@
                 android:textColor="@color/grid_product_main"
                 android:textSize="15sp"
                 app:drawableRightCompat="@drawable/ic_chevron_right"
-                tools:text="CARLOS\nMONGE BONILLA\n11350 NW 25TH ST\nSWEETWATER, FL, 33172" />
+                tools:text="John\nDoe\n5335 Gate Parkway Fourth Floor\nJacksonvillle, FL, 32256" />
 
             <TextView
                 android:id="@+id/billingAddressLabel"

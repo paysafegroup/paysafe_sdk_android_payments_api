@@ -77,6 +77,7 @@ private fun onCvvFocusChange(
 ) {
     if (focusState.isFocused) onEvent?.invoke(PSCardFieldInputEvent.FOCUS)
     val isInactive = !focusState.isFocused
+    cvvState.isFocused = focusState.isFocused
     if (isInactive && cvvState.alreadyShown) {
         cvvState.isValidInUi = CvvChecks.validations(cvvState.value, cvvState.cardType)
     }
@@ -94,8 +95,9 @@ private fun provideVisualTransformation(isMasked: Boolean): VisualTransformation
 internal fun PSCvv(
     state: PSCvvState,
     modifier: Modifier = Modifier,
-    labelText: String? = null,
+    labelText: String,
     placeholderText: String? = null,
+    animateTopLabelText: Boolean,
     isValidLiveData: MutableLiveData<Boolean>,
     psTheme: PSTheme,
     isMasked: Boolean,
@@ -110,11 +112,12 @@ internal fun PSCvv(
         value = state.value,
         onValueChange = onValueChange,
         label = {
-            TextLabelWithPSTheme(
-                labelText = labelText
-                    ?: stringResource(id = R.string.card_cvv_placeholder),
-                psTheme = psTheme
-            )
+            if (animateTopLabelText) {
+                TextLabelWithPSTheme(
+                    labelText = labelText,
+                    psTheme = psTheme
+                )
+            }
         },
         placeholder = {
             TextPlaceholderWithPSTheme(
@@ -200,6 +203,8 @@ internal fun PreviewPSCvv(
 ) {
     PSCvv(
         state = cvvState,
+        labelText = "CVV Number",
+        animateTopLabelText = true,
         isValidLiveData = MutableLiveData(false),
         psTheme = provideDefaultPSTheme(),
         isMasked = isMasked,

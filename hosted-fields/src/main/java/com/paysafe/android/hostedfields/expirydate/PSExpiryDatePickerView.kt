@@ -31,6 +31,7 @@ class PSExpiryDatePickerView @JvmOverloads constructor(
     private val expiryDateState = mutableStateOf(PSExpiryDateStateImpl())
     private val _isValidLiveData = MutableLiveData(false)
     private val hintString = provideHint(attrs)
+    private val animateTopPlaceholderLabel = provideAnimateTopPlaceholderLabel(attrs)
 
     /** Property to enable the month data retrieval from expiry date. */
     override val monthData: String
@@ -62,6 +63,7 @@ class PSExpiryDatePickerView @JvmOverloads constructor(
         modifier = Modifier.fillMaxWidth(),
         labelText = placeholderString,
         placeholderText = hintString,
+        animateTopLabelText = animateTopPlaceholderLabel,
         isValidLiveData = _isValidLiveData,
         psTheme = psTheme,
         onEvent = onEvent

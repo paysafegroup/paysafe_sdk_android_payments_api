@@ -124,7 +124,7 @@ class FragmentSavedCardCvv : Fragment() {
         binding.savedCardCvvPlaceOrderButton.isEnabled = false
 
         val cardTokenizeOptions = getCardTokenizeOptions(
-            args.productForCheckout.totalRaw,
+            (args.productForCheckout.totalRaw * 100).toInt(),
             args.savedCardChosen.paymentHandleTokenFrom,
             args.savedCardChosen.singleUseCustomerToken,
         )
@@ -174,12 +174,12 @@ class FragmentSavedCardCvv : Fragment() {
         transactionType = TransactionType.PAYMENT,
         merchantRefNum = PaysafeSDK.getMerchantReferenceNumber(),
         billingDetails = BillingDetails(
-            nickName = "nickName",
-            street = "street",
-            city = "city",
-            state = "AL",
+            nickName = "John Doe's card",
+            street = "5335 Gate Parkway Fourth Floor",
+            city = "Jacksonvillle",
+            state = "FL",
             country = "US",
-            zip = "12345"
+            zip = "32256"
         ),
         profile = Profile(
             firstName = "firstName",

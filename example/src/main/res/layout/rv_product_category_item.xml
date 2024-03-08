@@ -9,13 +9,10 @@
     android:layout_height="wrap_content"
     android:foreground="?android:attr/selectableItemBackground">
 
-    <ImageView
-        android:id="@+id/productCategoryBg"
+    <View
         android:layout_width="match_parent"
         android:layout_height="170dp"
-        android:importantForAccessibility="no"
-        android:scaleType="centerCrop"
-        tools:src="@drawable/ic_launcher_background" />
+        android:background="@color/category_background" />
 
     <TextView
         android:id="@+id/productCategoryTitle"

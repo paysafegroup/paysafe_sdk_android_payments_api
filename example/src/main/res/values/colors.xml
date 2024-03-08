@@ -16,6 +16,7 @@
     <color name="grid_product_main">#220B39</color>
     <color name="grid_product_new_bg">#7A78E6</color>
     <color name="grid_product_date">#7A6D88</color>
+    <color name="category_background">#5A28FF</color>
 
     <color name="small_horizontal_touch">#D3CED7</color>
     <color name="product_bg_in_checkout">#F2F1F4</color>

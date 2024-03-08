@@ -257,7 +257,10 @@ class PSApiClient internal constructor(
 
     private fun addLoggingInterceptor(okHttpClientBuilder: OkHttpClient.Builder) {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            level = if (BuildConfig.DEBUG)
+                HttpLoggingInterceptor.Level.BODY
+            else
+                HttpLoggingInterceptor.Level.NONE
         }
         okHttpClientBuilder.addInterceptor(loggingInterceptor)
     }

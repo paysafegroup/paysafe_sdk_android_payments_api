@@ -4,6 +4,7 @@
 
 import org.gradle.api.JavaVersion
 import java.io.File
+
 object ConfigData {
     const val compileSdkVersion = 34 // Android 14
     const val minSdkVersion = 23 // Android 6
@@ -11,7 +12,7 @@ object ConfigData {
     const val buildToolsVersion = "34.0.0"
     const val minifyEnabled = false
     const val versionName = "1.0.0"
-    const val versionCode = 12
+    const val versionCode = 14
     const val kotlinJvmTarget = "1.8"
     val sourceCompatibility = JavaVersion.VERSION_1_8
     val targetCompatibility = JavaVersion.VERSION_1_8

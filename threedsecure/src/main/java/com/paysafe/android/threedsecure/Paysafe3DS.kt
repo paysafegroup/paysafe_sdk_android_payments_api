@@ -59,13 +59,13 @@ class Paysafe3DS internal constructor(
     override fun start(
         context: Context,
         lifecycleOwner: LifecycleOwner,
-        cardBin: String,
+        bin: String,
         accountId: String,
         threeDSRenderType: ThreeDSRenderType?,
         callback: PSResultCallback<String>
     ) {
         lifecycleOwner.lifecycleScope.launch(ioDispatcher) {
-            val result = start(context, cardBin, accountId, threeDSRenderType)
+            val result = start(context, bin, accountId, threeDSRenderType)
             withContext(mainDispatcher) {
                 resultAsCallback(result, callback)
             }

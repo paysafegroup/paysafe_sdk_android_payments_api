@@ -264,7 +264,7 @@ class FragmentSelectPaymentMethod : Fragment() {
 
     private fun providePSGooglePayTokenizeOptions(): PSGooglePayTokenizeOptions =
         PSGooglePayTokenizeOptions(
-            amount = args.productForCheckout.totalRaw,
+            amount = (args.productForCheckout.totalRaw * 100).toInt(),
             currencyCode = "USD",
             transactionType = TransactionType.PAYMENT,
             merchantRefNum = PaysafeSDK.getMerchantReferenceNumber(),
@@ -281,7 +281,7 @@ class FragmentSelectPaymentMethod : Fragment() {
 
     private fun providePSPayPalTokenizeOptions(): PSPayPalTokenizeOptions =
         PSPayPalTokenizeOptions(
-            amount = args.productForCheckout.totalRaw,
+            amount = (args.productForCheckout.totalRaw * 100).toInt(),
             currencyCode = "USD",
             transactionType = TransactionType.PAYMENT,
             merchantRefNum = PaysafeSDK.getMerchantReferenceNumber(),

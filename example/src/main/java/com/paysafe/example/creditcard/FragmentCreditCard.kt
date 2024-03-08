@@ -136,7 +136,9 @@ class FragmentCreditCard : Fragment() {
         binding.placeOrderButton.text = "Loading..."
         binding.placeOrderButton.isEnabled = false
 
-        val cardTokenizeOptions = getCardTokenizeOptions(args.productToUseCreditCard.totalRaw)
+        val cardTokenizeOptions = getCardTokenizeOptions(
+            (args.productToUseCreditCard.totalRaw * 100).toInt()
+        )
 
         cardTokenizeOptionsAccountId = cardTokenizeOptions.accountId
         cardTokenizeOptionsMerchantRefNum = cardTokenizeOptions.merchantRefNum
@@ -183,12 +185,12 @@ class FragmentCreditCard : Fragment() {
         transactionType = TransactionType.PAYMENT,
         merchantRefNum = PaysafeSDK.getMerchantReferenceNumber(),
         billingDetails = BillingDetails(
-            nickName = "nickName",
-            street = "street",
-            city = "city",
-            state = "AL",
+            nickName = "John Doe's card",
+            street = "5335 Gate Parkway Fourth Floor",
+            city = "Jacksonvillle",
+            state = "FL",
             country = "US",
-            zip = "12345"
+            zip = "32256"
         ),
         profile = Profile(
             firstName = "firstName",

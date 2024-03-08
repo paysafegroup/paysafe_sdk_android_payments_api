@@ -9,9 +9,11 @@ import androidx.compose.runtime.Stable
 @Stable
 interface PSCardholderNameState {
     var value: String
+    var isFocused: Boolean
     var isValidInUi: Boolean
     var alreadyShown: Boolean
 
     fun isEmpty(): Boolean
     fun isValid(): Boolean
+    fun showLabelWithoutAnimation(animateTopLabelText: Boolean, labelText: String): Boolean
 }

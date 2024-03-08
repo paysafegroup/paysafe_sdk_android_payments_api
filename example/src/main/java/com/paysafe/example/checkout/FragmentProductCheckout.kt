@@ -10,6 +10,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.navArgs
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.paysafe.example.R
 import com.paysafe.example.databinding.FragmentProductCheckoutBinding
@@ -28,6 +30,9 @@ class FragmentProductCheckout : BottomSheetDialogFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        dialog?.setOnShowListener {
+            (dialog as? BottomSheetDialog)?.behavior?.state = BottomSheetBehavior.STATE_EXPANDED
+        }
         val binding = FragmentProductCheckoutBinding.inflate(inflater, container, false)
         isCancelable = false
         fillCheckoutWithData(binding)
@@ -45,12 +50,12 @@ class FragmentProductCheckout : BottomSheetDialogFragment() {
             onSelectPaymentMethodClick()
         }
         binding.billingAddressText.text = BillingAddress(
-            "CARLOS",
-            "MONGE BONILLA",
-            "11350 NW 25TH ST",
-            "SWEETWATER",
+            "John",
+            "Doe",
+            "5335 Gate Parkway Fourth Floor",
+            "Jacksonvillle",
             "FL",
-            "33172"
+            "32256"
         ).formattedAddress()
         binding.checkoutSelectBillingAddress.setOnClickListener {}
         binding.checkoutPromoCode.setOnClickListener {}

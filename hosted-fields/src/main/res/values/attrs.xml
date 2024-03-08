@@ -23,6 +23,7 @@
         <attr name="psExpiryPickerButtonBackgroundColor" format="color" />
         <attr name="psExpiryPickerButtonTextColor" format="color" />
         <attr name="psHint" format="string" />
+        <attr name="psAnimateTopPlaceholderLabel" format="boolean" />
     </declare-styleable>
 
     <declare-styleable name="PSCardNumberView">

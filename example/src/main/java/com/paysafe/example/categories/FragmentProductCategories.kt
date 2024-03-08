@@ -50,25 +50,21 @@ class FragmentProductCategories : Fragment() {
         UiProductCategoryData(
             R.id.lotteryTickets,
             getString(R.string.lottery_tickets),
-            R.drawable.lottery_tickets_woman,
             ::onCategoryClick
         ),
         UiProductCategoryData(
             R.id.raffleDraws,
             getString(R.string.raffle_draws),
-            R.drawable.raffle_draws_woman,
             ::onCategoryClick
         ),
         UiProductCategoryData(
             R.id.bingoGames,
             getString(R.string.bingo_games),
-            R.drawable.bingo_games_man,
             ::onCategoryClick
         ),
         UiProductCategoryData(
             R.id.triviaAndQuizes,
             getString(R.string.trivia_quizes),
-            R.drawable.trivia_quizes_man,
             ::onCategoryClick
         )
     )

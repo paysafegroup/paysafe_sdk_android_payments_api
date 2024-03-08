@@ -44,6 +44,22 @@ abstract class PSCardView @JvmOverloads constructor(
         }
     }
 
+    protected fun provideAnimateTopPlaceholderLabel(attrs: AttributeSet?): Boolean {
+        val styledAttributes = context.theme.obtainStyledAttributes(
+            /* set = */ attrs,
+            /* attrs = */ R.styleable.PSCardView,
+            /* defStyleAttr = */ 0,
+            /* defStyleRes = */ 0
+        )
+        try {
+            return styledAttributes.getBoolean(
+                /* index = */ R.styleable.PSCardView_psAnimateTopPlaceholderLabel,
+                /* defValue = */ true
+            )
+        } finally {
+            styledAttributes.recycle()
+        }
+    }
 
     abstract val placeholderString: String
 

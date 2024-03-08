@@ -37,6 +37,7 @@ private fun onExpiryDateFocusChange(
     expiryDateState: PSExpiryDateState,
 ) {
     val isInactive = !focusState.isFocused
+    expiryDateState.isFocused = focusState.isFocused
     if (isInactive && expiryDateState.alreadyShown) {
         expiryDateState.isValidInUi = ExpiryDateChecks.validations(expiryDateState.value)
     }
@@ -52,8 +53,9 @@ internal fun EmptyViewJustToClearFocus(modifier: Modifier = Modifier) {
 @JvmSynthetic
 fun PSExpiryDatePicker(
     state: PSExpiryDateState,
-    labelText: String? = null,
+    labelText: String,
     placeholderText: String? = null,
+    animateTopLabelText: Boolean,
     modifier: Modifier = Modifier,
     psTheme: PSTheme
 ) {
@@ -62,11 +64,12 @@ fun PSExpiryDatePicker(
         onValueChange = {},
         // Texts //
         label = {
-            TextLabelWithPSTheme(
-                labelText = labelText
-                    ?: stringResource(id = R.string.card_expiry_date_placeholder),
-                psTheme = psTheme
-            )
+            if (animateTopLabelText) {
+                TextLabelWithPSTheme(
+                    labelText = labelText,
+                    psTheme = psTheme
+                )
+            }
         },
         placeholder = {
             TextPlaceholderWithPSTheme(
@@ -124,6 +127,8 @@ internal fun PreviewPSExpiryDatePicker(
 ) {
     PSExpiryDatePicker(
         state = expiryDateState,
+        animateTopLabelText = true,
+        labelText = "Expiry date",
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 16.dp),

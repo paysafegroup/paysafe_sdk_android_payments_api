@@ -29,6 +29,7 @@ class PSCardholderNameView @JvmOverloads constructor(
     private val cardHolderNameState = mutableStateOf(PSCardholderNameStateImpl())
     private val _isValidLiveData = MutableLiveData(false)
     private val hintString = provideHint(attrs)
+    private val animateTopPlaceholderLabel = provideAnimateTopPlaceholderLabel(attrs)
 
     val isValidLiveData: LiveData<Boolean> get() = _isValidLiveData
 
@@ -53,6 +54,7 @@ class PSCardholderNameView @JvmOverloads constructor(
         modifier = Modifier.fillMaxWidth(),
         labelText = placeholderString,
         placeholderText = hintString,
+        animateTopLabelText = animateTopPlaceholderLabel,
         isValidLiveData = _isValidLiveData,
         psTheme = psTheme,
         onEvent = onEvent

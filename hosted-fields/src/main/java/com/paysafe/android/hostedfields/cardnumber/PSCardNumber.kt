@@ -108,6 +108,7 @@ private fun onCardNumberFocusChange(
 ) {
     if (focusState.isFocused) onEvent?.invoke(PSCardFieldInputEvent.FOCUS)
     val isInactive = !focusState.isFocused
+    cardNumberState.isFocused = focusState.isFocused
     if (isInactive && cardNumberState.alreadyShown) {
         cardNumberState.isValidInUi = CardNumberChecks.validations(cardNumberState.value)
     }
@@ -119,8 +120,9 @@ private fun onCardNumberFocusChange(
 internal fun PSCardNumber(
     state: PSCardNumberState,
     cardNumberModifier: PSCardNumberModifier,
-    labelText: String? = null,
+    labelText: String,
     placeholderText: String? = null,
+    animateTopLabelText: Boolean,
     cardNumberLiveData: PSCardNumberLiveData,
     psTheme: PSTheme,
     separator: CardNumberSeparator,
@@ -141,11 +143,12 @@ internal fun PSCardNumber(
         onValueChange = onValueChange,
         // Texts //
         label = {
-            TextLabelWithPSTheme(
-                labelText = labelText
-                    ?: stringResource(id = R.string.card_number_placeholder),
-                psTheme = psTheme
-            )
+            if (animateTopLabelText) {
+                TextLabelWithPSTheme(
+                    labelText = labelText,
+                    psTheme = psTheme
+                )
+            }
         },
         placeholder = {
             TextPlaceholderWithPSTheme(
@@ -252,6 +255,8 @@ internal fun PreviewPSCardNumber(
                 .padding(horizontal = 16.dp, vertical = 16.dp),
             cardBrandModifier = Modifier.padding(end = 16.dp)
         ),
+        labelText = "Card number",
+        animateTopLabelText = true,
         cardNumberLiveData = PSCardNumberLiveData(
             cardTypeLiveData = MutableLiveData(PSCreditCardType.UNKNOWN),
             isValidLiveData = MutableLiveData(false)

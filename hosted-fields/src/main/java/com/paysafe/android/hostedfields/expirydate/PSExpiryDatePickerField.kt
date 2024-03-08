@@ -6,6 +6,7 @@ package com.paysafe.android.hostedfields.expirydate
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
@@ -17,12 +18,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalTextToolbar
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
@@ -32,6 +35,8 @@ import com.paysafe.android.hostedfields.PSTheme
 import com.paysafe.android.hostedfields.R
 import com.paysafe.android.hostedfields.model.PSCardFieldInputEvent
 import com.paysafe.android.hostedfields.model.PSExpiryDateState
+import com.paysafe.android.hostedfields.util.PS_EXPIRY_DATE_PICKER_NO_ANIM_LABEL_TEST_TAG
+import com.paysafe.android.hostedfields.util.TextLabelReplacement
 import com.paysafe.android.hostedfields.util.WrapperToAvoidPaste
 import com.paysafe.android.hostedfields.util.avoidCursorHandle
 import com.paysafe.android.hostedfields.util.rememberExpiryDateState
@@ -44,6 +49,7 @@ import com.paysafe.android.hostedfields.valid.ExpiryDateChecks
  * @param modifier Compose modifier for [PSExpiryDatePicker] to decorate or add behavior.
  * @param labelText Helper label shown inside [OutlinedTextField].
  * @param placeholderText Helper placeholder shown inside [OutlinedTextField].
+ * @param animateTopLabelText If 'true' it will show the default animation for [OutlinedTextField], otherwise the label will remain in place.
  * @param isValidLiveData [LiveData] that stores if expiration date is valid.
  * @param onEvent Callback function that reacts to several [PSCardFieldInputEvent].
  */
@@ -52,8 +58,9 @@ import com.paysafe.android.hostedfields.valid.ExpiryDateChecks
 fun PSExpiryDatePickerField(
     expiryDateState: PSExpiryDateState = rememberExpiryDateState(),
     modifier: Modifier,
-    labelText: String?,
+    labelText: String,
     placeholderText: String?,
+    animateTopLabelText: Boolean,
     isValidLiveData: MutableLiveData<Boolean>,
     psTheme: PSTheme,
     onEvent: ((PSCardFieldInputEvent) -> Unit)? = null
@@ -93,13 +100,26 @@ fun PSExpiryDatePickerField(
                         }
                     }
             )
-            PSExpiryDatePicker(
-                state = expiryDateState,
-                labelText = labelText,
-                placeholderText = placeholderText,
-                modifier = modifier,
-                psTheme = psTheme
-            )
+            Box {
+                PSExpiryDatePicker(
+                    state = expiryDateState,
+                    labelText = labelText,
+                    placeholderText = placeholderText,
+                    animateTopLabelText = animateTopLabelText,
+                    modifier = modifier,
+                    psTheme = psTheme
+                )
+                if (expiryDateState.showLabelWithoutAnimation(animateTopLabelText, labelText)) {
+                    TextLabelReplacement(
+                        labelText = labelText,
+                        isValidInUI = expiryDateState.isValidInUi,
+                        psTheme = psTheme,
+                        modifier = Modifier
+                            .testTag(PS_EXPIRY_DATE_PICKER_NO_ANIM_LABEL_TEST_TAG)
+                            .align(Alignment.Center)
+                    )
+                }
+            }
         }
         if (expiryDateState.isPickerOpen) {
             PSMonthYearPickerDialogIfPickerOpen(
