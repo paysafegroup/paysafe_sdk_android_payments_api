@@ -8,7 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal enum class RequestorChallengePreferenceSerializable {
+enum class RequestorChallengePreferenceSerializable {
     @SerialName("CHALLENGE_MANDATED")
     CHALLENGE_MANDATED,
 

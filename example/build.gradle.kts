@@ -106,7 +106,7 @@ android {
 dependencies {
     implementation(project(":hosted-fields"))
     implementation(project(":google-pay"))
-    implementation(project(":paypal"))
+    implementation(project(":venmo"))
 
     // Dependencies
     implementation(AndroidBase.appCompat)

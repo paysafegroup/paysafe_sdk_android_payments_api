@@ -5,9 +5,9 @@
 package com.paysafe.android.tokenization.domain.model.paymentHandle
 
 import com.paysafe.android.tokenization.domain.model.paymentHandle.googlepay.GooglePayPaymentToken
-import com.paysafe.android.tokenization.domain.model.paymentHandle.paypal.PayPalRequest
 import com.paysafe.android.tokenization.domain.model.paymentHandle.profile.Profile
 import com.paysafe.android.tokenization.domain.model.paymentHandle.threeds.ThreeDS
+import com.paysafe.android.tokenization.domain.model.paymentHandle.venmo.VenmoRequest
 
 /**
  * Wrapper with all the parameters available for a tokenize payment.
@@ -50,8 +50,8 @@ data class PaymentHandleRequest(
     /** Google Pay additional data. */
     val googlePayPaymentToken: GooglePayPaymentToken? = null,
 
-    /** PayPal additional data. */
-    val payPalRequest: PayPalRequest? = null,
+    /** Venmo additinal data */
+    val venmoRequest: VenmoRequest ? = null,
 
     /** List of return links information for payment. */
     val returnLinks: List<PaymentHandleReturnLink>? = null

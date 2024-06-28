@@ -16,7 +16,7 @@ import kotlinx.serialization.Serializable
  * Structure to store Three DS information data.
  */
 @Serializable
-internal data class ThreeDSSerializable(
+data class ThreeDSSerializable(
 
     /** Merchant ref number for 3D secure. */
     @SerialName("merchantRefNum")

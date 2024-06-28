@@ -8,7 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal data class ProfileSerializable(
+data class ProfileSerializable(
     /** First name. */
     @SerialName("firstName")
     val firstName: String? = null,

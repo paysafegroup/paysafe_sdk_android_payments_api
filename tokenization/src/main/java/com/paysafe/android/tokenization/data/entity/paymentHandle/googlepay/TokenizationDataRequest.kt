@@ -8,7 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal data class TokenizationDataRequest(
+data class TokenizationDataRequest(
     /** Token. */
     @SerialName("token")
     val token: String? = null,

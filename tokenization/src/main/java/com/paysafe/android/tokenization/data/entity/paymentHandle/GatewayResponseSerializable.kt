@@ -11,6 +11,15 @@ import kotlinx.serialization.Serializable
 data class GatewayResponseSerializable(
 
     @SerialName("id")
-    val orderId: String? = null
+    val orderId: String? = null,
+
+    @SerialName("jwtToken")
+    val jwtToken: String? = null,
+
+    @SerialName("clientToken")
+    val clientToken: String? = null,
+
+    @SerialName("processor")
+    val processor: String? = null
 
 )

@@ -8,7 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal data class PaymentAccountDetailsSerializable(
+data class PaymentAccountDetailsSerializable(
     /** Created range. */
     @SerialName("createdRange")
     val createdRange: CreatedRangeSerializable? = null,

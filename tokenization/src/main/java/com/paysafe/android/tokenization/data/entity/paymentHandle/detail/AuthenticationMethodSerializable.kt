@@ -8,7 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal enum class AuthenticationMethodSerializable {
+enum class AuthenticationMethodSerializable {
     @SerialName("THIRD_PARTY_AUTHENTICATION")
     THIRD_PARTY_AUTHENTICATION,
 

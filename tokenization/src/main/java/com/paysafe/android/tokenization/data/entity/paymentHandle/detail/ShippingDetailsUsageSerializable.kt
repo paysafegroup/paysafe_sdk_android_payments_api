@@ -8,7 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal data class ShippingDetailsUsageSerializable(
+data class ShippingDetailsUsageSerializable(
     /** Card holder name match. */
     @SerialName("cardHolderNameMatch")
     val cardHolderNameMatch: Boolean? = null,

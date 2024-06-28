@@ -78,6 +78,30 @@
 
         </FrameLayout>
 
+        <FrameLayout
+            android:id="@+id/selectPayMethodVenmo"
+            android:layout_width="@dimen/no_size"
+            android:layout_height="80dp"
+            android:layout_marginStart="@dimen/app_padding"
+            android:layout_marginTop="@dimen/app_padding"
+            android:layout_marginEnd="@dimen/app_padding"
+            android:background="@drawable/bg_payment_data_display"
+            android:foreground="?android:attr/selectableItemBackground"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/selectPayMethodCreditCard">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="25dp"
+                android:importantForAccessibility="no"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_venmo" />
+
+        </FrameLayout>
 
         <FrameLayout
             android:id="@+id/selectPayMethodPayPal"
@@ -91,7 +115,7 @@
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/selectPayMethodCreditCard">
+            app:layout_constraintTop_toBottomOf="@id/selectPayMethodVenmo">
 
             <ImageView
                 android:layout_width="wrap_content"

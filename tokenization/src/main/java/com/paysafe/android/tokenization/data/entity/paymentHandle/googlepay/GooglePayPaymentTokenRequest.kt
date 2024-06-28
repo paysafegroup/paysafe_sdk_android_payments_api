@@ -8,7 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal data class GooglePayPaymentTokenRequest(
+data class GooglePayPaymentTokenRequest(
     /** Api version. */
     @SerialName("apiVersion")
     val apiVersion: Int? = null,

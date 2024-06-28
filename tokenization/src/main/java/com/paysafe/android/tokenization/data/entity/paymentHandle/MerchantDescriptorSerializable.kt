@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
  * Structure to organize merchant descriptor data.
  */
 @Serializable
-internal data class MerchantDescriptorSerializable(
+data class MerchantDescriptorSerializable(
 
     /** Dynamic descriptor for merchant. */
     @SerialName("dynamicDescriptor")

@@ -22,26 +22,22 @@ import com.paysafe.android.google_pay.button.PSGooglePayButtonOptions
 import com.paysafe.android.google_pay.button.PSGooglePayPaymentMethodConfig
 import com.paysafe.android.google_pay.domain.model.PSGooglePayConfig
 import com.paysafe.android.google_pay.domain.model.PSGooglePayTokenizeOptions
-import com.paysafe.android.paypal.PSPayPalContext
-import com.paysafe.android.paypal.PSPayPalTokenizeCallback
-import com.paysafe.android.paypal.domain.model.PSPayPalConfig
-import com.paysafe.android.paypal.domain.model.PSPayPalRenderType
-import com.paysafe.android.paypal.domain.model.PSPayPalTokenizeOptions
 import com.paysafe.android.tokenization.domain.model.paymentHandle.BillingDetails
 import com.paysafe.android.tokenization.domain.model.paymentHandle.MerchantDescriptor
 import com.paysafe.android.tokenization.domain.model.paymentHandle.ShippingDetails
 import com.paysafe.android.tokenization.domain.model.paymentHandle.ShippingMethod
 import com.paysafe.android.tokenization.domain.model.paymentHandle.TransactionType
-import com.paysafe.android.tokenization.domain.model.paymentHandle.paypal.PSPayPalLanguage
-import com.paysafe.android.tokenization.domain.model.paymentHandle.paypal.PSPayPalShippingPreference
-import com.paysafe.android.tokenization.domain.model.paymentHandle.paypal.PayPalRequest
 import com.paysafe.android.tokenization.domain.model.paymentHandle.profile.DateOfBirth
 import com.paysafe.android.tokenization.domain.model.paymentHandle.profile.Gender
 import com.paysafe.android.tokenization.domain.model.paymentHandle.profile.IdentityDocument
 import com.paysafe.android.tokenization.domain.model.paymentHandle.profile.Profile
 import com.paysafe.android.tokenization.domain.model.paymentHandle.profile.ProfileLocale
 import com.paysafe.android.tokenization.domain.model.paymentHandle.threeds.ThreeDS
-import com.paysafe.example.BuildConfig
+import com.paysafe.android.tokenization.domain.model.paymentHandle.venmo.VenmoRequest
+import com.paysafe.android.venmo.PSVenmoContext
+import com.paysafe.android.venmo.PSVenmoTokenizeCallback
+import com.paysafe.android.venmo.domain.model.PSVenmoConfig
+import com.paysafe.android.venmo.domain.model.PSVenmoTokenizeOptions
 import com.paysafe.example.R
 import com.paysafe.example.databinding.FragmentSelectPaymentMethodBinding
 import com.paysafe.example.successful.SuccessDisplay
@@ -62,11 +58,11 @@ class FragmentSelectPaymentMethod : Fragment() {
 
     private lateinit var binding: FragmentSelectPaymentMethodBinding
     private var googlePayContext: PSGooglePayContext? = null
-    private var payPalContext: PSPayPalContext? = null
+    private var venmoContext: PSVenmoContext? = null
     private var googlePayTokenizeOptionsAccountId = ""
     private var googlePayTokenizeOptionsMerchantRefNum = ""
-    private var payPalTokenizeOptionsAccountId = ""
-    private var payPalTokenizeOptionsMerchantRefNum = ""
+    private var venmoTokenizeOptionsAccountId = ""
+    private var venmoTokenizeOptionsMerchantRefNum = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -95,20 +91,21 @@ class FragmentSelectPaymentMethod : Fragment() {
 
             }
         )
-        PSPayPalContext.initialize(
+
+        PSVenmoContext.initialize(
             this@FragmentSelectPaymentMethod,
-            providePSPayPalConfig(),
-            object : PSCallback<PSPayPalContext> {
-                override fun onSuccess(value: PSPayPalContext) {
-                    payPalContext = value
-                    showPayPalButton()
+            providePSVenmoConfig(),
+            object : PSCallback<PSVenmoContext> {
+                override fun onSuccess(value: PSVenmoContext) {
+                    venmoContext = value
+                    showVenmoButton()
                 }
 
                 override fun onFailure(exception: Exception) {
-                    logDebug("PSPayPalContext initialize error: $exception")
+                    logDebug("PSVenmoContext initialize error: $exception")
                     ErrorHandlingDialog.newInstance(
                         exception = exception,
-                        title = "PayPal init error"
+                        title = "Venmo init error"
                     ).show(
                         parentFragmentManager, ErrorHandlingDialog.TAG
                     )
@@ -132,8 +129,9 @@ class FragmentSelectPaymentMethod : Fragment() {
             onCreditCardClick()
         }
 
-        binding.selectPayMethodPayPal.setOnClickListener {
-            onPayPalClick()
+
+        binding.selectPayMethodVenmo.setOnClickListener {
+            onVenmoClick()
         }
 
         binding.selectPayMethodGooglePay.setOnClickListener {
@@ -143,8 +141,9 @@ class FragmentSelectPaymentMethod : Fragment() {
         if (googlePayContext != null) {
             initializeGooglePayButton(googlePayContext!!.providePaymentMethodConfig())
         }
-        if (payPalContext != null) {
-            showPayPalButton()
+
+        if (venmoContext != null) {
+            showVenmoButton()
         }
 
         return binding.root
@@ -152,7 +151,6 @@ class FragmentSelectPaymentMethod : Fragment() {
 
     override fun onDetach() {
         super.onDetach()
-        payPalContext?.dispose()
         googlePayContext?.dispose()
     }
 
@@ -161,9 +159,9 @@ class FragmentSelectPaymentMethod : Fragment() {
         binding.selectPayMethodGooglePay.initialize(payButtonOptions)
     }
 
-    internal fun showPayPalButton() {
+    internal fun showVenmoButton() {
         if (this::binding.isInitialized)
-            binding.selectPayMethodPayPal.visibility = View.VISIBLE
+            binding.selectPayMethodVenmo.visibility = View.VISIBLE
     }
 
     internal fun onSuccessGooglePayment(paymentHandleToken: String) {
@@ -187,36 +185,36 @@ class FragmentSelectPaymentMethod : Fragment() {
         )
     }
 
-    private fun onPayPalClick() {
-        if (payPalContext == null) {
-            context?.longToast("PayPalContext not initialized yet")
+    private fun onVenmoClick() {
+        if (venmoContext == null) {
+            context?.longToast("VenmoContext not initialized yet")
             return
         }
 
-        val payPalTokenizeOptions = providePSPayPalTokenizeOptions()
+        val venmoTokenizeOptions = providePSVenmoTokenizeOptions()
 
-        payPalTokenizeOptionsAccountId = payPalTokenizeOptions.accountId
-        payPalTokenizeOptionsMerchantRefNum = payPalTokenizeOptions.merchantRefNum
+        venmoTokenizeOptionsAccountId = venmoTokenizeOptions.accountId
+        venmoTokenizeOptionsMerchantRefNum = venmoTokenizeOptions.merchantRefNum
 
         lifecycleScope.launch(Dispatchers.IO) {
-            payPalContext?.tokenize(
+            venmoContext?.tokenize(
                 requireContext(),
-                payPalTokenizeOptions,
-                object : PSPayPalTokenizeCallback {
+                venmoTokenizeOptions,
+                object : PSVenmoTokenizeCallback {
 
                     override fun onSuccess(paymentHandleToken: String) {
-                        onPayPalPaymentSuccess(paymentHandleToken)
+                        onVenmoPaymentSuccess(paymentHandleToken)
                     }
 
                     override fun onFailure(exception: Exception) {
-                        logDebug("PayPal payment failed. Error message: ${exception.message}")
+                        logDebug("Venmo payment failed. Error message: ${exception.message}")
                         ErrorHandlingDialog.newInstance(exception).show(
                             parentFragmentManager, ErrorHandlingDialog.TAG
                         )
                     }
 
                     override fun onCancelled(paysafeException: PaysafeException) {
-                        context?.longToast("PayPal payment was cancelled")
+                        context?.longToast("Venmo payment was cancelled")
                     }
                 }
             )
@@ -254,12 +252,9 @@ class FragmentSelectPaymentMethod : Fragment() {
         )
     }
 
-    private fun providePSPayPalConfig(): PSPayPalConfig = PSPayPalConfig(
+    private fun providePSVenmoConfig(): PSVenmoConfig = PSVenmoConfig(
         currencyCode = "USD",
-        accountId = Consts.PAYPAL_ACCOUNT_ID,
-        renderType = PSPayPalRenderType.PSPayPalNativeRenderType(
-            applicationId = BuildConfig.APPLICATION_ID
-        )
+        accountId = Consts.VENMO_ACCOUNT_ID
     )
 
     private fun providePSGooglePayTokenizeOptions(): PSGooglePayTokenizeOptions =
@@ -279,25 +274,23 @@ class FragmentSelectPaymentMethod : Fragment() {
             )
         )
 
-    private fun providePSPayPalTokenizeOptions(): PSPayPalTokenizeOptions =
-        PSPayPalTokenizeOptions(
+    private fun providePSVenmoTokenizeOptions(): PSVenmoTokenizeOptions =
+        PSVenmoTokenizeOptions(
             amount = (args.productForCheckout.totalRaw * 100).toInt(),
             currencyCode = "USD",
             transactionType = TransactionType.PAYMENT,
             merchantRefNum = PaysafeSDK.getMerchantReferenceNumber(),
             billingDetails = provideBillingDetails(),
             profile = provideProfile(),
-            accountId = Consts.PAYPAL_ACCOUNT_ID,
+            accountId = Consts.VENMO_ACCOUNT_ID,
             merchantDescriptor = provideMerchantDescriptor(),
             shippingDetails = provideShippingDetails(),
-            payPalRequest = PayPalRequest(
-                consumerId = "cosumer@gmail.com",
-                recipientDescription = "My store description",
-                language = PSPayPalLanguage.US,
-                shippingPreference = PSPayPalShippingPreference.SET_PROVIDED_ADDRESS,
-                consumerMessage = "My note to payer",
-                orderDescription = "My order description"
-            )
+            customUrlScheme = "customScheme",
+            venmoRequest = VenmoRequest(
+                consumerId = "consumer007",
+                merchantAccountId = "MerchantId002",
+                profileId = "profileId002"
+                )
         )
 
     private fun provideBillingDetails() = BillingDetails(
@@ -342,12 +335,13 @@ class FragmentSelectPaymentMethod : Fragment() {
         zip = "36051",
     )
 
-    internal fun onPayPalPaymentSuccess(paymentHandleToken: String) {
+
+    internal fun onVenmoPaymentSuccess(paymentHandleToken: String) {
         navController.navigate(
             FragmentSelectPaymentMethodDirections.actionNavSelectPaymentMethodToNavPaymentSuccessful(
                 SuccessDisplay(
-                    accountId = payPalTokenizeOptionsAccountId,
-                    merchantReferenceNumber = payPalTokenizeOptionsMerchantRefNum,
+                    accountId = venmoTokenizeOptionsAccountId,
+                    merchantReferenceNumber = venmoTokenizeOptionsMerchantRefNum,
                     paymentHandleToken = paymentHandleToken
                 )
             )

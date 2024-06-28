@@ -8,7 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal enum class ProfileLocaleSerializable {
+enum class ProfileLocaleSerializable {
     @SerialName("ca_en")
     CA_EN,
 

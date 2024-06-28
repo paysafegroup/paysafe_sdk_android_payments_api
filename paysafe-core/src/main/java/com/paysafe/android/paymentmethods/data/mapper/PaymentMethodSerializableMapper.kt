@@ -68,9 +68,9 @@ internal fun CardTypeCategorySerializable.toDomain() = when (this) {
     CardTypeCategorySerializable.BOTH -> PSCreditCardTypeCategory.BOTH
 }
 
-// As the SDK Grows it will add more payment methods as for now the only supported ones are CARD and PAYPAL
+// As the SDK Grows it will add more payment methods as for now the only supported ones are CARD and VENMO
 internal fun PaymentMethodTypeSerializable?.toDomain() = when (this) {
     PaymentMethodTypeSerializable.CARD -> PaymentMethodType.CARD
-    PaymentMethodTypeSerializable.PAYPAL -> PaymentMethodType.PAYPAL
+    PaymentMethodTypeSerializable.VENMO -> PaymentMethodType.VENMO
     else -> PaymentMethodType.UNSUPPORTED
 }

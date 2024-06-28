@@ -8,7 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal data class GooglePayRequest(
+data class GooglePayRequest(
     /** Google Pay payment token. */
     @SerialName("googlePayPaymentToken")
     val googlePayPaymentToken: GooglePayPaymentTokenRequest? = null

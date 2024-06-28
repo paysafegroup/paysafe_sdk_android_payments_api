@@ -5,6 +5,5 @@
 package com.paysafe.example.merchantbackend.data.domain.payment
 
 enum class PaymentType {
-    CARD,
-    PAYPAL
+    CARD
 }

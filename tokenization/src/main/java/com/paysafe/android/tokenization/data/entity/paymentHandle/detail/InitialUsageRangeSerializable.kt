@@ -8,7 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal enum class InitialUsageRangeSerializable {
+enum class InitialUsageRangeSerializable {
     @SerialName("CURRENT_TRANSACTION")
     CURRENT_TRANSACTION,
 

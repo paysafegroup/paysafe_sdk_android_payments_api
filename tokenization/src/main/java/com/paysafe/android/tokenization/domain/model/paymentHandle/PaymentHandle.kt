@@ -4,6 +4,8 @@
 
 package com.paysafe.android.tokenization.domain.model.paymentHandle
 
+import com.paysafe.android.tokenization.data.entity.paymentHandle.GatewayResponseSerializable
+
 /**
  * Payment handle data model.
  */
@@ -29,6 +31,5 @@ data class PaymentHandle(
     /** Status for payment handle. */
     val status: String,
 
-    /** OrderId for PayPal */
-    val payPalOrderId: String? = null
+    val gatewayResponse: GatewayResponseSerializable? = null
 )

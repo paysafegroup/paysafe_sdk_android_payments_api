@@ -44,10 +44,12 @@ import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
+import okhttp3.ResponseBody.Companion.toResponseBody
 import okhttp3.logging.HttpLoggingInterceptor
 import okio.IOException
 import java.net.HttpURLConnection
@@ -85,6 +87,9 @@ class PSApiClient internal constructor(
         callTimeout(CALL_TIMEOUT, TimeUnit.SECONDS)
         addInterceptor(ApiConfigInterceptor(apiKey))
         if (loggingInterceptorEnabled) addLoggingInterceptor(this)
+        addInterceptor(RedirectInterceptor())
+        followRedirects(false)
+        followSslRedirects(false)
     }
 
     init {
@@ -289,6 +294,29 @@ private class ApiConfigInterceptor(
             .header("Authorization", "Basic $apiKey")
             .build()
         return chain.proceed(requestWithApiKey)
+    }
+}
+
+
+class RedirectInterceptor : Interceptor {
+    @Throws(IOException::class)
+    override fun intercept(chain: Interceptor.Chain): Response {
+        val request = chain.request()
+        var response = chain.proceed(request)
+        val customBody = """
+                {
+                    "status": "MANUAL_REDIRECTION"
+                }
+            """.trimIndent()
+
+        if (response.code in 300..399) {
+            response = response.newBuilder()
+                .code(200)
+                .message("Handled redirect manually")
+                .body(customBody.toResponseBody("application/json".toMediaTypeOrNull()))
+                .build()
+        }
+        return response
     }
 }
 

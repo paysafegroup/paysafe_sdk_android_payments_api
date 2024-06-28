@@ -11,7 +11,7 @@ import kotlinx.serialization.Serializable
  * Structure to organize payment handle token for status request.
  */
 @Serializable
-internal data class PaymentHandleStatusRequest(
+data class PaymentHandleStatusRequest(
     /** Payment handle token. */
     @SerialName("paymentHandleToken")
     val paymentHandleToken: String? = null

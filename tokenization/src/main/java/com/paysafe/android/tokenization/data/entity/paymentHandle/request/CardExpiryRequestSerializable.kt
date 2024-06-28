@@ -12,14 +12,14 @@ import kotlinx.serialization.Serializable
  * Structure to organize card expiration date data.
  */
 @Serializable
-internal data class CardExpiryRequestSerializable(
+data class CardExpiryRequestSerializable(
 
     /** Expiration month. */
     @SerialName("month")
-    val month: Int?,
+    val month: Int? = null,
 
     /** Expiration year. */
     @SerialName("year")
-    val year: Int?
+    val year: Int? = null
 
 )

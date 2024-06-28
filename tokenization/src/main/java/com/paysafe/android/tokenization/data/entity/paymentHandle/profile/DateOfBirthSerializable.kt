@@ -8,7 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal data class DateOfBirthSerializable(
+data class DateOfBirthSerializable(
     /** Day. */
     @SerialName("day")
     val day: Int? = null,

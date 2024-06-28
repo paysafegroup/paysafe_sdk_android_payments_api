@@ -11,11 +11,8 @@ enum class PaymentTypeResponse {
     @SerializedName("CARD")
     CARD,
 
-    @SerializedName("PAYPAL")
-    PAYPAL
 }
 
 fun PaymentTypeResponse.toDomain() = when (this) {
     PaymentTypeResponse.CARD -> PaymentType.CARD
-    PaymentTypeResponse.PAYPAL -> PaymentType.CARD
 }

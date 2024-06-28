@@ -37,9 +37,6 @@ import com.paysafe.android.tokenization.data.entity.paymentHandle.googlepay.Goog
 import com.paysafe.android.tokenization.data.entity.paymentHandle.googlepay.InfoRequest
 import com.paysafe.android.tokenization.data.entity.paymentHandle.googlepay.PaymentMethodDataRequest
 import com.paysafe.android.tokenization.data.entity.paymentHandle.googlepay.TokenizationDataRequest
-import com.paysafe.android.tokenization.data.entity.paymentHandle.paypal.PayPalLanguageSerializable
-import com.paysafe.android.tokenization.data.entity.paymentHandle.paypal.PayPalRequestSerializable
-import com.paysafe.android.tokenization.data.entity.paymentHandle.paypal.PayPalShippingPreferenceSerializable
 import com.paysafe.android.tokenization.data.entity.paymentHandle.profile.DateOfBirthSerializable
 import com.paysafe.android.tokenization.data.entity.paymentHandle.profile.GenderSerializable
 import com.paysafe.android.tokenization.data.entity.paymentHandle.profile.IdentityDocumentSerializable
@@ -51,6 +48,7 @@ import com.paysafe.android.tokenization.data.entity.paymentHandle.request.CardRe
 import com.paysafe.android.tokenization.data.entity.paymentHandle.request.OrderItemDetailsSerializable
 import com.paysafe.android.tokenization.data.entity.paymentHandle.request.ShippingDetailsSerializable
 import com.paysafe.android.tokenization.data.entity.paymentHandle.request.ShippingMethodSerializable
+import com.paysafe.android.tokenization.data.entity.paymentHandle.venmo.VenmoRequestSerializable
 import com.paysafe.android.tokenization.domain.model.paymentHandle.BillingDetails
 import com.paysafe.android.tokenization.domain.model.paymentHandle.CardExpiryRequest
 import com.paysafe.android.tokenization.domain.model.paymentHandle.CardRequest
@@ -80,9 +78,6 @@ import com.paysafe.android.tokenization.domain.model.paymentHandle.googlepay.Goo
 import com.paysafe.android.tokenization.domain.model.paymentHandle.googlepay.GooglePayPaymentToken
 import com.paysafe.android.tokenization.domain.model.paymentHandle.googlepay.GooglePaymentMethodData
 import com.paysafe.android.tokenization.domain.model.paymentHandle.googlepay.GoogleTokenizationData
-import com.paysafe.android.tokenization.domain.model.paymentHandle.paypal.PSPayPalLanguage
-import com.paysafe.android.tokenization.domain.model.paymentHandle.paypal.PSPayPalShippingPreference
-import com.paysafe.android.tokenization.domain.model.paymentHandle.paypal.PayPalRequest
 import com.paysafe.android.tokenization.domain.model.paymentHandle.profile.DateOfBirth
 import com.paysafe.android.tokenization.domain.model.paymentHandle.profile.Gender
 import com.paysafe.android.tokenization.domain.model.paymentHandle.profile.IdentityDocument
@@ -97,51 +92,52 @@ import com.paysafe.android.tokenization.domain.model.paymentHandle.threeds.Purch
 import com.paysafe.android.tokenization.domain.model.paymentHandle.threeds.RequestorChallengePreference
 import com.paysafe.android.tokenization.domain.model.paymentHandle.threeds.ThreeDS
 import com.paysafe.android.tokenization.domain.model.paymentHandle.threeds.TransactionIntent
+import com.paysafe.android.tokenization.domain.model.paymentHandle.venmo.VenmoRequest
 
-internal fun TransactionType.toData() = when (this) {
+fun TransactionType.toData() = when (this) {
     TransactionType.PAYMENT -> TransactionTypeSerializable.PAYMENT
     TransactionType.STANDALONE_CREDIT -> TransactionTypeSerializable.STANDALONE_CREDIT
     TransactionType.ORIGINAL_CREDIT -> TransactionTypeSerializable.ORIGINAL_CREDIT
     TransactionType.VERIFICATION -> TransactionTypeSerializable.VERIFICATION
 }
 
-internal fun ReturnLinkRelation.toData() = when (this) {
+fun ReturnLinkRelation.toData() = when (this) {
     ReturnLinkRelation.DEFAULT -> ReturnLinkRelationSerializable.DEFAULT
     ReturnLinkRelation.ON_COMPLETED -> ReturnLinkRelationSerializable.ON_COMPLETED
     ReturnLinkRelation.ON_FAILED -> ReturnLinkRelationSerializable.ON_FAILED
     ReturnLinkRelation.ON_CANCELLED -> ReturnLinkRelationSerializable.ON_CANCELLED
 }
 
-internal fun PaymentHandleReturnLink.toData() = ReturnLinkSerializable(
+fun PaymentHandleReturnLink.toData() = ReturnLinkSerializable(
     relation = relation.toData(),
     href = href,
     method = method
 )
 
-internal fun ProfileLocale.toData() = when (this) {
+fun ProfileLocale.toData() = when (this) {
     ProfileLocale.CA_EN -> ProfileLocaleSerializable.CA_EN
     ProfileLocale.EN_US -> ProfileLocaleSerializable.EN_US
     ProfileLocale.FR_CA -> ProfileLocaleSerializable.FR_CA
     ProfileLocale.EN_GB -> ProfileLocaleSerializable.EN_GB
 }
 
-internal fun Gender.toData() = when (this) {
+fun Gender.toData() = when (this) {
     Gender.MALE -> GenderSerializable.MALE
     Gender.FEMALE -> GenderSerializable.FEMALE
 }
 
-internal fun DateOfBirth.toData() = DateOfBirthSerializable(
+fun DateOfBirth.toData() = DateOfBirthSerializable(
     day = day,
     month = month,
     year = year
 )
 
-internal fun IdentityDocument.toData() = IdentityDocumentSerializable(
+fun IdentityDocument.toData() = IdentityDocumentSerializable(
     type = "SOCIAL_SECURITY",
     documentNumber = documentNumber
 )
 
-internal fun Profile.toData() = ProfileSerializable(
+fun Profile.toData() = ProfileSerializable(
     firstName = firstName,
     lastName = lastName,
     locale = locale?.toData(),
@@ -155,7 +151,7 @@ internal fun Profile.toData() = ProfileSerializable(
     identityDocuments = identityDocuments?.map { it.toData() }
 )
 
-internal fun BillingDetails.toData() = BillingDetailsRequestSerializable(
+fun BillingDetails.toData() = BillingDetailsRequestSerializable(
     city = city,
     country = country,
     nickName = nickName,
@@ -182,7 +178,7 @@ internal fun CardRequest.toData() = CardRequestSerializable(
 
 internal fun PaymentType.toData() = when (this) {
     PaymentType.CARD -> PaymentTypeSerializable.CARD
-    PaymentType.PAYPAL -> PaymentTypeSerializable.PAYPAL
+    PaymentType.VENMO -> PaymentTypeSerializable.VENMO
 }
 
 internal fun MerchantDescriptor.toData() = MerchantDescriptorSerializable(
@@ -426,52 +422,8 @@ internal fun GooglePayPaymentToken.toData() = GooglePayPaymentTokenRequest(
     paymentMethodData = googlePaymentMethodData?.toData()
 )
 
-internal fun PSPayPalLanguage.toData() = when (this) {
-    PSPayPalLanguage.AT -> PayPalLanguageSerializable.AT
-    PSPayPalLanguage.AU -> PayPalLanguageSerializable.AU
-    PSPayPalLanguage.BE -> PayPalLanguageSerializable.BE
-    PSPayPalLanguage.BR -> PayPalLanguageSerializable.BR
-    PSPayPalLanguage.CA -> PayPalLanguageSerializable.CA
-    PSPayPalLanguage.CH -> PayPalLanguageSerializable.CH
-    PSPayPalLanguage.CN -> PayPalLanguageSerializable.CN
-    PSPayPalLanguage.DE -> PayPalLanguageSerializable.DE
-    PSPayPalLanguage.ES -> PayPalLanguageSerializable.ES
-    PSPayPalLanguage.FR -> PayPalLanguageSerializable.FR
-    PSPayPalLanguage.GB -> PayPalLanguageSerializable.GB
-    PSPayPalLanguage.IT -> PayPalLanguageSerializable.IT
-    PSPayPalLanguage.NL -> PayPalLanguageSerializable.NL
-    PSPayPalLanguage.PL -> PayPalLanguageSerializable.PL
-    PSPayPalLanguage.PT -> PayPalLanguageSerializable.PT
-    PSPayPalLanguage.RU -> PayPalLanguageSerializable.RU
-    PSPayPalLanguage.US -> PayPalLanguageSerializable.US
-    PSPayPalLanguage.da_DK -> PayPalLanguageSerializable.da_DK
-    PSPayPalLanguage.he_IL -> PayPalLanguageSerializable.he_IL
-    PSPayPalLanguage.id_ID -> PayPalLanguageSerializable.id_ID
-    PSPayPalLanguage.ja_JP -> PayPalLanguageSerializable.ja_JP
-    PSPayPalLanguage.no_NO -> PayPalLanguageSerializable.no_NO
-    PSPayPalLanguage.pt_BR -> PayPalLanguageSerializable.pt_BR
-    PSPayPalLanguage.ru_RU -> PayPalLanguageSerializable.ru_RU
-    PSPayPalLanguage.sv_SE -> PayPalLanguageSerializable.sv_SE
-    PSPayPalLanguage.th_TH -> PayPalLanguageSerializable.th_TH
-    PSPayPalLanguage.zh_CN -> PayPalLanguageSerializable.zh_CN
-    PSPayPalLanguage.zh_HK -> PayPalLanguageSerializable.zh_HK
-    PSPayPalLanguage.zh_TW -> PayPalLanguageSerializable.zh_TW
-}
-
-internal fun PSPayPalShippingPreference.toData() = when (this) {
-    PSPayPalShippingPreference.GET_FROM_FILE -> PayPalShippingPreferenceSerializable.GET_FROM_FILE
-    PSPayPalShippingPreference.NO_SHIPPING -> PayPalShippingPreferenceSerializable.NO_SHIPPING
-    PSPayPalShippingPreference.SET_PROVIDED_ADDRESS -> PayPalShippingPreferenceSerializable.SET_PROVIDED_ADDRESS
-}
-
-internal fun PayPalRequest.toData() = PayPalRequestSerializable(
+internal fun VenmoRequest.toData() = VenmoRequestSerializable(
     consumerId = consumerId,
-    recipientDescription = recipientDescription,
-    language = language?.toData(),
-    consumerMessage = consumerMessage,
-    orderDescription = orderDescription,
-    shippingPreference = shippingPreference?.toData(),
-    recipientType = "PAYPAL_ID"
 )
 
 internal fun PaymentHandleRequest.toData(cardRequest: CardRequest? = null) =
@@ -492,5 +444,5 @@ internal fun PaymentHandleRequest.toData(cardRequest: CardRequest? = null) =
         singleUseCustomerToken = singleUseCustomerToken,
         paymentHandleTokenFrom = paymentHandleTokenFrom,
         googlePay = googlePayPaymentToken?.let { GooglePayRequest(it.toData()) },
-        payPal = payPalRequest?.toData()
+        venmo = venmoRequest?.toData()
     )

@@ -8,7 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal enum class TransactionIntentSerializable {
+enum class TransactionIntentSerializable {
     @SerialName("GOODS_OR_SERVICE_PURCHASE")
     GOODS_OR_SERVICE_PURCHASE,
 

@@ -8,7 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal data class TravelDetailsSerializable(
+data class TravelDetailsSerializable(
     /** Is air travel. */
     @SerialName("isAirTravel")
     val isAirTravel: Boolean? = null,

@@ -5,11 +5,11 @@
 package com.paysafe.android.tokenization.data.entity.paymentHandle
 
 import com.paysafe.android.tokenization.data.entity.paymentHandle.googlepay.GooglePayRequest
-import com.paysafe.android.tokenization.data.entity.paymentHandle.paypal.PayPalRequestSerializable
 import com.paysafe.android.tokenization.data.entity.paymentHandle.profile.ProfileSerializable
 import com.paysafe.android.tokenization.data.entity.paymentHandle.request.BillingDetailsRequestSerializable
 import com.paysafe.android.tokenization.data.entity.paymentHandle.request.CardRequestSerializable
 import com.paysafe.android.tokenization.data.entity.paymentHandle.request.ShippingDetailsSerializable
+import com.paysafe.android.tokenization.data.entity.paymentHandle.venmo.VenmoRequestSerializable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -17,7 +17,7 @@ import kotlinx.serialization.Serializable
  * Structure to organize payment handle request, important data structure that links relevant information.
  */
 @Serializable
-internal data class PaymentHandleRequestSerializable(
+data class PaymentHandleRequestSerializable(
 
     /** Merchant reference number for payment. */
     @SerialName("merchantRefNum")
@@ -83,7 +83,7 @@ internal data class PaymentHandleRequestSerializable(
     @SerialName("googlePay")
     val googlePay: GooglePayRequest? = null,
 
-    @SerialName("paypal")
-    val payPal: PayPalRequestSerializable? = null
+    @SerialName("venmo")
+    val venmo: VenmoRequestSerializable? = null
 
 )

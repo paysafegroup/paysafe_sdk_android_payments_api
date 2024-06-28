@@ -8,10 +8,10 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal enum class PaymentTypeSerializable {
+enum class PaymentTypeSerializable {
     @SerialName("CARD")
     CARD,
 
-    @SerialName("PAYPAL")
-    PAYPAL
+    @SerialName("VENMO")
+    VENMO
 }

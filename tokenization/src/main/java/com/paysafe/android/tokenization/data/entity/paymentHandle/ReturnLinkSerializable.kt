@@ -8,13 +8,13 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal data class ReturnLinkSerializable(
+data class ReturnLinkSerializable(
 
     @SerialName("rel")
-    val relation: ReturnLinkRelationSerializable,
+    val relation: ReturnLinkRelationSerializable? = null,
 
     @SerialName("href")
-    val href: String,
+    val href: String? = null,
 
     @SerialName("method")
     val method: String? = null

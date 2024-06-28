@@ -8,7 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal data class IdentityDocumentSerializable(
+data class IdentityDocumentSerializable(
     /** Document type. */
     @SerialName("type")
     val type: String,

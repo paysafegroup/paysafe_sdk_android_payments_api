@@ -8,7 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal data class PurchasedGiftCardDetailsSerializable(
+data class PurchasedGiftCardDetailsSerializable(
     @SerialName("amount")
     val amount: Int? = null,
 

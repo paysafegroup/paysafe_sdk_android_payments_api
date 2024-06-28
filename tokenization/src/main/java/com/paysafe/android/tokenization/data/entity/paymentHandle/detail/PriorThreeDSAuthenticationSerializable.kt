@@ -8,7 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal data class PriorThreeDSAuthenticationSerializable(
+data class PriorThreeDSAuthenticationSerializable(
     /** Data. */
     @SerialName("data")
     val data: String? = null,

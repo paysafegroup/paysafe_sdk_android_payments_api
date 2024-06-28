@@ -27,9 +27,6 @@ internal enum class PaymentMethodTypeSerializable {
     @SerialName("PAYSAFECARD")
     PAYSAFECARD,
 
-    @SerialName("PAYPAL")
-    PAYPAL,
-
     @SerialName("VENMO")
     VENMO,
 

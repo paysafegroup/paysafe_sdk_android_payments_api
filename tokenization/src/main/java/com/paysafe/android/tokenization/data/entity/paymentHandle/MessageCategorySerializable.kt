@@ -8,7 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal enum class MessageCategorySerializable {
+enum class MessageCategorySerializable {
     @SerialName("PAYMENT")
     PAYMENT,
 

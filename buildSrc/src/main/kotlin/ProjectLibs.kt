@@ -101,9 +101,8 @@ object Versions {
     // Retrofit
     const val retrofit = "2.9.0"
 
-    //PayPal
-    const val paypalNativePayments = "1.3.0"
-    const val paypalWebPayments = "1.3.0"
+    //Venmo
+    const val venmoDependency = "4.39.0"
 
     // Testing
     const val jUnit = "4.13.2"
@@ -171,9 +170,8 @@ object Retrofit {
     val gsonConverter by lazy { "com.squareup.retrofit2:converter-gson:${Versions.retrofit}" }
 }
 
-object PayPal {
-    val nativePayments by lazy { "com.paypal.android:paypal-native-payments:${Versions.paypalNativePayments}" }
-    val webPayments by lazy { "com.paypal.android:paypal-web-payments:${Versions.paypalWebPayments}" }
+object Venmo {
+    val venmoPayments by lazy { "com.braintreepayments.api:venmo:${Versions.venmoDependency}" }
 }
 
 object Testing {
@@ -184,6 +182,7 @@ object Testing {
     val robolectric by lazy { "org.robolectric:robolectric:${Versions.robolectric}" }
     val lifecycleRuntimeTesting by lazy { "androidx.lifecycle:lifecycle-runtime-testing:${Versions.lifecycleRuntimeTesting}" }
     val kotlin by lazy { "org.jetbrains.kotlin:kotlin-test:${Versions.jetbrainsKotlinPlugin}" }
+    val work by lazy { "androidx.work:work-runtime-ktx:2.9.0" }
 }
 
 object AndroidTesting {

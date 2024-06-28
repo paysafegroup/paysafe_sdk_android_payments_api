@@ -8,7 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal enum class CreatedRangeSerializable {
+enum class CreatedRangeSerializable {
     @SerialName("DURING_TRANSACTION")
     DURING_TRANSACTION,
 

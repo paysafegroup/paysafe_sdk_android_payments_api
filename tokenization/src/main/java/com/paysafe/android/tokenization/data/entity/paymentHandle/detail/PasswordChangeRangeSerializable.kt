@@ -8,7 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal enum class PasswordChangeRangeSerializable {
+enum class PasswordChangeRangeSerializable {
     @SerialName("MORE_THAN_SIXTY_DAYS")
     MORE_THAN_SIXTY_DAYS,
 

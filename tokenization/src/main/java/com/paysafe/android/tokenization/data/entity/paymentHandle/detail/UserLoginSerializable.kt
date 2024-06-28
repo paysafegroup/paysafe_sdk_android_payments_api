@@ -8,7 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal data class UserLoginSerializable(
+data class UserLoginSerializable(
     /** Data. */
     @SerialName("data")
     val data: String? = null,

@@ -8,7 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal data class ShippingDetailsSerializable(
+data class ShippingDetailsSerializable(
     @SerialName("shipMethod")
     val shipMethod: ShippingMethodSerializable?,
 

@@ -8,7 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal enum class AuthenticationPurposeSerializable {
+enum class AuthenticationPurposeSerializable {
     @SerialName("PAYMENT_TRANSACTION")
     PAYMENT_TRANSACTION,
 

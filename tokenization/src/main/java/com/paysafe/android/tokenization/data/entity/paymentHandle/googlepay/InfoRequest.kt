@@ -8,7 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal data class InfoRequest(
+data class InfoRequest(
     /** Billing address. */
     @SerialName("billingAddress")
     val billingAddress: BillingAddressRequest? = null,

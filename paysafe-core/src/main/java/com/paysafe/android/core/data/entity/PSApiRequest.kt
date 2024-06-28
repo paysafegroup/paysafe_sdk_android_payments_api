@@ -18,7 +18,7 @@ data class PSApiRequest(
     internal val headers: Map<String, String> = emptyMap(),
 
     /** Query parameters for api call. */
-    internal val queryParams: Map<String, String> = emptyMap(),
+    internal val queryParams: Map<String, String?> = emptyMap(),
 
     /** Body for api call. */
     var body: String? = null,

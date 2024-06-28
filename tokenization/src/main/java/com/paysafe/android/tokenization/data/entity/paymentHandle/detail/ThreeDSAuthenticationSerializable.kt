@@ -8,7 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal enum class ThreeDSAuthenticationSerializable {
+enum class ThreeDSAuthenticationSerializable {
     @SerialName("FRICTIONLESS_AUTHENTICATION")
     FRICTIONLESS_AUTHENTICATION,
 

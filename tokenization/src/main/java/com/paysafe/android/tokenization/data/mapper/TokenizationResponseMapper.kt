@@ -10,7 +10,7 @@ import com.paysafe.android.tokenization.domain.model.paymentHandle.PaymentHandle
 import com.paysafe.android.tokenization.domain.model.paymentHandle.PaymentHandleStatus
 import com.paysafe.android.tokenization.domain.model.paymentHandle.PaymentHandleTokenStatus
 
-internal fun PaymentHandleResponseSerializable.toDomain() = PaymentHandle(
+fun PaymentHandleResponseSerializable.toDomain() = PaymentHandle(
     accountId = accountId,
     cardBin = card?.cardBin,
     networkTokenBin = card?.networkToken?.networkTokenBin,
@@ -18,10 +18,10 @@ internal fun PaymentHandleResponseSerializable.toDomain() = PaymentHandle(
     merchantRefNum = merchantRefNum,
     paymentHandleToken = paymentHandleToken,
     status = status,
-    payPalOrderId = gatewayResponse?.orderId
+    gatewayResponse = gatewayResponse
 )
 
-internal fun paymentHandleTokenStatusToDomain(status: String): PaymentHandleTokenStatus =
+fun paymentHandleTokenStatusToDomain(status: String): PaymentHandleTokenStatus =
     when (status) {
         "INITIATED" -> PaymentHandleTokenStatus.INITIATED
         "PAYABLE" -> PaymentHandleTokenStatus.PAYABLE

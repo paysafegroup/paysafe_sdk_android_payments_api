@@ -84,7 +84,6 @@ internal class PaymentHubRepositoryImpl(
                     PSResult.Failure(paysafeException)
                 }
             }
-
             is PSResult.Failure -> response
         }
         return result

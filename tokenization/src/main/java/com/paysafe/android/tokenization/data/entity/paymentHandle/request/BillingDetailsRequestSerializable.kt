@@ -11,7 +11,7 @@ import kotlinx.serialization.Serializable
  * Structure to organize billing details request data.
  */
 @Serializable
-internal data class BillingDetailsRequestSerializable(
+data class BillingDetailsRequestSerializable(
 
     /** Country for billing. */
     @SerialName("country")

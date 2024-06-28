@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
  * Structure to organize payment handle response, important data structure that links relevant information.
  */
 @Serializable
-internal data class PaymentHandleResponseSerializable(
+data class PaymentHandleResponseSerializable(
 
     /** Identification for payment handle response. */
     @SerialName("id")

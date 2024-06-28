@@ -8,7 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal data class PaymentMethodDataRequest(
+data class PaymentMethodDataRequest(
     /** Description. */
     @SerialName("description")
     val description: String? = null,

@@ -8,7 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal enum class ReturnLinkRelationSerializable {
+enum class ReturnLinkRelationSerializable {
     @SerialName("default")
     DEFAULT,
 

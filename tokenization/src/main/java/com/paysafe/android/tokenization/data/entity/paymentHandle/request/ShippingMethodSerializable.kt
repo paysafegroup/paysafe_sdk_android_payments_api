@@ -8,7 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal enum class ShippingMethodSerializable {
+enum class ShippingMethodSerializable {
     @SerialName("N")
     NEXT_DAY_OR_OVERNIGHT,
 

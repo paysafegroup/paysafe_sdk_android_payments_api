@@ -9,5 +9,5 @@ package com.paysafe.android.tokenization.domain.model.paymentHandle
  */
 enum class PaymentType {
     CARD,
-    PAYPAL
+    VENMO
 }

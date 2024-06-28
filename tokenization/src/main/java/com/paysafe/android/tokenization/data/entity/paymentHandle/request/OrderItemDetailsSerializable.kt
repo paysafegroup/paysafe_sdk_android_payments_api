@@ -8,7 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal data class OrderItemDetailsSerializable(
+data class OrderItemDetailsSerializable(
 
     @SerialName("preOrderItemAvailabilityDate")
     val preOrderItemAvailabilityDate: String? = null,

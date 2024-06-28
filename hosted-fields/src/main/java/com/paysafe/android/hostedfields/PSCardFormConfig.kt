@@ -9,7 +9,7 @@ data class PSCardFormConfig(
     /** Currency code. */
     val currencyCode: String,
 
-    /** Account id for PayPal payment. */
+    /** Account id for payment. */
     val accountId: String
 
 )

@@ -11,7 +11,7 @@ import kotlinx.serialization.Serializable
  * Structure to organize credit card information data.
  */
 @Serializable
-internal data class CardResponseSerializable(
+data class CardResponseSerializable(
 
     /** Card bank identification number. */
     @SerialName("cardBin")

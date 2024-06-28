@@ -16,7 +16,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal data class UserAccountDetailsSerializable(
+data class UserAccountDetailsSerializable(
 
     /** Created date. */
     @SerialName("createdDate")
