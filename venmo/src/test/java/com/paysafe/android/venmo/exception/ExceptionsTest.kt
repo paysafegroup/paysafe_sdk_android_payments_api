@@ -232,4 +232,18 @@ class ExceptionsTest {
         Assert.assertEquals(correlationIdInput, output.correlationId)
     }
 
+    @Test
+    fun `IF venmo app is not installed failed exception is created THEN check output data`() {
+        // Arrange
+        val expectedDetailedMessage = "Venmo App Doesn't exist."
+
+        // Act
+        val output = venmoAppIsNotInstalledFailedException()
+
+        // Assert
+        Assert.assertEquals(VENMO_FAILED_AUTHORIZATION, output.code)
+        Assert.assertEquals(genericDisplayMessage(VENMO_FAILED_AUTHORIZATION), output.displayMessage)
+        Assert.assertEquals(expectedDetailedMessage, output.detailedMessage)
+        Assert.assertEquals("", output.correlationId) // Assuming no correlationId is set for this exception
+    }
 }

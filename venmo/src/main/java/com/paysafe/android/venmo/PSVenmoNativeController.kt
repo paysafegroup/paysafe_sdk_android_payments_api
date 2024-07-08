@@ -18,7 +18,6 @@ import com.paysafe.android.venmo.activity.VenmoWebCheckoutActivity
 import com.paysafe.android.venmo.exception.errorName
 import com.paysafe.android.venmo.exception.genericApiErrorException
 
-
 internal class PSVenmoNativeController internal constructor(
     activityResultCaller: ActivityResultCaller,
     lifecycleScope: LifecycleCoroutineScope,
@@ -108,7 +107,9 @@ internal class PSVenmoNativeController internal constructor(
                 val request = createRequest(data = null)
                 onVenmoFailure(request)
             }
-
+            VenmoConstants.RESULT_VENMO_APP_IS_NOT_INSTALLED -> {
+                onVenmoAppNotExist()
+            }
             else -> {
                 LocalLog.d("PSVenmoNativeController", "Unknown result code $resultCode received!")
                 val paysafeException = genericApiErrorException(psApiClient.getCorrelationId())

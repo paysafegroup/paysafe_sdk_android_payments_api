@@ -107,3 +107,9 @@ internal fun sdkNotInitializedException() = PaysafeException(
     detailedMessage = "PaysafeSDK is not initialized.",
     correlationId = ""// no correlationId in this case
 )
+
+internal fun venmoAppIsNotInstalledFailedException() = PaysafeException(
+    code = VENMO_FAILED_AUTHORIZATION,
+    displayMessage = genericDisplayMessage(VENMO_FAILED_AUTHORIZATION),
+    detailedMessage = "Venmo App Doesn't exist.",
+)

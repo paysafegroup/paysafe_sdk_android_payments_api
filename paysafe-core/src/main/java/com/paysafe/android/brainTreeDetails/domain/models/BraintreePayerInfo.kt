@@ -6,20 +6,20 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class PayerInfo(
     @SerialName("firstName")
-    val firstName: String,
+    val firstName: String ="",
 
     @SerialName("lastName")
-    val lastName: String,
+    val lastName: String ="",
 
     @SerialName("phoneNumber")
-    val phoneNumber: String,
+    val phoneNumber: String="",
 
     @SerialName("email")
-    val email: String,
+    val email: String ="",
 
     @SerialName("externalId")
-    val externalId: String,
+    val externalId: String = "",
 
     @SerialName("userName")
-    val userName: String
+    val userName: String = ""
 )

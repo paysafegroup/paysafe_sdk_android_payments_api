@@ -81,6 +81,7 @@ internal class VenmoWebCheckoutActivity : AppCompatActivity(), VenmoListener {
         if (venmoClient.isVenmoAppSwitchAvailable(this)) {
             venmoClient.tokenizeVenmoAccount(this, request)
         } else if (!isAppInstalled(this)) {
+            finishActivityWithResult(VenmoConstants.RESULT_VENMO_APP_IS_NOT_INSTALLED, null)
             venmoClient.showVenmoInGooglePlayStore(this)
         } else{
             venmoClient.tokenizeVenmoAccount(this, request)

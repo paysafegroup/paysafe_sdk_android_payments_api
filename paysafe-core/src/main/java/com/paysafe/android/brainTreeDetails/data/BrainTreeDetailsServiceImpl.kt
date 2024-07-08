@@ -27,8 +27,9 @@ class BrainTreeDetailsServiceImpl(
 ) : BrainTreeDetailsService {
 
     private val braintreeDetailsApi = BraintreeDetailsApi(psApiClient)
-    private val brainTreeDetailsRepository: BrainTreeDetailsRepository =
+    private var brainTreeDetailsRepository: BrainTreeDetailsRepository =
         BrainTreeDetailsRepositoryImpl(braintreeDetailsApi)
+
 
     override fun getBraintreeDetails(
         lifecycleOwner: LifecycleOwner,
@@ -45,9 +46,7 @@ class BrainTreeDetailsServiceImpl(
 
     override suspend fun getBraintreeDetails(braintreeDetailsRequest: BraintreeDetailsRequest): PSResult<BrainTreeDetailsResponse> {
 
-        val result = withContext(ioDispatcher) {
-            brainTreeDetailsRepository.getBrainTreeDetails(braintreeDetailsRequest)
-        }
+        val result = brainTreeDetailsRepository.getBrainTreeDetails(braintreeDetailsRequest)
         if (result is PSResult.Failure) {
             val paysafeException =
                 failedToLoadAvailableMethodsException(psApiClient.getCorrelationId())

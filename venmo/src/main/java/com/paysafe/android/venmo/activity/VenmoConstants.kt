@@ -6,5 +6,6 @@ object VenmoConstants {
     const val INTENT_EXTRA_CUSTOM_URL_SCHEME = "CUSTOM_URL_SCHEME"
     const val RESULT_SUCCESS = 1_000
     const val RESULT_FAILED = 1_001
+    const val RESULT_VENMO_APP_IS_NOT_INSTALLED = 1_002
     const val VENMO_PACKAGE = "com.venmo"
 }

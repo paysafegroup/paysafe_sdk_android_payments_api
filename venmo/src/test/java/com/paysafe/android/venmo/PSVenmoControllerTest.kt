@@ -1100,4 +1100,20 @@ class PSVenmoControllerTest {
         )
         Assert.assertEquals(expected, domain.toData())
     }
+
+    @Test
+    fun `IF onVenmoAppNotExist THEN callback RETURNS onFailure`() =
+        runTest {
+            // Arrange
+            val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+            Dispatchers.setMain(testDispatcher)
+
+            val psVenmoController = providePSVenmoNativeController()
+
+            // Act
+            psVenmoController.onVenmoAppNotExist()
+
+            // Verify
+            Assert.assertFalse(psVenmoController.tokenizationAlreadyInProgress)
+        }
 }

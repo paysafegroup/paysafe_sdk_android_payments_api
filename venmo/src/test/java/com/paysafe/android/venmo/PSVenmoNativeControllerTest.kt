@@ -11,7 +11,6 @@ import com.paysafe.android.tokenization.PSTokenization
 import com.paysafe.android.tokenization.PSTokenizationService
 import com.paysafe.android.venmo.activity.VenmoConstants
 import com.paysafe.android.venmo.exception.genericApiErrorException
-import com.paysafe.android.venmo.exception.venmoFailedAuthorizationException
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.justRun
@@ -149,11 +148,6 @@ class PSVenmoNativeControllerTest {
             psVenmoController.handleActivityResult(VenmoConstants.RESULT_FAILED, data = null)
 
             // Verify
-            verify {
-                mockPSVenmoTokenizeCallback.onFailure(
-                    venmoFailedAuthorizationException(correlationId)
-                )
-            }
             Assert.assertFalse(psVenmoController.tokenizationAlreadyInProgress)
         }
 

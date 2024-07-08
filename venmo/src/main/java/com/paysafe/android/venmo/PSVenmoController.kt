@@ -34,6 +34,7 @@ import com.paysafe.android.venmo.exception.improperlyCreatedMerchantAccountConfi
 import com.paysafe.android.venmo.exception.invalidAccountIdForPaymentMethodException
 import com.paysafe.android.venmo.exception.paymentHandleStatusExpiredOrFailedException
 import com.paysafe.android.venmo.exception.tokenizationAlreadyInProgressException
+import com.paysafe.android.venmo.exception.venmoAppIsNotInstalledFailedException
 import com.paysafe.android.venmo.exception.venmoFailedAuthorizationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -44,13 +45,15 @@ import java.lang.ref.WeakReference
 internal abstract class PSVenmoController internal constructor(
     lifecycleScope: LifecycleCoroutineScope,
     private val psApiClient: PSApiClient,
-    private val tokenizationService: PSTokenizationService
+    private val tokenizationService: PSTokenizationService,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
 
     internal val lifecycleScopeWeakRef: WeakReference<LifecycleCoroutineScope>
     internal var tokenizeCallback: PSVenmoTokenizeCallback? = null
     internal var paymentHandle: PaymentHandle? = null
     internal var tokenizationAlreadyInProgress = false
+
 
     init {
         lifecycleScopeWeakRef = WeakReference(lifecycleScope)
@@ -148,11 +151,19 @@ internal abstract class PSVenmoController internal constructor(
         }
     }
 
-    internal fun onVenmoFailure(request: BraintreeDetailsRequest) {
+    internal fun onVenmoAppNotExist() {
+        LocalLog.d("PSVenmoController", "onVenmoIsNotInstalledFailure")
+        val paysafeException =
+            venmoAppIsNotInstalledFailedException()
+        psApiClient.logErrorEvent(paysafeException.errorName(), paysafeException)
+        tokenizationAlreadyInProgress = false
+        tokenizeCallback?.onFailure(paysafeException)
+    }
 
+    internal fun onVenmoFailure(request: BraintreeDetailsRequest) {
         val brainTreeDetailsService: BrainTreeDetailsService = BrainTreeDetailsServiceImpl(psApiClient)
 
-        lifecycleScopeWeakRef.get()?.launch {
+        lifecycleScopeWeakRef.get()?.launch(ioDispatcher) {
             try {
                 val brainDetailsResult = brainTreeDetailsService.getBraintreeDetails(request)
 
@@ -161,19 +172,20 @@ internal abstract class PSVenmoController internal constructor(
             } catch (e: Exception) {
                 // Handle the error as needed
             }
+        }?: run {
+            LocalLog.d("PSVenmoController", "onVenmoFailure Cannot continue as the lifecycle scope is null.")
+            val paysafeException =
+                venmoFailedAuthorizationException(psApiClient.getCorrelationId())
+            psApiClient.logErrorEvent(paysafeException.errorName(), paysafeException)
+            tokenizationAlreadyInProgress = false
+            tokenizeCallback?.onFailure(paysafeException)
         }
-        LocalLog.d("PSVenmoController", "onVenmoFailure")
-        val paysafeException =
-            venmoFailedAuthorizationException(psApiClient.getCorrelationId())
-        psApiClient.logErrorEvent(paysafeException.errorName(), paysafeException)
-        tokenizationAlreadyInProgress = false
-        tokenizeCallback?.onFailure(paysafeException)
     }
 
     internal fun  onVenmoListenerSuccess(request: BraintreeDetailsRequest) {
         val brainTreeDetailsService: BrainTreeDetailsService = BrainTreeDetailsServiceImpl(psApiClient)
 
-        lifecycleScopeWeakRef.get()?.launch {
+        lifecycleScopeWeakRef.get()?.launch(ioDispatcher) {
             try {
                 val brainDetailsResult = brainTreeDetailsService.getBraintreeDetails(request)
 
