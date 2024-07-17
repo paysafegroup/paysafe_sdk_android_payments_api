@@ -154,7 +154,7 @@ class PSApiClient internal constructor(
         )
     )
 
-    private fun errorInternalResponse(
+    fun errorInternalResponse(
         responseBodyString: String?,
         responseCode: Int,
         is3DSRequest: Boolean
