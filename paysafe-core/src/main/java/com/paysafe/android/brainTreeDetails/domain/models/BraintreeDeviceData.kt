@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class DeviceData(
     @SerialName("correlation_id")
-    val correlationId: String
+    val correlationId: String = ""
 )

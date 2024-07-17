@@ -6,17 +6,17 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class BraintreeDetailsRequest(
     @SerialName("payment_method_nonce")
-    val paymentMethodNonce: String?,
+    val paymentMethodNonce: String? = null,
 
     @SerialName("payment_method_payerInfo")
-    val paymentMethodPayerInfo: PayerInfo?,
+    val paymentMethodPayerInfo: PayerInfo? = null,
 
     @SerialName("payment_method_jwtToken")
-    val paymentMethodJwtToken: String?,
+    val paymentMethodJwtToken: String? = null,
 
     @SerialName("payment_method_deviceData")
-    val paymentMethodDeviceData: DeviceData?,
+    val paymentMethodDeviceData: DeviceData? = null,
 
     @SerialName("errorCode")
-    val errorCode: String?
+    val errorCode: String? = null
 )
