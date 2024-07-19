@@ -88,7 +88,12 @@ android {
 }
 
 dependencies {
-    api(project(":tokenization"))
+    api(project(":tokenization")) {
+        exclude(
+            module = "paysafe-cardinal"
+        )
+    }
+
     api(Google.playServicesTask)
     implementation(Google.payWallet)
     implementation(Google.gPayButton)

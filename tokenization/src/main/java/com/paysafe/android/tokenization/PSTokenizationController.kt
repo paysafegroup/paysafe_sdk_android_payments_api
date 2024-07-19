@@ -50,7 +50,6 @@ internal class PSTokenizationController(
     )
     private val cardAdapterAuthRepository: CardAdapterAuthRepository =
         CardAdapterAuthRepositoryImpl(CardAdapterAuthApi(psApiClient), psApiClient)
-    private val paysafe3DS = Paysafe3DS()
 
     suspend fun tokenize(
         paymentHandleRequest: PaymentHandleRequest,
@@ -103,6 +102,7 @@ internal class PSTokenizationController(
         ?: return handleGenericError()
 
         LocalLog.d("PSTokenizationController", "Initialize 3DS")
+        val paysafe3DS = Paysafe3DS()
         val deviceFingerprint = paysafe3DS.start(
             context = activity.applicationContext,
             bin = bin,
@@ -129,6 +129,7 @@ internal class PSTokenizationController(
                     authenticationResponse.sdkChallengePayload != null -> {
                 val finalizeResult = continueAuthenticationFlow(
                     activity = activity,
+                    paysafe3DS = paysafe3DS,
                     sdkChallengePayload = authenticationResponse.sdkChallengePayload,
                     paymentHandleId = paymentHandle.id
                 )
@@ -157,6 +158,7 @@ internal class PSTokenizationController(
 
     private suspend fun continueAuthenticationFlow(
         activity: Activity,
+        paysafe3DS: Paysafe3DS,
         sdkChallengePayload: String,
         paymentHandleId: String
     ): FinalizeAuthenticationResponse? {

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2024 Paysafe Group
+  -->
+
+<resources>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <color name="base_item_bg">#F3F1F4</color>
+    <color name="grid_product_main">#220B39</color>
+    <color name="grid_product_new_bg">#7A78E6</color>
+    <color name="grid_product_date">#7A6D88</color>
+    <color name="category_background">#5A28FF</color>
+
+    <color name="small_horizontal_touch">#D3CED7</color>
+    <color name="product_bg_in_checkout">#F2F1F4</color>
+    <color name="checkout_divider">#E9E6EB</color>
+</resources>

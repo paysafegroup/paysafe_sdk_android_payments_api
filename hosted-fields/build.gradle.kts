@@ -95,6 +95,7 @@ android {
 
 dependencies {
     api(project(":tokenization"))
+
     val platformComposeBom = platform(Compose.bom)
 
     // Dependencies

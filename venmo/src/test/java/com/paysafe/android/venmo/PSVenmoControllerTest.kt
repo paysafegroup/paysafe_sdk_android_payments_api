@@ -11,7 +11,6 @@ import com.paysafe.android.PaysafeSDK
 import com.paysafe.android.brainTreeDetails.data.BrainTreeDetailsService
 import com.paysafe.android.brainTreeDetails.data.entity.BrainTreeDetailsResponse
 import com.paysafe.android.core.data.entity.PSResult
-import com.paysafe.android.core.data.entity.value
 import com.paysafe.android.core.data.service.PSApiClient
 import com.paysafe.android.paymentmethods.PaymentMethodsServiceImpl
 import com.paysafe.android.paymentmethods.domain.model.AccountConfiguration
@@ -515,6 +514,7 @@ class PSVenmoControllerTest {
                 mockPSVenmoTokenizeCallback.onFailure(genericApiErrorException(correlationId))
             }
         }
+
     @Test
     fun `IF handleTokenizeResultSuccess with tokenizeCallback null and PaymentHandle null THEN handleTokenizeResultSuccess RETURNS nothing via callback`() =
         runTest {
@@ -557,7 +557,6 @@ class PSVenmoControllerTest {
             Assert.assertNull(psVenmoController.tokenizeCallback)
             Assert.assertFalse(psVenmoController.tokenizationAlreadyInProgress)
         }
-
 
     @Test
     fun `IF handleTokenizeResultSuccess with status PAYABLE  THEN handleTokenizeResultSuccess RETURNS nothing via callback`() =
@@ -608,6 +607,83 @@ class PSVenmoControllerTest {
         }
 
     @Test
+    fun `IF handleTokenizeResultSuccess with status PROCESSING and with sesisonToken empty string THEN handleTokenizeResultSuccess RETURNS nothing via callback`() =
+        runTest {
+            // Arrange
+            val psVenmoController = providePSVenmoNativeController()
+
+            // Act
+            psVenmoController.handleTokenizeResultSuccess(
+                context = mockActivity,
+                customUrlScheme = "",
+                result = PSResult.Success(
+                    PaymentHandle(
+                        merchantRefNum = "merchantRefNum",
+                        paymentHandleToken = "paymentHandleToken",
+                        status = "PROCESSING",
+                        id = "ID",
+                        gatewayResponse = GatewayResponseSerializable(sessionToken = "")
+                    )
+                )
+            )
+
+            // Assert
+            Assert.assertFalse(psVenmoController.tokenizationAlreadyInProgress)
+        }
+
+    @Test
+    fun `IF handleTokenizeResultSuccess with status PROCESSING and with valid sesisonToken THEN handleTokenizeResultSuccess RETURNS nothing via callback`() =
+        runTest {
+            // Arrange
+            val psVenmoController = providePSVenmoNativeController()
+
+            // Act
+            psVenmoController.handleTokenizeResultSuccess(
+                context = mockActivity,
+                customUrlScheme = "",
+                result = PSResult.Success(
+                    PaymentHandle(
+                        merchantRefNum = "merchantRefNum",
+                        paymentHandleToken = "paymentHandleToken",
+                        status = "PROCESSING",
+                        id = "ID",
+                        gatewayResponse = GatewayResponseSerializable(
+                            sessionToken = "session-token"
+                        )
+                    )
+                )
+            )
+
+            // Assert
+            Assert.assertFalse(psVenmoController.tokenizationAlreadyInProgress)
+        }
+
+    @Test
+    fun `IF handleTokenizeResultSuccess with status PROCESSING and with empty gatewayResponse THEN handleTokenizeResultSuccess RETURNS nothing via callback`() =
+        runTest {
+            // Arrange
+            val psVenmoController = providePSVenmoNativeController()
+
+            // Act
+            psVenmoController.handleTokenizeResultSuccess(
+                context = mockActivity,
+                customUrlScheme = "",
+                result = PSResult.Success(
+                    PaymentHandle(
+                        merchantRefNum = "merchantRefNum",
+                        paymentHandleToken = "paymentHandleToken",
+                        status = "PROCESSING",
+                        id = "ID",
+                        gatewayResponse = GatewayResponseSerializable()
+                    )
+                )
+            )
+
+            // Assert
+            Assert.assertFalse(psVenmoController.tokenizationAlreadyInProgress)
+        }
+
+    @Test
     fun `IF handleTokenizeResultSuccess with status EXPIRED  THEN handleTokenizeResultSuccess RETURNS nothing via callback`() =
         runTest {
             // Arrange
@@ -630,7 +706,6 @@ class PSVenmoControllerTest {
             // Assert
             Assert.assertFalse(psVenmoController.tokenizationAlreadyInProgress)
         }
-
 
     @Test
     fun `IF handleTokenizeResultFailure with tokenizeCallback null THEN handleTokenizeResultFailure RETURNS nothing via callback`() =
@@ -874,12 +949,12 @@ class PSVenmoControllerTest {
     fun `test GatewayResponseSerializable serialization`() {
         val response = GatewayResponseSerializable(
             orderId = "123",
-            jwtToken = "jwt123",
+            sessionToken = "jwt123",
             clientToken = "client123",
             processor = "processor123"
         )
         val json = Json.encodeToString(response)
-        val expectedJson = """{"id":"123","jwtToken":"jwt123","clientToken":"client123","processor":"processor123"}"""
+        val expectedJson = """{"id":"123","sessionToken":"jwt123","clientToken":"client123","processor":"processor123"}"""
         Assert.assertEquals(expectedJson, json)
     }
 

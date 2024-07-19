@@ -120,7 +120,7 @@ private fun transformMonthYearFromInput(
  *
  * @return month and year as text, without special characters.
  */
-private fun transformExpiryDateForOutput(dateWithSeparator: String): String {
+fun transformExpiryDateForOutput(dateWithSeparator: String): String {
     if (dateWithSeparator == "$MONTH_MM${MONTH_YEAR_SEPARATOR}$YEAR_YYYY") return ""
     val monthText = dateWithSeparator.substring(START_DATE_INDEX, HALF_DATE_INDEX)
     val month = monthText.toIntOrNull()

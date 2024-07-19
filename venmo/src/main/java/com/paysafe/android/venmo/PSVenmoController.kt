@@ -363,7 +363,7 @@ internal abstract class PSVenmoController internal constructor(
         }
 
         val orderId = paymentHandle?.id ?:""
-        val sessionToken = paymentHandle?.gatewayResponse?.jwtToken ?: ""
+        val sessionToken = paymentHandle?.gatewayResponse?.sessionToken ?: ""
         val clientToken = paymentHandle?.gatewayResponse?.clientToken ?: ""
         if (orderId.isEmpty()) {
             val paysafeException = genericApiErrorException(psApiClient.getCorrelationId())

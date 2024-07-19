@@ -13,8 +13,8 @@ data class GatewayResponseSerializable(
     @SerialName("id")
     val orderId: String? = null,
 
-    @SerialName("jwtToken")
-    val jwtToken: String? = null,
+    @SerialName("sessionToken")
+    val sessionToken: String? = null,
 
     @SerialName("clientToken")
     val clientToken: String? = null,
