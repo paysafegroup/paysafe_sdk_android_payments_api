@@ -88,11 +88,13 @@ android {
 }
 
 dependencies {
-    api(project(":tokenization")) {
+    implementation(project(":tokenization")) {
         exclude(
+            "*",
             module = "paysafe-cardinal"
         )
     }
+    implementation(project(":paysafe-core"))
 
     api(Google.playServicesTask)
     implementation(Google.payWallet)

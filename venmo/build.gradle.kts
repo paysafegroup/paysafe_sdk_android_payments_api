@@ -90,12 +90,14 @@ android {
 }
 
 dependencies {
-    api(project(":tokenization")) {
+    implementation(project(":tokenization")) {
         exclude(
-            module = "paysafe-cardinal"
+            "*",
+            "paysafe-cardinal"
         )
     }
-    api(Venmo.venmoPayments)
+    implementation(project(":paysafe-core"))
+    implementation(Venmo.venmoPayments)
 
     implementation(AndroidBase.appCompat)
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.2")

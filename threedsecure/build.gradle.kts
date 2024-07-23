@@ -84,8 +84,8 @@ android {
 }
 
 dependencies {
-    api(project(":paysafe-cardinal"))
-    api(project(":paysafe-core"))
+    implementation(project(":paysafe-cardinal"))
+    implementation(project(":paysafe-core"))
 
     implementation(AndroidBase.appCompat)
     testImplementation(Testing.jUnit)
