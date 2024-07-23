@@ -82,6 +82,7 @@ android {
 dependencies {
     api(project(":paysafe-core"))
     api(project(":threedsecure"))
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.9.20")
     
     // Tests
     testImplementation(Testing.jUnit)
