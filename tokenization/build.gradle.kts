@@ -92,7 +92,6 @@ dependencies {
     testImplementation(Testing.coroutines)
 }
 
-
 afterEvaluate {
     publishing {
         publications {

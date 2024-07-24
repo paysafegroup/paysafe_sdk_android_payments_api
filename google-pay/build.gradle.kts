@@ -99,18 +99,29 @@ configurations.all {
     )
 }
 
+val workingLocally = project.findProperty("workingLocally")?.toString()?.toBoolean() ?: false
+
 dependencies {
-    implementation(project(":tokenization")) {
-        exclude(
-            "com.github.paysafegroup.paysafe_sdk_android_payments_api",
-            "paysafe-cardinal"
-        )
-        exclude(
-            "*",
-            "paysafe-cardinal"
-        )
+
+    if (workingLocally) {
+        println("Working locally, adjusting configurations.")
+        implementation(project(":paysafe-core"))
+        implementation(project(":tokenization")) {
+            exclude(
+                "*",
+                "paysafe-cardinal"
+            )
+        }
+    } else {
+        println("Not working locally, default configurations.")
+        implementation("com.github.paysafegroup.paysafe_sdk_android_payments_api:paysafe-core:${getVersionFromProperties()}")
+        implementation("com.github.paysafegroup.paysafe_sdk_android_payments_api:tokenization:${getVersionFromProperties()}") {
+            exclude(
+                "com.github.paysafegroup.paysafe_sdk_android_payments_api",
+                "paysafe-cardinal"
+            )
+        }
     }
-    implementation(project(":paysafe-core"))
 
     api(Google.playServicesTask)
     implementation(Google.payWallet)
