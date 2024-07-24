@@ -92,6 +92,10 @@ android {
 dependencies {
     implementation(project(":tokenization")) {
         exclude(
+            "com.github.paysafegroup.paysafe_sdk_android_payments_api",
+            "paysafe-cardinal"
+        )
+        exclude(
             "*",
             "paysafe-cardinal"
         )
