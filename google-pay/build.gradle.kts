@@ -100,17 +100,8 @@ configurations.all {
 }
 
 dependencies {
-    implementation(project(":paysafe-core"))
-    implementation(project(":tokenization")) {
-        exclude(
-            "com.github.paysafegroup.paysafe_sdk_android_payments_api",
-            "paysafe-cardinal"
-        )
-        exclude(
-            "*",
-            "paysafe-cardinal"
-        )
-    }
+    api(project(":paysafe-core"))
+    api(project(":tokenization"))
 
     api(Google.playServicesTask)
     implementation(Google.payWallet)
