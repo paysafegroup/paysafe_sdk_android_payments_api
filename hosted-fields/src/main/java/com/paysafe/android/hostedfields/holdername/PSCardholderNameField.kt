@@ -19,6 +19,8 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.paysafe.android.hostedfields.PSTheme
+import com.paysafe.android.hostedfields.model.DefaultPSCardFieldEventHandler
+import com.paysafe.android.hostedfields.model.PSCardFieldEventHandler
 import com.paysafe.android.hostedfields.model.PSCardFieldInputEvent
 import com.paysafe.android.hostedfields.model.PSCardholderNameState
 import com.paysafe.android.hostedfields.util.PS_CARD_HOLDER_NAME_NO_ANIM_LABEL_TEST_TAG
@@ -36,7 +38,7 @@ import com.paysafe.android.hostedfields.util.rememberCardholderNameState
  * @param placeholderText Helper placeholder shown inside [OutlinedTextField].
  * @param animateTopLabelText If 'true' it will show the default animation for [OutlinedTextField], otherwise the label will remain in place.
  * @param isValidLiveData [LiveData] that stores if card holder name is valid.
- * @param onEvent Callback function that reacts to several [PSCardFieldInputEvent].
+ * @param eventHandler Callback function that reacts to several [PSCardFieldInputEvent].
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -48,7 +50,7 @@ fun PSCardholderNameField(
     animateTopLabelText: Boolean,
     isValidLiveData: MutableLiveData<Boolean>,
     psTheme: PSTheme,
-    onEvent: ((PSCardFieldInputEvent) -> Unit)? = null
+    eventHandler: PSCardFieldEventHandler = DefaultPSCardFieldEventHandler(isValidLiveData)
 ) {
     CompositionLocalProvider(
         LocalTextToolbar provides WrapperToAvoidPaste,
@@ -63,9 +65,8 @@ fun PSCardholderNameField(
                 labelText = labelText,
                 placeholderText = placeholderText,
                 animateTopLabelText = animateTopLabelText,
-                isValidLiveData = isValidLiveData,
                 psTheme = psTheme,
-                onEvent = onEvent
+                eventHandler = eventHandler
             )
             if (holderNameState.showLabelWithoutAnimation(animateTopLabelText, labelText)) {
                 TextLabelReplacement(

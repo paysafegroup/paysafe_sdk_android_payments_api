@@ -11,6 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.AbstractComposeView
 import com.paysafe.android.hostedfields.PSTheme
 import com.paysafe.android.hostedfields.R
+import com.paysafe.android.hostedfields.model.PSCardFieldEventHandler
 import com.paysafe.android.hostedfields.model.PSCardFieldInputEvent
 import com.paysafe.android.hostedfields.provideDefaultPSTheme
 
@@ -63,6 +64,7 @@ abstract class PSCardView @JvmOverloads constructor(
 
     abstract val placeholderString: String
 
+    open var eventHandler: PSCardFieldEventHandler? = null
     open var onEvent: ((PSCardFieldInputEvent) -> Unit)? = null
 
     var psTheme: PSTheme

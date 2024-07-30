@@ -156,7 +156,7 @@ internal class PSTokenizationController(
         return refreshToken(paymentHandle)
     }
 
-    private suspend fun continueAuthenticationFlow(
+    suspend fun continueAuthenticationFlow(
         activity: Activity,
         paysafe3DS: Paysafe3DS,
         sdkChallengePayload: String,
@@ -240,7 +240,7 @@ internal class PSTokenizationController(
         return PSResult.Success(updatedPaymentHandle)
     }
 
-    private suspend fun handleRefreshTokenStatusCompletedInitiatedAndProcessing(
+    suspend fun handleRefreshTokenStatusCompletedInitiatedAndProcessing(
         retryCount: Int,
         delayInSeconds: Int,
         paymentHandle: PaymentHandle,
@@ -276,7 +276,7 @@ internal class PSTokenizationController(
         psApiClient.logEvent(message)
     }
 
-    private fun logTokenizeOptionsEvent(content: String, invocationId: String) {
+    fun logTokenizeOptionsEvent(content: String, invocationId: String) {
         val message = "Options object passed on tokenize: $content, invocationId: $invocationId"
         psApiClient.logEvent(message)
     }

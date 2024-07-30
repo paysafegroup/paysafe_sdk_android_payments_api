@@ -19,6 +19,7 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.paysafe.android.hostedfields.PSTheme
+import com.paysafe.android.hostedfields.model.PSCardFieldEventHandler
 import com.paysafe.android.hostedfields.model.PSCardFieldInputEvent
 import com.paysafe.android.hostedfields.model.PSCvvState
 import com.paysafe.android.hostedfields.util.PS_CVV_NO_ANIM_LABEL_TEST_TAG
@@ -36,7 +37,7 @@ import com.paysafe.android.hostedfields.util.rememberCvvState
  * @param placeholderText Helper placeholder shown inside [OutlinedTextField].
  * @param animateTopLabelText If 'true' it will show the default animation for [OutlinedTextField], otherwise the label will remain in place.
  * @param isValidLiveData [LiveData] that stores if card verification value is valid.
- * @param onEvent Callback function that reacts to several [PSCardFieldInputEvent].
+ * @param eventHandler Callback function that reacts to several [PSCardFieldInputEvent].
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -50,7 +51,7 @@ fun PSCvvField(
     psTheme: PSTheme,
     isMasked: Boolean,
     isValidLiveData: MutableLiveData<Boolean>,
-    onEvent: ((PSCardFieldInputEvent) -> Unit)? = null
+    eventHandler: PSCardFieldEventHandler
 ) {
     CompositionLocalProvider(
         LocalTextToolbar provides WrapperToAvoidPaste,
@@ -68,7 +69,7 @@ fun PSCvvField(
                 isValidLiveData = isValidLiveData,
                 psTheme = psTheme,
                 isMasked = isMasked,
-                onEvent = onEvent
+                eventHandler = eventHandler // Proporcionar el eventHandler
             )
             if (cvvState.showLabelWithoutAnimation(animateTopLabelText, labelText)) {
                 TextLabelReplacement(

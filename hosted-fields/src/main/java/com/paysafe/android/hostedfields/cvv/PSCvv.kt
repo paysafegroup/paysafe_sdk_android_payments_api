@@ -26,6 +26,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.MutableLiveData
 import com.paysafe.android.hostedfields.PSTheme
 import com.paysafe.android.hostedfields.R
+import com.paysafe.android.hostedfields.model.DefaultPSCardFieldEventHandler
+import com.paysafe.android.hostedfields.model.PSCardFieldEventHandler
 import com.paysafe.android.hostedfields.model.PSCardFieldInputEvent
 import com.paysafe.android.hostedfields.model.PSCvvState
 import com.paysafe.android.hostedfields.model.PSCvvStateImpl
@@ -44,17 +46,15 @@ import com.paysafe.android.hostedfields.valid.CvvChecks
 private fun onCvvChange(
     cvvState: PSCvvState,
     isValidLiveData: MutableLiveData<Boolean>,
-    onEvent: ((PSCardFieldInputEvent) -> Unit)? = null
+    eventHandler: PSCardFieldEventHandler
 ): (String) -> Unit = {
-    val newValue = CvvChecks.inputProtection(it, cvvState.cardType, onEvent)
-    if (cvvState.value != newValue) { // is new value distinct?
+    val newValue = CvvChecks.inputProtection(it, cvvState.cardType, eventHandler::handleEvent)
+    if (cvvState.value != newValue) {
         val isValid = CvvChecks.validations(newValue, cvvState.cardType)
         val noInvalidCharacters = newValue == it
 
-        // Security check to avoid double trigger for 'onFieldValueChange'; if 'it' contains an
-        // invalid character its value would be different from the one returned by 'inputProtection'
-        if (noInvalidCharacters) onEvent?.invoke(PSCardFieldInputEvent.FIELD_VALUE_CHANGE)
-        onEvent?.invoke(if (isValid) PSCardFieldInputEvent.VALID else PSCardFieldInputEvent.INVALID)
+        if (noInvalidCharacters) eventHandler.handleEvent(PSCardFieldInputEvent.FIELD_VALUE_CHANGE)
+        eventHandler.handleEvent(if (isValid) PSCardFieldInputEvent.VALID else PSCardFieldInputEvent.INVALID)
 
         isValidLiveData.postValue(isValid)
     }
@@ -73,9 +73,9 @@ private fun onDonePressed(
 private fun onCvvFocusChange(
     focusState: FocusState,
     cvvState: PSCvvState,
-    onEvent: ((PSCardFieldInputEvent) -> Unit)? = null
+    eventHandler: PSCardFieldEventHandler
 ) {
-    if (focusState.isFocused) onEvent?.invoke(PSCardFieldInputEvent.FOCUS)
+    if (focusState.isFocused) eventHandler.handleEvent(PSCardFieldInputEvent.FOCUS)
     val isInactive = !focusState.isFocused
     cvvState.isFocused = focusState.isFocused
     if (isInactive && cvvState.alreadyShown) {
@@ -101,9 +101,9 @@ internal fun PSCvv(
     isValidLiveData: MutableLiveData<Boolean>,
     psTheme: PSTheme,
     isMasked: Boolean,
-    onEvent: ((PSCardFieldInputEvent) -> Unit)? = null,
+    eventHandler: PSCardFieldEventHandler,
 ) {
-    val onValueChange: (String) -> Unit = onCvvChange(state, isValidLiveData, onEvent)
+    val onValueChange: (String) -> Unit = onCvvChange(state, isValidLiveData, eventHandler)
     val keyboardController = LocalSoftwareKeyboardController.current
     val keyboardImeAction: ImeAction = ImeAction.Done
     val onKeyboardAction: (KeyboardActionScope.() -> Unit) =
@@ -137,7 +137,7 @@ internal fun PSCvv(
         isError = !state.isValidInUi,
         modifier = modifier
             .testTag(PS_CVV_TEST_TAG)
-            .onFocusChanged { onCvvFocusChange(it, state, onEvent) },
+            .onFocusChanged { onCvvFocusChange(it, state, eventHandler) },
         colors = textFieldColorsWithPSTheme(psTheme),
         shape = roundedCornerShapeWithPSTheme(psTheme),
         textStyle = textStyleWithPSTheme(psTheme)
@@ -201,13 +201,17 @@ internal fun PreviewPSCvv(
     cvvState: PSCvvState = PSCvvStateImpl(),
     isMasked: Boolean = false
 ) {
+    val isValidLiveData = MutableLiveData(false)
+    val eventHandler = DefaultPSCardFieldEventHandler(isValidLiveData)
+
     PSCvv(
         state = cvvState,
         labelText = "CVV Number",
         animateTopLabelText = true,
-        isValidLiveData = MutableLiveData(false),
+        isValidLiveData = isValidLiveData,
         psTheme = provideDefaultPSTheme(),
         isMasked = isMasked,
+        eventHandler = eventHandler,  // Proporcionar el eventHandler
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 16.dp)

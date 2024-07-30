@@ -10,6 +10,7 @@ import androidx.compose.foundation.text.KeyboardActionScope
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusState
@@ -25,6 +26,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.MutableLiveData
 import com.paysafe.android.hostedfields.PSTheme
 import com.paysafe.android.hostedfields.R
+import com.paysafe.android.hostedfields.model.DefaultPSCardFieldEventHandler
+import com.paysafe.android.hostedfields.model.PSCardFieldEventHandler
 import com.paysafe.android.hostedfields.model.PSCardFieldInputEvent
 import com.paysafe.android.hostedfields.model.PSCardholderNameState
 import com.paysafe.android.hostedfields.model.PSCardholderNameStateImpl
@@ -42,20 +45,19 @@ import com.paysafe.android.hostedfields.valid.CardholderNameChecks
 //region HOSTED FIELD: Cardholder Name
 private fun onHolderNameChange(
     cardholderNameState: PSCardholderNameState,
-    isValidLiveData: MutableLiveData<Boolean>,
-    onEvent: ((PSCardFieldInputEvent) -> Unit)? = null
+    eventHandler: PSCardFieldEventHandler,
 ): (String) -> Unit = {
-    val newValue = CardholderNameChecks.inputProtection(it, onEvent)
+    val newValue = CardholderNameChecks.inputProtection(it, eventHandler::handleEvent)
     if (cardholderNameState.value != newValue) { // is new value distinct?
         val isValid = CardholderNameChecks.validations(newValue)
         val noInvalidCharacters = newValue == it
 
         // Security check to avoid double trigger for 'onFieldValueChange'; if 'it' contains an
         // invalid character its value would be different from the one returned by 'inputProtection'
-        if (noInvalidCharacters) onEvent?.invoke(PSCardFieldInputEvent.FIELD_VALUE_CHANGE)
-        onEvent?.invoke(if (isValid) PSCardFieldInputEvent.VALID else PSCardFieldInputEvent.INVALID)
+        if (noInvalidCharacters) eventHandler.handleEvent(PSCardFieldInputEvent.FIELD_VALUE_CHANGE)
+        eventHandler.handleEvent(if (isValid) PSCardFieldInputEvent.VALID else PSCardFieldInputEvent.INVALID)
 
-        isValidLiveData.postValue(isValid)
+        cardholderNameState.isValidInUi = isValid
     }
     cardholderNameState.value = newValue
 }
@@ -69,12 +71,13 @@ private fun onDonePressed(
     holderNameState.isValidInUi = CardholderNameChecks.validations(holderNameState.value)
 }
 
+
 private fun onHolderNameFocusChange(
     focusState: FocusState,
     holderNameState: PSCardholderNameState,
-    onEvent: ((PSCardFieldInputEvent) -> Unit)? = null
+    eventHandler: PSCardFieldEventHandler
 ) {
-    if (focusState.isFocused) onEvent?.invoke(PSCardFieldInputEvent.FOCUS)
+    if (focusState.isFocused) eventHandler.handleEvent(PSCardFieldInputEvent.FOCUS)
     val isInactive = !focusState.isFocused
     holderNameState.isFocused = focusState.isFocused
     if (isInactive && holderNameState.alreadyShown) {
@@ -82,7 +85,6 @@ private fun onHolderNameFocusChange(
     }
     holderNameState.alreadyShown = true
 }
-
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun PSCardholderName(
@@ -91,10 +93,9 @@ internal fun PSCardholderName(
     labelText: String,
     placeholderText: String? = null,
     animateTopLabelText: Boolean,
-    isValidLiveData: MutableLiveData<Boolean>,
     psTheme: PSTheme,
-    onEvent: ((PSCardFieldInputEvent) -> Unit)? = null,
-    onValueChange: (String) -> Unit = onHolderNameChange(state, isValidLiveData, onEvent),
+    eventHandler: PSCardFieldEventHandler,
+    onValueChange: (String) -> Unit = onHolderNameChange(state, eventHandler),
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val keyboardImeAction: ImeAction = ImeAction.Done
@@ -130,7 +131,7 @@ internal fun PSCardholderName(
         isError = !state.isValidInUi,
         modifier = modifier
             .testTag(PS_CARD_HOLDER_NAME_TEST_TAG)
-            .onFocusChanged { onHolderNameFocusChange(it, state, onEvent) },
+            .onFocusChanged { onHolderNameFocusChange(it, state, eventHandler) },
         colors = textFieldColorsWithPSTheme(psTheme),
         shape = roundedCornerShapeWithPSTheme(psTheme),
         textStyle = textStyleWithPSTheme(psTheme)
@@ -168,15 +169,18 @@ internal fun ErrorPSCardholderName() {
 internal fun PreviewPSCardholderName(
     holderNameState: PSCardholderNameState = PSCardholderNameStateImpl()
 ) {
+    val isValidLiveData = remember { MutableLiveData(false) }
+    val eventHandler = DefaultPSCardFieldEventHandler(isValidLiveData)
+
     PSCardholderName(
         state = holderNameState,
-        isValidLiveData = MutableLiveData(false),
         animateTopLabelText = true,
         psTheme = provideDefaultPSTheme(),
         labelText = "Name on card",
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 16.dp)
+            .padding(horizontal = 16.dp, vertical = 16.dp),
+        eventHandler = eventHandler
     )
 }
 //endregion
