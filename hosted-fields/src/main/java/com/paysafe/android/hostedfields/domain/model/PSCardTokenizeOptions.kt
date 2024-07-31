@@ -9,6 +9,7 @@ import com.paysafe.android.tokenization.domain.model.paymentHandle.MerchantDescr
 import com.paysafe.android.tokenization.domain.model.paymentHandle.PSTokenizeOptions
 import com.paysafe.android.tokenization.domain.model.paymentHandle.RenderType
 import com.paysafe.android.tokenization.domain.model.paymentHandle.ShippingDetails
+import com.paysafe.android.tokenization.domain.model.paymentHandle.SimulatorType
 import com.paysafe.android.tokenization.domain.model.paymentHandle.TransactionType
 import com.paysafe.android.tokenization.domain.model.paymentHandle.profile.Profile
 import com.paysafe.android.tokenization.domain.model.paymentHandle.threeds.ThreeDS
@@ -44,6 +45,8 @@ data class PSCardTokenizeOptions(
 
     /** Payment handle token. */
     val paymentHandleTokenFrom: String? = null,
+
+    override val simulator: SimulatorType = SimulatorType.EXTERNAL,
 
     /** Render type to display specific payment challenges. */
     val renderType: RenderType? = null

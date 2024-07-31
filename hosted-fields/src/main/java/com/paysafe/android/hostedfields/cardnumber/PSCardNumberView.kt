@@ -18,6 +18,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.distinctUntilChanged
 import com.paysafe.android.hostedfields.R
 import com.paysafe.android.hostedfields.model.CardNumberSeparator
+import com.paysafe.android.hostedfields.model.DefaultPSCardFieldEventHandler
 import com.paysafe.android.hostedfields.model.PSCardNumberStateImpl
 import com.paysafe.android.hostedfields.valid.CardNumberChecks
 import com.paysafe.android.hostedfields.view.PSCardView
@@ -73,7 +74,7 @@ class PSCardNumberView @JvmOverloads constructor(
         ),
         psTheme = psTheme,
         separator = separator,
-        onEvent = onEvent
+        eventHandler = eventHandler ?: DefaultPSCardFieldEventHandler(_isValidLiveData)
     )
 
     private fun provideSeparator(attrs: AttributeSet?): CardNumberSeparator {

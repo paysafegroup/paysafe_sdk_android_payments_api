@@ -38,4 +38,8 @@ interface PSTokenizeOptions {
     /** Shipping details. */
     val shippingDetails: ShippingDetails?
 
+    /** Simulator details. */
+    val simulator: SimulatorType
+        get() = SimulatorType.EXTERNAL
+
 }

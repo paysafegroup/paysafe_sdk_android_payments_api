@@ -5,6 +5,7 @@ import com.paysafe.android.tokenization.domain.model.paymentHandle.MerchantDescr
 import com.paysafe.android.tokenization.domain.model.paymentHandle.PaymentHandleReturnLink
 import com.paysafe.android.tokenization.domain.model.paymentHandle.PaymentType
 import com.paysafe.android.tokenization.domain.model.paymentHandle.ShippingDetails
+import com.paysafe.android.tokenization.domain.model.paymentHandle.SimulatorType
 import com.paysafe.android.tokenization.domain.model.paymentHandle.TransactionType
 import com.paysafe.android.tokenization.domain.model.paymentHandle.profile.Profile
 import com.paysafe.android.tokenization.domain.model.paymentHandle.venmo.VenmoRequest
@@ -26,6 +27,7 @@ class PSVenmoTokenizeOptionsMapperTest {
     private val consumerIdInput = "consumerIdInput"
     private val profileId = "profileId"
     private val recipientDescriptionInput = "recipientDescriptionInput"
+    private val simulator = SimulatorType.INTERNAL
 
     @Test
     fun `IF venmo tokenization options contains data THEN toTokenizationOptions RETURNS PSTokenizeOptions with data`() {
@@ -40,6 +42,7 @@ class PSVenmoTokenizeOptionsMapperTest {
             accountIdInput,
             merchantDescriptorInput,
             shippingDetailsInput,
+            simulator,
             VenmoRequest(
                 consumerIdInput,
                 recipientDescriptionInput,

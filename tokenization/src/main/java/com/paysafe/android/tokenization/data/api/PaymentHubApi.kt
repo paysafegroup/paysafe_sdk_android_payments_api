@@ -14,11 +14,11 @@ import com.paysafe.android.tokenization.data.entity.paymentHandle.PaymentHandleR
 import com.paysafe.android.tokenization.data.entity.paymentHandle.PaymentHandleResponseSerializable
 import com.paysafe.android.tokenization.data.entity.paymentHandle.PaymentHandleStatusRequest
 import com.paysafe.android.tokenization.data.entity.paymentHandle.PaymentHandleStatusResponse
+import com.paysafe.android.tokenization.domain.model.paymentHandle.SimulatorType
 import com.paysafe.android.tokenization.domain.repository.UniversallyUniqueId
 
 private const val INVOCATION_ID_HEADER = "invocationId"
 private const val SIMULATOR_HEADER = "Simulator"
-private const val SIMULATOR_HEADER_EXTERNAL = "EXTERNAL"
 
 /**
  * Structure to organize API calls to payment hub endpoints.
@@ -37,6 +37,7 @@ internal class PaymentHubApi(
      */
     suspend fun requestPaymentHandle(
         requestBody: PaymentHandleRequestSerializable,
+        simulatorType: SimulatorType = SimulatorType.EXTERNAL,
         doBeforeRequest: (String) -> Unit
     ): PSResult<PaymentHandleResponseSerializable?> {
         val invocationId = invocationId.generate()
@@ -47,8 +48,9 @@ internal class PaymentHubApi(
                 path = "paymenthub/v1/singleusepaymenthandles",
                 headers = mapOf(
                     INVOCATION_ID_HEADER to invocationId,
-                    SIMULATOR_HEADER to SIMULATOR_HEADER_EXTERNAL
-                )
+                    SIMULATOR_HEADER to simulatorType.toString()
+                ),
+                simulator = simulatorType.toCoreModuleSimulatorType()
             ).withBody(requestBody, PaymentHandleRequestSerializable.serializer())
         )
     }

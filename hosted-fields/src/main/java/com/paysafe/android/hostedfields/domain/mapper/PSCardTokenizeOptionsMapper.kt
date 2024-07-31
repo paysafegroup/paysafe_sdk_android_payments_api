@@ -22,5 +22,6 @@ internal fun PSCardTokenizeOptions.toPaymentHandleRequest() = PaymentHandleReque
     singleUseCustomerToken = singleUseCustomerToken,
     paymentHandleTokenFrom = paymentHandleTokenFrom,
     renderType = renderType,
+    simulatorType = simulator,
     threeDS = threeDS
 )

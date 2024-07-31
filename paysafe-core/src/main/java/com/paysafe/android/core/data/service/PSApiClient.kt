@@ -63,6 +63,7 @@ private const val SDK_VERSION_HEADER = "X-App-Version"
 private const val SDK_SOURCE_HEADER = "X-TransactionSource"
 private const val SDK_SOURCE_ANDROID = "AndroidSDKV2"
 private const val CALL_TIMEOUT = 15L
+const val SIMULATOR_HEADER = "Simulator"
 
 /**
  * Paysafe api client.
@@ -249,7 +250,8 @@ class PSApiClient internal constructor(
     private fun prepareHeaders(apiRequest: PSApiRequest) = apiRequest.headers + mapOf(
         CORRELATION_ID_HEADER to correlationId,
         SDK_VERSION_HEADER to BuildConfig.APP_VERSION,
-        SDK_SOURCE_HEADER to (customSDKSource ?: SDK_SOURCE_ANDROID)
+        SDK_SOURCE_HEADER to (customSDKSource ?: SDK_SOURCE_ANDROID),
+        SIMULATOR_HEADER to apiRequest.simulator.toString()
     )
 
     private fun createUrl(httpUrl: HttpUrl, apiRequest: PSApiRequest) =

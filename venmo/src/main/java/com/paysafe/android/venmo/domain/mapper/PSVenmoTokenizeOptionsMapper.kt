@@ -23,5 +23,6 @@ internal fun PSVenmoTokenizeOptions.toPaymentHandleRequest(
     shippingDetails = shippingDetails,
     paymentType = PaymentType.VENMO,
     venmoRequest = venmoRequest,
+    simulatorType = simulator,
     returnLinks = returnLinks,
 )

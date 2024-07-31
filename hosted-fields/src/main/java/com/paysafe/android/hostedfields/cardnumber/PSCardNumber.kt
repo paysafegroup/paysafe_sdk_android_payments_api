@@ -27,6 +27,8 @@ import androidx.lifecycle.MutableLiveData
 import com.paysafe.android.hostedfields.PSTheme
 import com.paysafe.android.hostedfields.R
 import com.paysafe.android.hostedfields.model.CardNumberSeparator
+import com.paysafe.android.hostedfields.model.DefaultPSCardFieldEventHandler
+import com.paysafe.android.hostedfields.model.PSCardFieldEventHandler
 import com.paysafe.android.hostedfields.model.PSCardFieldInputEvent
 import com.paysafe.android.hostedfields.model.PSCardNumberState
 import com.paysafe.android.hostedfields.model.PSCardNumberStateImpl
@@ -58,7 +60,7 @@ private fun CardNumberBrandIcon(
     }
 }
 
-private fun getCreditCardIcon(creditCardType: PSCreditCardType) = when (creditCardType) {
+fun getCreditCardIcon(creditCardType: PSCreditCardType) = when (creditCardType) {
     PSCreditCardType.VISA -> R.drawable.ic_cc_visa
     PSCreditCardType.MASTERCARD -> R.drawable.ic_cc_mastercard
     PSCreditCardType.AMEX -> R.drawable.ic_cc_amex
@@ -70,18 +72,18 @@ private fun onCardNumberChange(
     cardNumberState: PSCardNumberState,
     cardTypeLiveData: MutableLiveData<PSCreditCardType>,
     isValidLiveData: MutableLiveData<Boolean>,
-    onEvent: ((PSCardFieldInputEvent) -> Unit)? = null
-): (String) -> Unit = {
-    val inputData = CardNumberChecks.inputProtection(it, cardNumberState.type, onEvent)
+    eventHandler: PSCardFieldEventHandler
+): (String) -> Unit = { input ->
+    val inputData = CardNumberChecks.inputProtection(input, cardNumberState.type, eventHandler::handleEvent)
 
     if (cardNumberState.value != inputData.first) { // is new value distinct?
         val isValid = CardNumberChecks.validations(inputData.first)
-        val noInvalidCharacters = inputData.first == it
+        val noInvalidCharacters = inputData.first == input
 
-        // Security check to avoid double trigger for 'onFieldValueChange'; if 'it' contains an
+        // Security check to avoid double trigger for 'onFieldValueChange'; if 'input' contains an
         // invalid character its value would be different from the one returned by 'inputProtection'
-        if (noInvalidCharacters) onEvent?.invoke(PSCardFieldInputEvent.FIELD_VALUE_CHANGE)
-        onEvent?.invoke(if (isValid) PSCardFieldInputEvent.VALID else PSCardFieldInputEvent.INVALID)
+        if (noInvalidCharacters) eventHandler.handleEvent(PSCardFieldInputEvent.FIELD_VALUE_CHANGE)
+        eventHandler.handleEvent(if (isValid) PSCardFieldInputEvent.VALID else PSCardFieldInputEvent.INVALID)
 
         isValidLiveData.postValue(isValid)
     }
@@ -104,9 +106,9 @@ private fun onDonePressed(
 private fun onCardNumberFocusChange(
     focusState: FocusState,
     cardNumberState: PSCardNumberState,
-    onEvent: ((PSCardFieldInputEvent) -> Unit)? = null
+    eventHandler: PSCardFieldEventHandler
 ) {
-    if (focusState.isFocused) onEvent?.invoke(PSCardFieldInputEvent.FOCUS)
+    if (focusState.isFocused) eventHandler.handleEvent(PSCardFieldInputEvent.FOCUS)
     val isInactive = !focusState.isFocused
     cardNumberState.isFocused = focusState.isFocused
     if (isInactive && cardNumberState.alreadyShown) {
@@ -126,13 +128,13 @@ internal fun PSCardNumber(
     cardNumberLiveData: PSCardNumberLiveData,
     psTheme: PSTheme,
     separator: CardNumberSeparator,
-    onEvent: ((PSCardFieldInputEvent) -> Unit)? = null,
+    eventHandler: PSCardFieldEventHandler,
 ) {
     val onValueChange: (String) -> Unit = onCardNumberChange(
         state,
         cardNumberLiveData.cardTypeLiveData,
         cardNumberLiveData.isValidLiveData,
-        onEvent
+        eventHandler::handleEvent
     )
     val keyboardController = LocalSoftwareKeyboardController.current
     val keyboardImeAction: ImeAction = ImeAction.Done
@@ -170,7 +172,7 @@ internal fun PSCardNumber(
         isError = !state.isValidInUi,
         modifier = cardNumberModifier.modifier
             .testTag(PS_CARD_NUMBER_TEST_TAG)
-            .onFocusChanged { onCardNumberFocusChange(it, state, onEvent) },
+            .onFocusChanged { onCardNumberFocusChange(it, state, eventHandler) },
         colors = textFieldColorsWithPSTheme(psTheme),
         shape = roundedCornerShapeWithPSTheme(psTheme),
         textStyle = textStyleWithPSTheme(psTheme)
@@ -247,6 +249,7 @@ internal fun PreviewPSCardNumber(
     cardNumber: PSCardNumberState = PSCardNumberStateImpl(),
     separator: CardNumberSeparator = CardNumberSeparator.WHITESPACE
 ) {
+    val eventHandler = DefaultPSCardFieldEventHandler(MutableLiveData(false))
     PSCardNumber(
         state = cardNumber,
         cardNumberModifier = PSCardNumberModifier(
@@ -262,7 +265,8 @@ internal fun PreviewPSCardNumber(
             isValidLiveData = MutableLiveData(false)
         ),
         psTheme = provideDefaultPSTheme(),
-        separator = separator
+        separator = separator,
+        eventHandler = eventHandler
     )
 }
 //endregion

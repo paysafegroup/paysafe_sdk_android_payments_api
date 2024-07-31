@@ -53,6 +53,9 @@ data class PaymentHandleRequest(
     /** Venmo additinal data */
     val venmoRequest: VenmoRequest ? = null,
 
+    /** Venmo additinal data */
+    val simulatorType: SimulatorType = SimulatorType.EXTERNAL,
+
     /** List of return links information for payment. */
     val returnLinks: List<PaymentHandleReturnLink>? = null
 

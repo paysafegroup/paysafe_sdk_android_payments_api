@@ -23,5 +23,6 @@ internal fun PSGooglePayTokenizeOptions.toPaymentHandleRequest(
     shippingDetails = shippingDetails,
     paymentType = PaymentType.CARD,
     googlePayPaymentToken = token,
+    simulatorType = simulator,
     threeDS = threeDS
 )

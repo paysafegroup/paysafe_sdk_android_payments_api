@@ -19,6 +19,7 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import com.paysafe.android.hostedfields.PSTheme
 import com.paysafe.android.hostedfields.cvv.PSCvvView
 import com.paysafe.android.hostedfields.model.CardNumberSeparator
+import com.paysafe.android.hostedfields.model.PSCardFieldEventHandler
 import com.paysafe.android.hostedfields.model.PSCardFieldInputEvent
 import com.paysafe.android.hostedfields.model.PSCardNumberState
 import com.paysafe.android.hostedfields.util.PS_CARD_NUMBER_NO_ANIM_LABEL_TEST_TAG
@@ -49,7 +50,7 @@ fun PSCardNumberField(
     cardNumberLiveData: PSCardNumberLiveData,
     psTheme: PSTheme,
     separator: CardNumberSeparator,
-    onEvent: ((PSCardFieldInputEvent) -> Unit)? = null
+    eventHandler: PSCardFieldEventHandler
 ) {
     CompositionLocalProvider(
         LocalTextToolbar provides WrapperToAvoidPaste,
@@ -67,7 +68,7 @@ fun PSCardNumberField(
                 cardNumberLiveData = cardNumberLiveData,
                 psTheme = psTheme,
                 separator = separator,
-                onEvent = onEvent
+                eventHandler = eventHandler
             )
             if (cardNumberState.showLabelWithoutAnimation(animateTopLabelText, labelText)) {
                 TextLabelReplacement(

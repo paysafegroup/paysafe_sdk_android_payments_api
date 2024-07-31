@@ -26,6 +26,7 @@ import com.paysafe.android.tokenization.domain.model.paymentHandle.BillingDetail
 import com.paysafe.android.tokenization.domain.model.paymentHandle.MerchantDescriptor
 import com.paysafe.android.tokenization.domain.model.paymentHandle.ShippingDetails
 import com.paysafe.android.tokenization.domain.model.paymentHandle.ShippingMethod
+import com.paysafe.android.tokenization.domain.model.paymentHandle.SimulatorType
 import com.paysafe.android.tokenization.domain.model.paymentHandle.TransactionType
 import com.paysafe.android.tokenization.domain.model.paymentHandle.profile.DateOfBirth
 import com.paysafe.android.tokenization.domain.model.paymentHandle.profile.Gender
@@ -268,6 +269,7 @@ class FragmentSelectPaymentMethod : Fragment() {
             accountId = Consts.CARDS_ACCOUNT_ID,
             merchantDescriptor = provideMerchantDescriptor(),
             shippingDetails = provideShippingDetails(),
+            simulator = SimulatorType.INTERNAL,
             threeDS = ThreeDS(
                 merchantUrl = "https://api.qa.paysafe.com/checkout/v2/index.html#/desktop",
                 process = true

@@ -8,6 +8,7 @@ import com.paysafe.android.tokenization.domain.model.paymentHandle.BillingDetail
 import com.paysafe.android.tokenization.domain.model.paymentHandle.MerchantDescriptor
 import com.paysafe.android.tokenization.domain.model.paymentHandle.PSTokenizeOptions
 import com.paysafe.android.tokenization.domain.model.paymentHandle.ShippingDetails
+import com.paysafe.android.tokenization.domain.model.paymentHandle.SimulatorType
 import com.paysafe.android.tokenization.domain.model.paymentHandle.TransactionType
 import com.paysafe.android.tokenization.domain.model.paymentHandle.profile.Profile
 import com.paysafe.android.tokenization.domain.model.paymentHandle.threeds.ThreeDS
@@ -34,6 +35,8 @@ data class PSGooglePayTokenizeOptions(
     override val merchantDescriptor: MerchantDescriptor? = null,
 
     override val shippingDetails: ShippingDetails? = null,
+
+    override val simulator: SimulatorType = SimulatorType.EXTERNAL,
 
     /** ThreeDS. */
     val threeDS: ThreeDS? = null

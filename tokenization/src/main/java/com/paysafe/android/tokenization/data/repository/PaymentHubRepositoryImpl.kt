@@ -41,7 +41,7 @@ internal class PaymentHubRepositoryImpl(
         doBeforeRequest: (String, String) -> Unit
     ): PSResult<PaymentHandle> {
         val requestSerializable = paymentHandleRequest.toData(cardRequest)
-        val response = paymentHubApi.requestPaymentHandle(requestSerializable) { invocationId ->
+        val response = paymentHubApi.requestPaymentHandle(requestSerializable, simulatorType = paymentHandleRequest.simulatorType) { invocationId ->
             doBeforeRequest(
                 Json.encodeToString(requestSerializable), invocationId
             )

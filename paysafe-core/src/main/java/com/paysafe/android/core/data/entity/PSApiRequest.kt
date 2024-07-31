@@ -4,6 +4,8 @@
 
 package com.paysafe.android.core.data.entity
 
+import com.paysafe.android.core.data.service.SimulatorType
+
 /**
  * Model for generic data required for each Paysafe request.
  */
@@ -22,6 +24,9 @@ data class PSApiRequest(
 
     /** Body for api call. */
     var body: String? = null,
+
+    /** SimulatorType for api call. */
+    var simulator: SimulatorType = SimulatorType.EXTERNAL
 )
 
 /** Http request types supported, GET and POST. */
