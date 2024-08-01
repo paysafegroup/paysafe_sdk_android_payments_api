@@ -89,18 +89,6 @@ android {
     }
 }
 
-// Global exclusion
-configurations.all {
-    exclude(
-        "com.github.paysafegroup.paysafe_sdk_android_payments_api",
-        "paysafe-cardinal"
-    )
-    exclude(
-        "*",
-        "paysafe-cardinal"
-    )
-}
-
 dependencies {
     api(project(":paysafe-core"))
     api(project(":tokenization"))
