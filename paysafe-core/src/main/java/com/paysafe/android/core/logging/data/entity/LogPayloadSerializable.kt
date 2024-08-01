@@ -39,9 +39,9 @@ sealed class LogPayloadSerializable {
 
 @OptIn(ExperimentalSerializationApi::class)
 @Serializer(forClass = LogPayloadSerializable::class)
-private object LogPayloadSerializableSerializer :
+object LogPayloadSerializableSerializer :
     JsonContentPolymorphicSerializer<LogPayloadSerializable>(LogPayloadSerializable::class) {
-    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<LogPayloadSerializable> {
+    public override fun selectDeserializer(element: JsonElement): DeserializationStrategy<LogPayloadSerializable> {
         // get type based on the values provided to SerialName for data class
         val type = element.jsonObject["type"]?.jsonPrimitive?.content
         return when (type) {

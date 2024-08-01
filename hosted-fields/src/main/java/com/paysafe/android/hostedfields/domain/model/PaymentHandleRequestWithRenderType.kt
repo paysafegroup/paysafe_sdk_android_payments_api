@@ -7,16 +7,20 @@ package com.paysafe.android.hostedfields.domain.model
 import com.paysafe.android.tokenization.domain.model.paymentHandle.BillingDetails
 import com.paysafe.android.tokenization.domain.model.paymentHandle.MerchantDescriptor
 import com.paysafe.android.tokenization.domain.model.paymentHandle.PSTokenizeOptions
+import com.paysafe.android.tokenization.domain.model.paymentHandle.PaymentHandleReturnLink
+import com.paysafe.android.tokenization.domain.model.paymentHandle.PaymentType
 import com.paysafe.android.tokenization.domain.model.paymentHandle.ShippingDetails
 import com.paysafe.android.tokenization.domain.model.paymentHandle.SimulatorType
 import com.paysafe.android.tokenization.domain.model.paymentHandle.TransactionType
+import com.paysafe.android.tokenization.domain.model.paymentHandle.googlepay.GooglePayPaymentToken
 import com.paysafe.android.tokenization.domain.model.paymentHandle.profile.Profile
 import com.paysafe.android.tokenization.domain.model.paymentHandle.threeds.ThreeDS
+import com.paysafe.android.tokenization.domain.model.paymentHandle.venmo.VenmoRequest
 
 /**
- * Tokenization parameters needed for a Card payment.
+ * Wrapper with all the parameters available for a tokenize payment.
  */
-data class PSCardTokenizeOptions(
+data class PaymentHandleRequestWithRenderType(
 
     override val amount: Int,
 
@@ -36,8 +40,8 @@ data class PSCardTokenizeOptions(
 
     override val shippingDetails: ShippingDetails? = null,
 
-    /** ThreeDS. */
-    val threeDS: ThreeDS? = null,
+    /** Payment type for handle. */
+    val paymentType: PaymentType? = null,
 
     /** Single use customer token. */
     val singleUseCustomerToken: String? = null,
@@ -45,9 +49,23 @@ data class PSCardTokenizeOptions(
     /** Payment handle token. */
     val paymentHandleTokenFrom: String? = null,
 
-    override val simulator: SimulatorType = SimulatorType.EXTERNAL,
+    /** ThreeDS. */
+    val threeDS: ThreeDS? = null,
 
-    /** Render type to display specific payment challenges. */
-    val renderType: RenderType? = null
+    val renderType: RenderType? = null,
+
+    /** Google Pay additional data. */
+    val googlePayPaymentToken: GooglePayPaymentToken? = null,
+
+    val simulatorType: SimulatorType = SimulatorType.EXTERNAL,
+
+    /** Venmo additinal data */
+    val venmoRequest: VenmoRequest ? = null,
+
+    /** List of return links information for payment. */
+    val returnLinks: List<PaymentHandleReturnLink>? = null
 
 ) : PSTokenizeOptions
+
+
+

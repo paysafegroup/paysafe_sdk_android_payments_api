@@ -1,6 +1,7 @@
 package com.paysafe.android.hostedfields.model
 
 import androidx.lifecycle.MutableLiveData
+import com.paysafe.android.hostedfields.domain.model.PSCardFieldInputEvent
 
 fun interface PSCardFieldEventHandler {
     fun handleEvent(event: PSCardFieldInputEvent)

@@ -2,7 +2,7 @@
  * Copyright (c) 2024 Paysafe Group
  */
 
-package com.paysafe.android.tokenization.data.entity.cardadapter
+package com.paysafe.android.hostedfields.data.entity.cardAdapter
 
 
 import kotlinx.serialization.SerialName

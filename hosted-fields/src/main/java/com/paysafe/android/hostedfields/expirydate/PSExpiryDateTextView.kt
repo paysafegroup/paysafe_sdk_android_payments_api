@@ -14,7 +14,7 @@ import androidx.compose.ui.platform.AbstractComposeView
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.paysafe.android.hostedfields.R
-import com.paysafe.android.hostedfields.model.PSExpiryDateStateImpl
+import com.paysafe.android.hostedfields.domain.model.PSExpiryDateStateImpl
 import com.paysafe.android.hostedfields.valid.ExpiryDateChecks
 import com.paysafe.android.hostedfields.valid.ExpiryDateChecks.Companion.HALF_DATE_INDEX
 import com.paysafe.android.hostedfields.valid.ExpiryDateChecks.Companion.TWO_DIGIT_THOUSAND_BASE

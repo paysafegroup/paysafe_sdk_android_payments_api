@@ -4,7 +4,6 @@
 
 package com.paysafe.android.tokenization
 
-import android.app.Activity
 import com.paysafe.android.core.data.entity.PSResult
 import com.paysafe.android.core.data.service.PSApiClient
 import com.paysafe.android.tokenization.domain.model.paymentHandle.CardRequest
@@ -19,22 +18,19 @@ class PSTokenization(
         fun createPSTokenizationController(
             psApiClient: PSApiClient
         ): PSTokenizationController = PSTokenizationController(psApiClient)
-
     }
 
     private val controller = createPSTokenizationController(psApiClient)
 
-    @JvmSynthetic
     override suspend fun tokenize(
-        paymentHandleRequest: PaymentHandleRequest
-    ): PSResult<PaymentHandle> = controller.tokenize(paymentHandleRequest)
-
-    @JvmSynthetic
-    override suspend fun tokenize(
-        activity: Activity,
         paymentHandleRequest: PaymentHandleRequest,
-        cardRequest: CardRequest
-    ): PSResult<PaymentHandle> = controller.tokenize(activity, paymentHandleRequest, cardRequest)
+        cardRequest: CardRequest?
+    ): PSResult<PaymentHandle> {
+       return  controller.tokenize(
+            paymentHandleRequest = paymentHandleRequest,
+            cardRequest = cardRequest
+        )
+    }
 
     @JvmSynthetic
     override suspend fun refreshToken(

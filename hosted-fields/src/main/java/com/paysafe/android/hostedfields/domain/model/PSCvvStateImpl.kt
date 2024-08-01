@@ -2,7 +2,7 @@
  * Copyright (c) 2024 Paysafe Group
  */
 
-package com.paysafe.android.hostedfields.model
+package com.paysafe.android.hostedfields.domain.model
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

@@ -19,10 +19,10 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.paysafe.android.hostedfields.PSTheme
+import com.paysafe.android.hostedfields.domain.model.PSCardholderNameState
 import com.paysafe.android.hostedfields.model.DefaultPSCardFieldEventHandler
 import com.paysafe.android.hostedfields.model.PSCardFieldEventHandler
-import com.paysafe.android.hostedfields.model.PSCardFieldInputEvent
-import com.paysafe.android.hostedfields.model.PSCardholderNameState
+
 import com.paysafe.android.hostedfields.util.PS_CARD_HOLDER_NAME_NO_ANIM_LABEL_TEST_TAG
 import com.paysafe.android.hostedfields.util.TextLabelReplacement
 import com.paysafe.android.hostedfields.util.WrapperToAvoidPaste

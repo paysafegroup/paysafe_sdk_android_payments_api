@@ -7,7 +7,7 @@ package com.paysafe.android.hostedfields.cardnumber
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.OffsetMapping
-import com.paysafe.android.hostedfields.model.CardNumberSeparator
+import com.paysafe.android.hostedfields.domain.model.CardNumberSeparator
 import com.paysafe.android.hostedfields.valid.CardNumberChecks.Companion.MAX_CHARS_FOR_AMEX_CARD
 import com.paysafe.android.hostedfields.valid.CardNumberChecks.Companion.MAX_CHARS_FOR_CARD_NUMBERS
 

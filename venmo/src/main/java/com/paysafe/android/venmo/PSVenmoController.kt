@@ -49,15 +49,10 @@ internal abstract class PSVenmoController internal constructor(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
 
-    internal val lifecycleScopeWeakRef: WeakReference<LifecycleCoroutineScope>
+    internal val lifecycleScopeWeakRef: WeakReference<LifecycleCoroutineScope> = WeakReference(lifecycleScope)
     internal var tokenizeCallback: PSVenmoTokenizeCallback? = null
     internal var paymentHandle: PaymentHandle? = null
     internal var tokenizationAlreadyInProgress = false
-
-
-    init {
-        lifecycleScopeWeakRef = WeakReference(lifecycleScope)
-    }
 
     companion object {
         suspend fun initialize(
@@ -294,7 +289,7 @@ internal abstract class PSVenmoController internal constructor(
         tokenizeCallback = callback
         val returnLinks = provideReturnLinks()
         val result = tokenizationService.tokenize(
-            venmoTokenizeOptions.toPaymentHandleRequest(returnLinks)
+            paymentHandleRequest = venmoTokenizeOptions.toPaymentHandleRequest(returnLinks)
         )
         psApiClient.customSDKSource = null
         val lifecycleScope = lifecycleScopeWeakRef.get()

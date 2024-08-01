@@ -25,7 +25,7 @@ import com.paysafe.android.hostedfields.PSCardFormController
 import com.paysafe.android.hostedfields.domain.model.PSCardTokenizeOptions
 import com.paysafe.android.tokenization.domain.model.paymentHandle.BillingDetails
 import com.paysafe.android.tokenization.domain.model.paymentHandle.MerchantDescriptor
-import com.paysafe.android.tokenization.domain.model.paymentHandle.RenderType
+import com.paysafe.android.hostedfields.domain.model.RenderType
 import com.paysafe.android.tokenization.domain.model.paymentHandle.ShippingDetails
 import com.paysafe.android.tokenization.domain.model.paymentHandle.ShippingMethod
 import com.paysafe.android.tokenization.domain.model.paymentHandle.TransactionType

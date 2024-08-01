@@ -11,8 +11,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.AbstractComposeView
 import com.paysafe.android.hostedfields.PSTheme
 import com.paysafe.android.hostedfields.R
+import com.paysafe.android.hostedfields.domain.model.PSCardFieldInputEvent
 import com.paysafe.android.hostedfields.model.PSCardFieldEventHandler
-import com.paysafe.android.hostedfields.model.PSCardFieldInputEvent
 import com.paysafe.android.hostedfields.provideDefaultPSTheme
 
 private const val UNDEFINED_COLOUR: Int = -1_234_567_890

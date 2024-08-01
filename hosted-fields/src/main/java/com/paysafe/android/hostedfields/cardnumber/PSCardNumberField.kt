@@ -18,10 +18,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import com.paysafe.android.hostedfields.PSTheme
 import com.paysafe.android.hostedfields.cvv.PSCvvView
-import com.paysafe.android.hostedfields.model.CardNumberSeparator
+import com.paysafe.android.hostedfields.domain.model.CardNumberSeparator
+import com.paysafe.android.hostedfields.domain.model.PSCardNumberState
+
 import com.paysafe.android.hostedfields.model.PSCardFieldEventHandler
-import com.paysafe.android.hostedfields.model.PSCardFieldInputEvent
-import com.paysafe.android.hostedfields.model.PSCardNumberState
+
 import com.paysafe.android.hostedfields.util.PS_CARD_NUMBER_NO_ANIM_LABEL_TEST_TAG
 import com.paysafe.android.hostedfields.util.TextLabelReplacement
 import com.paysafe.android.hostedfields.util.WrapperToAvoidPaste
@@ -37,7 +38,6 @@ import com.paysafe.android.hostedfields.util.rememberCardNumberState
  * @param placeholderText Helper placeholder shown inside [OutlinedTextField].
  * @param animateTopLabelText If 'true' it will show the default animation for [OutlinedTextField], otherwise the label will remain in place.
  * @param cardNumberLiveData Live data to store credit card type, bundled with [PSCvvView] and if card number is valid.
- * @param onEvent Callback function that reacts to several [PSCardFieldInputEvent].
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable

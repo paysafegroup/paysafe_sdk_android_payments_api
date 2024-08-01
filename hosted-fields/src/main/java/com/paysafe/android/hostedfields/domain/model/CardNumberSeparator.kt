@@ -2,7 +2,7 @@
  * Copyright (c) 2024 Paysafe Group
  */
 
-package com.paysafe.android.hostedfields.model
+package com.paysafe.android.hostedfields.domain.model
 
 enum class CardNumberSeparator(val id: Int) {
     WHITESPACE(0),

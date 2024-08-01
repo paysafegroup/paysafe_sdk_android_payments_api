@@ -41,9 +41,6 @@ data class PaymentHandleRequest(
     /** Payment handle token. */
     val paymentHandleTokenFrom: String? = null,
 
-    /** Render type to display specific payment challenges. */
-    val renderType: RenderType? = null,
-
     /** ThreeDS. */
     val threeDS: ThreeDS? = null,
 

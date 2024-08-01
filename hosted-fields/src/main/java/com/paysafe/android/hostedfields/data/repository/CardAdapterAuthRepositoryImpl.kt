@@ -2,19 +2,21 @@
  * Copyright (c) 2024 Paysafe Group
  */
 
-package com.paysafe.android.tokenization.data.repository
+package com.paysafe.android.hostedfields.data.repository
 
 import com.paysafe.android.core.data.entity.PSResult
 import com.paysafe.android.core.data.service.PSApiClient
-import com.paysafe.android.tokenization.data.api.CardAdapterAuthApi
-import com.paysafe.android.tokenization.data.mapper.toData
-import com.paysafe.android.tokenization.data.mapper.toDomain
-import com.paysafe.android.tokenization.domain.model.cardadapter.AuthenticationRequest
-import com.paysafe.android.tokenization.domain.model.cardadapter.AuthenticationResponse
-import com.paysafe.android.tokenization.domain.model.cardadapter.FinalizeAuthenticationResponse
-import com.paysafe.android.tokenization.domain.repository.CardAdapterAuthRepository
-import com.paysafe.android.tokenization.exception.errorName
-import com.paysafe.android.tokenization.exception.genericApiErrorException
+import com.paysafe.android.hostedfields.data.api.CardAdapterAuthApi
+import com.paysafe.android.hostedfields.data.mapper.toData
+import com.paysafe.android.hostedfields.data.mapper.toDomain
+import com.paysafe.android.hostedfields.domain.model.cardadapter.AuthenticationRequest
+import com.paysafe.android.hostedfields.domain.model.cardadapter.AuthenticationResponse
+import com.paysafe.android.hostedfields.domain.model.cardadapter.FinalizeAuthenticationResponse
+import com.paysafe.android.hostedfields.domain.repository.CardAdapterAuthRepository
+import com.paysafe.android.hostedfields.exception.errorName
+import com.paysafe.android.hostedfields.exception.genericApiErrorException
+
+
 
 internal class CardAdapterAuthRepositoryImpl(
     private val cardAdapterAuthApi: CardAdapterAuthApi,

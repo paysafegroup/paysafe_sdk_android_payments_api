@@ -33,11 +33,11 @@ import androidx.compose.ui.unit.sp
 import com.paysafe.android.hostedfields.PSTheme
 import com.paysafe.android.hostedfields.cardnumber.CardNumberSpaces
 import com.paysafe.android.hostedfields.expirydate.ExpiryDateSlash
-import com.paysafe.android.hostedfields.model.CardNumberSeparator
-import com.paysafe.android.hostedfields.model.PSCardNumberStateImpl
-import com.paysafe.android.hostedfields.model.PSCardholderNameStateImpl
-import com.paysafe.android.hostedfields.model.PSCvvStateImpl
-import com.paysafe.android.hostedfields.model.PSExpiryDateStateImpl
+import com.paysafe.android.hostedfields.domain.model.CardNumberSeparator
+import com.paysafe.android.hostedfields.domain.model.PSCardNumberStateImpl
+import com.paysafe.android.hostedfields.domain.model.PSCardholderNameStateImpl
+import com.paysafe.android.hostedfields.domain.model.PSCvvStateImpl
+import com.paysafe.android.hostedfields.domain.model.PSExpiryDateStateImpl
 import com.paysafe.android.paymentmethods.domain.model.PSCreditCardType
 
 //region Constants

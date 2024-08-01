@@ -95,6 +95,8 @@ android {
 
 dependencies {
     api(project(":tokenization"))
+    implementation(project(":threedsecure"))
+    implementation ("org.jetbrains.kotlin:kotlin-reflect:1.9.0")
 
     val platformComposeBom = platform(Compose.bom)
 
@@ -105,6 +107,7 @@ dependencies {
     implementation(Jetpack.testMonitor)
     implementation(Jetpack.testJUnit)
     implementation(Jetpack.lifecycleLiveData)
+
 
     // Debugging
     debugImplementation(Compose.uiTooling)

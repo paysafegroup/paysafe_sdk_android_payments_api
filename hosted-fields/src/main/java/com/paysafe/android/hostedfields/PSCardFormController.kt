@@ -19,21 +19,32 @@ import com.paysafe.android.core.data.entity.resultAsCallback
 import com.paysafe.android.core.data.entity.value
 import com.paysafe.android.core.data.service.PSApiClient
 import com.paysafe.android.core.domain.exception.PaysafeException
+import com.paysafe.android.core.util.LocalLog
 import com.paysafe.android.core.util.isCurrencyCodeValid
 import com.paysafe.android.core.util.isNotAllDigits
 import com.paysafe.android.core.util.isNotNullOrEmpty
 import com.paysafe.android.core.util.launchCatching
 import com.paysafe.android.hostedfields.cardnumber.PSCardNumberView
 import com.paysafe.android.hostedfields.cvv.PSCvvView
+import com.paysafe.android.hostedfields.data.api.CardAdapterAuthApi
+import com.paysafe.android.hostedfields.data.repository.CardAdapterAuthRepositoryImpl
 import com.paysafe.android.hostedfields.domain.mapper.toPaymentHandleRequest
+import com.paysafe.android.hostedfields.domain.mapper.toPaymentHandleRequestWithRenderType
 import com.paysafe.android.hostedfields.domain.model.PSCardTokenizeOptions
+import com.paysafe.android.hostedfields.domain.model.PaymentHandleRequestWithRenderType
+import com.paysafe.android.hostedfields.domain.model.cardadapter.AuthenticationRequest
+import com.paysafe.android.hostedfields.domain.model.cardadapter.FinalizeAuthenticationResponse
+import com.paysafe.android.hostedfields.domain.model.toThreeDSRenderType
+import com.paysafe.android.hostedfields.domain.repository.CardAdapterAuthRepository
 import com.paysafe.android.hostedfields.exception.currencyCodeInvalidIsoException
 import com.paysafe.android.hostedfields.exception.errorName
+import com.paysafe.android.hostedfields.exception.genericApiErrorException
 import com.paysafe.android.hostedfields.exception.improperlyCreatedMerchantAccountConfigException
 import com.paysafe.android.hostedfields.exception.invalidAccountIdForPaymentMethodException
 import com.paysafe.android.hostedfields.exception.invalidAccountIdParameterException
 import com.paysafe.android.hostedfields.exception.noAvailablePaymentMethodsException
 import com.paysafe.android.hostedfields.exception.noViewsInCardFormControllerException
+import com.paysafe.android.hostedfields.exception.paymentHandleCreationFailedException
 import com.paysafe.android.hostedfields.exception.sdkNotInitializedException
 import com.paysafe.android.hostedfields.exception.specifiedHostedFieldWithInvalidValueException
 import com.paysafe.android.hostedfields.exception.tokenizationAlreadyInProgressException
@@ -46,10 +57,14 @@ import com.paysafe.android.paymentmethods.PaymentMethodsServiceImpl
 import com.paysafe.android.paymentmethods.domain.model.PSCreditCardType
 import com.paysafe.android.paymentmethods.domain.model.PaymentMethod
 import com.paysafe.android.paymentmethods.domain.model.PaymentMethodType
+import com.paysafe.android.threedsecure.Paysafe3DS
 import com.paysafe.android.tokenization.PSTokenization
 import com.paysafe.android.tokenization.PSTokenizationService
+import com.paysafe.android.tokenization.domain.model.cardadapter.AuthenticationStatus
 import com.paysafe.android.tokenization.domain.model.paymentHandle.CardExpiryRequest
 import com.paysafe.android.tokenization.domain.model.paymentHandle.CardRequest
+import com.paysafe.android.tokenization.domain.model.paymentHandle.PaymentHandle
+import com.paysafe.android.tokenization.domain.model.paymentHandle.PaymentHandleRequest
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -79,10 +94,14 @@ class PSCardFormController internal constructor(
     internal var cardCvvView: PSCvvView? = null,
     private val tokenizationService: PSTokenizationService,
     private val mainDispatcher: CoroutineDispatcher,
-    private val ioDispatcher: CoroutineDispatcher
+    private val ioDispatcher: CoroutineDispatcher,
+    private val psApiClient: PSApiClient
 ) {
 
     var onCardBrandRecognition: ((PSCreditCardType) -> Unit)? = null
+
+    private val cardAdapterAuthRepository: CardAdapterAuthRepository =
+        CardAdapterAuthRepositoryImpl(CardAdapterAuthApi(psApiClient), psApiClient)
 
     /** Read-only [LiveData] to enable/disable a submit action for hosted fields. */
     val isSubmitEnabledLiveData: LiveData<Boolean>
@@ -182,7 +201,8 @@ class PSCardFormController internal constructor(
                             cardCvvView = cardCvvView,
                             tokenizationService = PSTokenization(psApiClient),
                             mainDispatcher = mainDispatcher,
-                            ioDispatcher = ioDispatcher
+                            ioDispatcher = ioDispatcher,
+                            psApiClient = psApiClient
                         )
                         callback.onSuccess(cardFormController)
                     }
@@ -278,6 +298,12 @@ class PSCardFormController internal constructor(
     } else
         false
 
+    private fun handleGenericError(): PSResult.Failure {
+        val paysafeException = genericApiErrorException(psApiClient.getCorrelationId())
+        psApiClient.logErrorEvent(paysafeException.errorName(), paysafeException)
+        return PSResult.Failure(paysafeException)
+    }
+
     /**
      * Coroutine to create a payment handle result object as a suspended function; with merchant,
      * transaction and credit card data retrieved from the user interface widgets.
@@ -285,35 +311,152 @@ class PSCardFormController internal constructor(
     @JvmSynthetic
     suspend fun tokenize(
         cardTokenizeOptions: PSCardTokenizeOptions,
-    ): PSResult<String> = try {
-        if (tokenizationAlreadyInProgress) {
-            val paysafeException = tokenizationAlreadyInProgressException(correlationId)
-            PaysafeSDK.getPSApiClient()
-                .logErrorEvent(paysafeException.errorName(), paysafeException)
-            throw paysafeException
-        }
-        tokenizationAlreadyInProgress = true
-        validateUsesSupportedCreditCard(getCardBrand(), supportedCardTypes)
-        val tokenizeResult = tokenizationService.tokenize(
-            activity = getContext().getActivity()!!,
-            paymentHandleRequest = cardTokenizeOptions.toPaymentHandleRequest(),
-            cardRequest = getCardRequestData()
-        )
-        when (tokenizeResult) {
-            is PSResult.Failure -> tokenizeResult
-            is PSResult.Success -> {
-                PSResult.Success(tokenizeResult.value?.paymentHandleToken!!)
+    ): PSResult<String> {
+        return try {
+            val paymentHandleRequestWithRenderType = cardTokenizeOptions.toPaymentHandleRequestWithRenderType()
+            val paymentHandleRequest = cardTokenizeOptions.toPaymentHandleRequest()
+            val activity = getContext().getActivity()
+
+            if (tokenizationAlreadyInProgress) {
+                return handleTokenizationInProgressError()
+            }
+            tokenizationAlreadyInProgress = true
+
+            validateUsesSupportedCreditCard(getCardBrand(), supportedCardTypes)
+
+            val tokenizeResult = tokenizationService.tokenize(
+                paymentHandleRequest = paymentHandleRequest,
+                cardRequest = getCardRequestData()
+            )
+
+            processTokenizeResult(tokenizeResult, paymentHandleRequest, paymentHandleRequestWithRenderType, activity)
+        } catch (psException: PaysafeException) {
+            PSResult.Failure(psException)
+        } catch (exception: Exception) {
+            PSResult.Failure(exception)
+        } finally {
+            tokenizationAlreadyInProgress = false
+            withContext(coroutineContext + Dispatchers.Main) {
+                resetFields()
             }
         }
-    } catch (psException: PaysafeException) {
-        PSResult.Failure(psException)
-    } catch (exception: Exception) {
-        PSResult.Failure(exception)
-    } finally {
-        tokenizationAlreadyInProgress = false
-        withContext(coroutineContext + Dispatchers.Main) {
-            resetFields()
+    }
+
+    private  fun handleTokenizationInProgressError(): PSResult.Failure {
+        val paysafeException = tokenizationAlreadyInProgressException(correlationId)
+        PaysafeSDK.getPSApiClient()
+            .logErrorEvent(paysafeException.errorName(), paysafeException)
+        return PSResult.Failure(paysafeException)
+    }
+
+    private suspend fun processTokenizeResult(
+        tokenizeResult: PSResult<PaymentHandle>,
+        paymentHandleRequest: PaymentHandleRequest,
+        paymentHandleRequestWithRenderType: PaymentHandleRequestWithRenderType,
+        activity: Activity?
+    ): PSResult<String> {
+        return when (tokenizeResult) {
+            is PSResult.Failure -> tokenizeResult
+            is PSResult.Success -> processSuccessfulTokenization(
+                tokenizeResult,
+                paymentHandleRequest,
+                paymentHandleRequestWithRenderType,
+                activity
+            )
         }
+    }
+
+    private suspend fun processSuccessfulTokenization(
+        tokenizeResult: PSResult.Success<PaymentHandle>,
+        paymentHandleRequest: PaymentHandleRequest,
+        paymentHandleRequestWithRenderType: PaymentHandleRequestWithRenderType,
+        activity: Activity?
+    ): PSResult<String> {
+        val paymentHandle = tokenizeResult.value
+        val bin = paymentHandle?.networkTokenBin ?: paymentHandle?.cardBin ?: ""
+        LocalLog.d("PSTokenizationController", "Initialize 3DS")
+        val paysafe3DS = Paysafe3DS()
+        val deviceFingerprint = paysafe3DS.start(
+            context = activity!!.applicationContext,
+            bin = bin,
+            accountId = paymentHandle?.accountId ?: paymentHandleRequest.accountId,
+            threeDSRenderType = paymentHandleRequestWithRenderType.renderType?.toThreeDSRenderType()
+        ).value()
+
+        if (paymentHandle?.id == null || deviceFingerprint == null) {
+            return handleGenericError()
+        }
+
+        LocalLog.d("PSTokenizationController", "Start Authentication")
+        return startAuthentication(paymentHandle, paymentHandleRequest, activity, paysafe3DS, deviceFingerprint)
+    }
+
+    private suspend fun startAuthentication(
+        paymentHandle: PaymentHandle,
+        paymentHandleRequest: PaymentHandleRequest,
+        activity: Activity?,
+        paysafe3DS: Paysafe3DS,
+        deviceFingerprint: String
+    ): PSResult<String> {
+        val authenticationRequest = AuthenticationRequest(
+            paymentHandleId = paymentHandle.id!!,
+            merchantRefNum = paymentHandle.merchantRefNum,
+            process = paymentHandleRequest.threeDS?.process
+        )
+        val authenticationResponse = cardAdapterAuthRepository.startAuthentication(
+            authenticationRequest = authenticationRequest,
+            deviceFingerprintingId = deviceFingerprint
+        ).value()
+
+        return when {
+            authenticationResponse?.status == AuthenticationStatus.PENDING && authenticationResponse.sdkChallengePayload != null -> {
+                val finalizeResult = activity?.let {
+                    continueAuthenticationFlow(activity = it, paysafe3DS = paysafe3DS, sdkChallengePayload = authenticationResponse.sdkChallengePayload, paymentHandleId = paymentHandle.id!!)
+                }
+                if (finalizeResult?.status == AuthenticationStatus.FAILED) {
+                    return handleAuthenticationStatusFailed()
+                }
+                if (finalizeResult?.status != AuthenticationStatus.COMPLETED) {
+                    return handleGenericError()
+                }
+                onRefreshToken(paymentHandle = paymentHandle)
+            }
+            authenticationResponse?.status == AuthenticationStatus.FAILED -> handleAuthenticationStatusFailed()
+            authenticationResponse?.status != AuthenticationStatus.COMPLETED -> handleGenericError()
+            else -> onRefreshToken(paymentHandle = paymentHandle)
+        }
+    }
+
+
+    private fun handleAuthenticationStatusFailed(): PSResult.Failure {
+        val paysafeException = paymentHandleCreationFailedException(
+            status = AuthenticationStatus.FAILED.value,
+            correlationId = psApiClient.getCorrelationId()
+        )
+        psApiClient.logErrorEvent(paysafeException.errorName(), paysafeException)
+        return PSResult.Failure(paysafeException)
+    }
+
+    private suspend fun continueAuthenticationFlow(
+        activity: Activity,
+        paysafe3DS: Paysafe3DS,
+        sdkChallengePayload: String,
+        paymentHandleId: String
+    ): FinalizeAuthenticationResponse? {
+        LocalLog.d("PSTokenizationController", "Launch 3DS Challenge")
+        val challengePayloadResult = paysafe3DS.launch3dsChallenge(
+            activity = activity,
+            challengePayload = sdkChallengePayload
+        )
+        val authenticationId =
+            (challengePayloadResult as? PSResult.Success)?.value?.authenticationId ?: return null
+
+        LocalLog.d("PSTokenizationController", "Finalize Authentication")
+        val finalizeAuthenticationResult = cardAdapterAuthRepository.finalizeAuthentication(
+            paymentHandleId = paymentHandleId,
+            authenticationId = authenticationId
+        )
+        return (finalizeAuthenticationResult as? PSResult.Success)?.value
     }
 
     /**
@@ -333,6 +476,58 @@ class PSCardFormController internal constructor(
             withContext(mainDispatcher) {
                 resultAsCallback(result, callback)
             }
+        }
+    }
+
+    internal suspend fun onRefreshToken(paymentHandle: PaymentHandle?): PSResult<String> {
+        if (paymentHandle?.paymentHandleToken == "" || paymentHandle == null) {
+            LocalLog.d(
+                "PSCardFormController",
+                "Cannot refresh token as the payment handle is null."
+            )
+            val paysafeException = genericApiErrorException(psApiClient.getCorrelationId())
+            psApiClient.logErrorEvent(paysafeException.errorName(), paysafeException)
+            tokenizationAlreadyInProgress = false
+            return PSResult.Failure(paysafeException)
+        }
+
+        when (val refreshTokenResult = tokenizationService.refreshToken(paymentHandle)) {
+            is PSResult.Failure -> {
+                return refreshTokenFailureHandler(refreshTokenResult)
+            }
+            is PSResult.Success -> {
+                return refreshTokenSuccessHandler(refreshTokenResult)
+            }
+        }
+    }
+
+    private fun refreshTokenSuccessHandler(refreshTokenResult: PSResult.Success<PaymentHandle>): PSResult<String> {
+        val refreshedPaymentHandle = refreshTokenResult.value
+        if (refreshedPaymentHandle != null) {
+            LocalLog.d("PSCardFormController", "Token was refreshed with success.")
+            tokenizationAlreadyInProgress = false
+            return PSResult.Success(refreshedPaymentHandle.paymentHandleToken)
+        } else {
+            LocalLog.d("PSCardFormController", "Refreshed PaymentHandle is null")
+            val paysafeException = genericApiErrorException(psApiClient.getCorrelationId())
+            psApiClient.logErrorEvent(paysafeException.errorName(), paysafeException)
+            tokenizationAlreadyInProgress = false
+            return PSResult.Failure(paysafeException)
+        }
+    }
+
+    private fun refreshTokenFailureHandler(refreshTokenResult: PSResult.Failure): PSResult.Failure {
+        LocalLog.d(
+            "PSCardFormController",
+            "Refresh token failed with ${refreshTokenResult.exception.message}"
+        )
+        tokenizationAlreadyInProgress = false
+        if (refreshTokenResult.exception is PaysafeException) {
+            return PSResult.Failure(refreshTokenResult.exception)
+        } else {
+            val paysafeException = genericApiErrorException(psApiClient.getCorrelationId())
+            psApiClient.logErrorEvent(paysafeException.errorName(), paysafeException)
+            return PSResult.Failure(paysafeException)
         }
     }
 
@@ -453,8 +648,10 @@ class PSCardFormController internal constructor(
             default
 }
 
+
+
 @Serializable
-private data class Field(
+internal data class  Field(
     @SerialName("placeHolder")
     val placeHolder: String,
     @SerialName("accessibilityLabel")
@@ -464,7 +661,7 @@ private data class Field(
 )
 
 @Serializable
-private data class Fields(
+internal data class  Fields(
     @SerialName("cardNumber")
     val cardNumber: Field?,
     @SerialName("cardHolderName")

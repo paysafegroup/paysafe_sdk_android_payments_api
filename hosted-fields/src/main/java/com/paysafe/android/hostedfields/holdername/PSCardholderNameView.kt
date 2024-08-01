@@ -14,8 +14,8 @@ import androidx.compose.ui.platform.AbstractComposeView
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.paysafe.android.hostedfields.R
+import com.paysafe.android.hostedfields.domain.model.PSCardholderNameStateImpl
 import com.paysafe.android.hostedfields.model.DefaultPSCardFieldEventHandler
-import com.paysafe.android.hostedfields.model.PSCardholderNameStateImpl
 import com.paysafe.android.hostedfields.valid.CardholderNameChecks
 import com.paysafe.android.hostedfields.view.PSCardView
 

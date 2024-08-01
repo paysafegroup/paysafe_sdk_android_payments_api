@@ -17,6 +17,8 @@ internal const val UNSUPPORTED_CARD_BRAND = 9125
 internal const val TOKENIZATION_ALREADY_IN_PROGRESS = 9136
 internal const val NO_VIEWS_IN_CARD_FORM_CONTROLLER = 9170
 internal const val SDK_NOT_INITIALIZED = 9202
+internal const val GENERIC_API_ERROR = 9014
+internal const val PAYMENT_HANDLE_CREATION_FAILED = 9131
 
 
 internal fun PaysafeException.errorName(): String = when (code) {
@@ -116,3 +118,18 @@ private fun fieldsHaveInvalidValue(vararg fields: String): String {
     else
         fields.joinToString(separator = ", ", prefix = "Invalid fields: ", postfix = ".")
 }
+
+internal fun genericApiErrorException(correlationId: String) = PaysafeException(
+    code = GENERIC_API_ERROR,
+    displayMessage = genericDisplayMessage(GENERIC_API_ERROR),
+    detailedMessage = "Unhandled error occurred.",
+    correlationId = correlationId
+)
+
+internal fun paymentHandleCreationFailedException(status: String, correlationId: String) =
+    PaysafeException(
+        code = PAYMENT_HANDLE_CREATION_FAILED,
+        displayMessage = genericDisplayMessage(PAYMENT_HANDLE_CREATION_FAILED),
+        detailedMessage = "Status of the payment handle is $status.",
+        correlationId = correlationId
+    )

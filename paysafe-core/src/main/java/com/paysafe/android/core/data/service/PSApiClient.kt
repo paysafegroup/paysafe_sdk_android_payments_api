@@ -323,7 +323,7 @@ class RedirectInterceptor : Interceptor {
 }
 
 @Serializable
-private data class LogEventContent(
+data class LogEventContent(
     @SerialName("environment")
     val environment: PSEnvironment,
 )

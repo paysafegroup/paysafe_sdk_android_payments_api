@@ -18,8 +18,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.paysafe.android.hostedfields.PSTheme
 import com.paysafe.android.hostedfields.R
-import com.paysafe.android.hostedfields.model.PSExpiryDateState
-import com.paysafe.android.hostedfields.model.PSExpiryDateStateImpl
+import com.paysafe.android.hostedfields.domain.model.PSExpiryDateState
+import com.paysafe.android.hostedfields.domain.model.PSExpiryDateStateImpl
 import com.paysafe.android.hostedfields.provideDefaultPSTheme
 import com.paysafe.android.hostedfields.util.CardPreview
 import com.paysafe.android.hostedfields.util.PS_EXPIRY_DATE_PICKER_TEST_TAG
@@ -32,7 +32,7 @@ import com.paysafe.android.hostedfields.util.textStyleWithPSTheme
 import com.paysafe.android.hostedfields.valid.ExpiryDateChecks
 
 //region HOSTED FIELD: Expiry Date
-private fun onExpiryDateFocusChange(
+fun onExpiryDateFocusChange(
     focusState: FocusState,
     expiryDateState: PSExpiryDateState,
 ) {

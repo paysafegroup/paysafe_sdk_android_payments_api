@@ -522,7 +522,8 @@ internal class PSGooglePayController internal constructor(
 
         lifecycleScope.launchCatching(ioDispatcher) {
             val paymentHandle = tokenizationService.tokenize(
-                googlePayTokenizeOptions.toPaymentHandleRequest(googlePayToken)
+                googlePayTokenizeOptions.toPaymentHandleRequest(googlePayToken),
+                null
             ).value()!!
             tokenizationAlreadyInProgress = false
 

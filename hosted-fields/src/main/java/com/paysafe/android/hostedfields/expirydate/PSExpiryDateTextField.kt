@@ -19,8 +19,8 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.paysafe.android.hostedfields.PSTheme
-import com.paysafe.android.hostedfields.model.PSCardFieldInputEvent
-import com.paysafe.android.hostedfields.model.PSExpiryDateState
+import com.paysafe.android.hostedfields.domain.model.PSCardFieldInputEvent
+import com.paysafe.android.hostedfields.domain.model.PSExpiryDateState
 import com.paysafe.android.hostedfields.util.PS_EXPIRY_DATE_TEXT_NO_ANIM_LABEL_TEST_TAG
 import com.paysafe.android.hostedfields.util.TextLabelReplacement
 import com.paysafe.android.hostedfields.util.WrapperToAvoidPaste

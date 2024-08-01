@@ -4,7 +4,7 @@
 
 package com.paysafe.android.hostedfields.valid
 
-import com.paysafe.android.hostedfields.model.PSCardFieldInputEvent
+import com.paysafe.android.hostedfields.domain.model.PSCardFieldInputEvent
 import com.paysafe.android.paymentmethods.domain.model.PSCreditCardType
 
 internal class CardNumberChecks {

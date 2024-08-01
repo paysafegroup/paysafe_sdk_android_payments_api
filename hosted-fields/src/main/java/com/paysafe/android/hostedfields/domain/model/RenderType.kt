@@ -2,7 +2,7 @@
  * Copyright (c) 2024 Paysafe Group
  */
 
-package com.paysafe.android.tokenization.domain.model.paymentHandle
+package com.paysafe.android.hostedfields.domain.model
 
 import com.paysafe.android.threedsecure.domain.model.ThreeDSRenderType
 
