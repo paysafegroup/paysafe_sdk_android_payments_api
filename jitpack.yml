@@ -1,4 +1,4 @@
 jdk:
   - openjdk17
 install:
-  - ./gradlew paysafe-cardinal:build paysafe-cardinal:publishToMavenLocal --refresh-dependencies && ./gradlew paysafe-core:build paysafe-core:publishToMavenLocal --refresh-dependencies && ./gradlew threedsecure:build threedsecure:publishToMavenLocal --refresh-dependencies && ./gradlew tokenization:build tokenization:publishToMavenLocal --refresh-dependencies && ./gradlew hosted-fields:build hosted-fields:publishToMavenLocal --refresh-dependencies && ./gradlew google-pay:build google-pay:publishToMavenLocal --refresh-dependencies && ./gradlew venmo:build venmo:publishToMavenLocal --refresh-dependencies
+  - ./gradlew paysafe-cardinal:build paysafe-cardinal:publishToMavenLocal paysafe-core:build paysafe-core:publishToMavenLocal threedsecure:build threedsecure:publishToMavenLocal tokenization:build tokenization:publishToMavenLocal card-payments:build card-payments:publishToMavenLocal google-pay:build google-pay:publishToMavenLocal venmo:build venmo:publishToMavenLocal --refresh-dependencies

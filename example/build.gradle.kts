@@ -105,7 +105,7 @@ android {
 
 dependencies {
 
-    implementation(project(":hosted-fields"))
+    implementation(project(":card-payments"))
     implementation(project(":google-pay"))
     implementation(project(":venmo"))
 

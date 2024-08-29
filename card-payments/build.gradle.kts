@@ -80,8 +80,8 @@ android {
         ignoreTestSources = LintConfig.ignoreTestSources
         explainIssues = LintConfig.explainIssues
         noLines = LintConfig.noLines
-        textOutput = LintConfig.getTextOutputFileName("hosted-fields")
-        htmlOutput = LintConfig.getHtmlOutputFile("hosted-fields")
+        textOutput = LintConfig.getTextOutputFileName("card-payments")
+        htmlOutput = LintConfig.getHtmlOutputFile("card-payments")
         disable += LintConfig.disableRules
     }
 
