@@ -13,6 +13,14 @@ class VenmoServiceConstants {
         return VenmoConstants.INTENT_EXTRA_CUSTOM_URL_SCHEME
     }
 
+    fun getIntentExtraProfileId(): String {
+        return VenmoConstants.INTENT_EXTRA_PROFILE_ID
+    }
+
+    fun getIntentExtraAmount(): String {
+        return VenmoConstants.INTENT_EXTRA_AMOUNT
+    }
+
     fun getResultSuccess(): Any {
         return VenmoConstants.RESULT_SUCCESS
     }

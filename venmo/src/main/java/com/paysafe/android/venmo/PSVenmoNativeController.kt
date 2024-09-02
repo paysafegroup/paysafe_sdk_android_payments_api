@@ -11,6 +11,7 @@ import com.paysafe.android.brainTreeDetails.domain.models.DeviceData
 import com.paysafe.android.brainTreeDetails.domain.models.PayerInfo
 import com.paysafe.android.core.data.service.PSApiClient
 import com.paysafe.android.core.util.LocalLog
+import com.paysafe.android.currencyConverter.CurrencyConverter
 import com.paysafe.android.tokenization.PSTokenization
 import com.paysafe.android.tokenization.PSTokenizationService
 import com.paysafe.android.venmo.activity.VenmoConstants
@@ -59,14 +60,23 @@ internal class PSVenmoNativeController internal constructor(
         orderId: String,
         sessionToken: String,
         clientToken: String,
+        profileId: String?,
+        amount: Int,
         customUrlScheme: String?
     ) {
         LocalLog.d("PSVenmoNativeController", "startVenmoCheckout")
         jwtToken = sessionToken
+
+        val currencyConverter = CurrencyConverter(CurrencyConverter.defaultCurrenciesMap())
+        val amountString =
+            currencyConverter.convert(amount = amount, forCurrency = "USD").toString()
+
         val intent = Intent(context, VenmoWebCheckoutActivity::class.java).apply {
-            putExtra("SESSION_TOKEN", sessionToken)
-            putExtra("CLIENT_TOKEN", clientToken)
-            putExtra("CUSTOM_URL_SCHEME", customUrlScheme)
+            putExtra(VenmoConstants.INTENT_EXTRA_SESSION_TOKEN, sessionToken)
+            putExtra(VenmoConstants.INTENT_EXTRA_CLIENT_TOKEN, clientToken)
+            putExtra(VenmoConstants.INTENT_EXTRA_PROFILE_ID, profileId)
+            putExtra(VenmoConstants.INTENT_EXTRA_AMOUNT, amountString)
+            putExtra(VenmoConstants.INTENT_EXTRA_CUSTOM_URL_SCHEME, customUrlScheme)
         }
         activityResultLauncher.launch(intent)
     }

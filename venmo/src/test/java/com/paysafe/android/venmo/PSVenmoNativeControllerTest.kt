@@ -105,6 +105,8 @@ class PSVenmoNativeControllerTest {
                 orderId = orderId,
                 sessionToken = sessionToken,
                 clientToken = clientToken,
+                profileId = "profile-id",
+                amount = 1000,
                 customUrlScheme = customUrlScheme
             )
 

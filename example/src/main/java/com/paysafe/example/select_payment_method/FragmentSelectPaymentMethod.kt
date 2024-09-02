@@ -289,9 +289,9 @@ class FragmentSelectPaymentMethod : Fragment() {
             shippingDetails = provideShippingDetails(),
             customUrlScheme = "customScheme",
             venmoRequest = VenmoRequest(
-                consumerId = "ala-bala-portocalaaaa",
-                merchantAccountId = "",
-                profileId = ""
+                consumerId = "consumerrr@mail.com",
+                merchantAccountId = "merch-acc-id",
+                profileId = "profile-di"
                 )
         )
 

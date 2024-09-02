@@ -22,6 +22,8 @@ internal class VenmoWebCheckoutActivity : AppCompatActivity(), VenmoListener {
     lateinit var braintreeClient: BraintreeClient
     lateinit var sessionToken: String
     lateinit var clientToken: String
+    lateinit var displayAmount: String
+    var profileId: String? = null
     lateinit var customUrlScheme: String
 
     private val observer = object : DefaultLifecycleObserver {
@@ -43,9 +45,14 @@ internal class VenmoWebCheckoutActivity : AppCompatActivity(), VenmoListener {
 
         val sessionTokenIntent = intent?.getStringExtra(VenmoConstants.INTENT_EXTRA_SESSION_TOKEN)
         val clientTokenIntent = intent?.getStringExtra(VenmoConstants.INTENT_EXTRA_CLIENT_TOKEN)
-        val customUrlSchemeIntent = intent?.getStringExtra(VenmoConstants.INTENT_EXTRA_CUSTOM_URL_SCHEME)
+        val customUrlSchemeIntent =
+            intent?.getStringExtra(VenmoConstants.INTENT_EXTRA_CUSTOM_URL_SCHEME)
+        val profileIdIntent = intent?.getStringExtra(VenmoConstants.INTENT_EXTRA_PROFILE_ID)
+        val displayAmountIntent = intent?.getStringExtra(VenmoConstants.INTENT_EXTRA_AMOUNT)
 
-        if (sessionTokenIntent == null || clientTokenIntent == null || customUrlSchemeIntent == null ) {
+        if (sessionTokenIntent == null || clientTokenIntent == null ||
+            customUrlSchemeIntent == null || displayAmountIntent == null
+        ) {
             finishActivityWithResult(VenmoConstants.RESULT_FAILED, null)
             return
         }
@@ -53,6 +60,8 @@ internal class VenmoWebCheckoutActivity : AppCompatActivity(), VenmoListener {
         sessionToken = sessionTokenIntent
         clientToken = clientTokenIntent
         customUrlScheme = customUrlSchemeIntent
+        profileId = profileIdIntent
+        displayAmount = displayAmountIntent
 
         lifecycle.addObserver(observer)
     }
@@ -65,9 +74,13 @@ internal class VenmoWebCheckoutActivity : AppCompatActivity(), VenmoListener {
         removeLifecycleObserver()
     }
 
-     fun launchVenmo() {
+    fun launchVenmo() {
         braintreeClient =
-            BraintreeClient(context = this, authorization = clientToken, returnUrlScheme = customUrlScheme)
+            BraintreeClient(
+                context = this,
+                authorization = clientToken,
+                returnUrlScheme = customUrlScheme
+            )
         venmoClient = VenmoClient(this, braintreeClient)
         venmoClient.setListener(this)
 
@@ -75,15 +88,16 @@ internal class VenmoWebCheckoutActivity : AppCompatActivity(), VenmoListener {
 
         request.collectCustomerBillingAddress = true
         request.collectCustomerShippingAddress = true
-        request.profileId = sessionToken
+        request.profileId = profileId
         request.shouldVault = false
+        request.totalAmount = displayAmount
 
         if (venmoClient.isVenmoAppSwitchAvailable(this)) {
             venmoClient.tokenizeVenmoAccount(this, request)
         } else if (!isAppInstalled(this)) {
             finishActivityWithResult(VenmoConstants.RESULT_VENMO_APP_IS_NOT_INSTALLED, null)
             venmoClient.showVenmoInGooglePlayStore(this)
-        } else{
+        } else {
             venmoClient.tokenizeVenmoAccount(this, request)
         }
     }
@@ -136,7 +150,10 @@ internal class VenmoWebCheckoutActivity : AppCompatActivity(), VenmoListener {
     fun isAppInstalled(context: Context): Boolean {
         val packageManager = context.packageManager
         return try {
-            packageManager.getPackageInfo(VenmoConstants.VENMO_PACKAGE, PackageManager.GET_ACTIVITIES)
+            packageManager.getPackageInfo(
+                VenmoConstants.VENMO_PACKAGE,
+                PackageManager.GET_ACTIVITIES
+            )
             true
         } catch (e: PackageManager.NameNotFoundException) {
             false

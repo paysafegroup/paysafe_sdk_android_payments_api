@@ -524,6 +524,8 @@ class PSVenmoControllerTest {
             // Act
             psVenmoController.handleTokenizeResultSuccess(
                 context = mockActivity,
+                profileId = "profile-id",
+                amount = 1000,
                 customUrlScheme = "",
                 result = PSResult.Success(null)
             )
@@ -542,6 +544,8 @@ class PSVenmoControllerTest {
             // Act
             psVenmoController.handleTokenizeResultSuccess(
                 context = mockActivity,
+                profileId = "profile-id",
+                amount = 1000,
                 customUrlScheme = "",
                 result = PSResult.Success(
                     PaymentHandle(
@@ -567,6 +571,8 @@ class PSVenmoControllerTest {
             // Act
             psVenmoController.handleTokenizeResultSuccess(
                 context = mockActivity,
+                profileId = "profile-id",
+                amount = 1000,
                 customUrlScheme = "",
                 result = PSResult.Success(
                     PaymentHandle(
@@ -591,6 +597,8 @@ class PSVenmoControllerTest {
             // Act
             psVenmoController.handleTokenizeResultSuccess(
                 context = mockActivity,
+                profileId = "profile-id",
+                amount = 1000,
                 customUrlScheme = "",
                 result = PSResult.Success(
                     PaymentHandle(
@@ -615,6 +623,8 @@ class PSVenmoControllerTest {
             // Act
             psVenmoController.handleTokenizeResultSuccess(
                 context = mockActivity,
+                profileId = null,
+                amount = 1000,
                 customUrlScheme = "",
                 result = PSResult.Success(
                     PaymentHandle(
@@ -640,6 +650,8 @@ class PSVenmoControllerTest {
             // Act
             psVenmoController.handleTokenizeResultSuccess(
                 context = mockActivity,
+                profileId = "profile-id",
+                amount = 1000,
                 customUrlScheme = "",
                 result = PSResult.Success(
                     PaymentHandle(
@@ -667,6 +679,8 @@ class PSVenmoControllerTest {
             // Act
             psVenmoController.handleTokenizeResultSuccess(
                 context = mockActivity,
+                profileId = null,
+                amount = 1000,
                 customUrlScheme = "",
                 result = PSResult.Success(
                     PaymentHandle(
@@ -692,6 +706,8 @@ class PSVenmoControllerTest {
             // Act
             psVenmoController.handleTokenizeResultSuccess(
                 context = mockActivity,
+                profileId = "profile-id",
+                amount = 1000,
                 customUrlScheme = "",
                 result = PSResult.Success(
                     PaymentHandle(

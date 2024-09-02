@@ -306,17 +306,26 @@ internal abstract class PSVenmoController internal constructor(
         }
         lifecycleScope.launch(mainDispatcher) {
             when (result) {
-                is PSResult.Success -> handleTokenizeResultSuccess(context, venmoTokenizeOptions.customUrlScheme,result)
+                is PSResult.Success ->
+                    handleTokenizeResultSuccess(
+                        context,
+                        venmoTokenizeOptions.venmoRequest?.profileId,
+                        venmoTokenizeOptions.amount,
+                        venmoTokenizeOptions.customUrlScheme,
+                        result
+                    )
                 is PSResult.Failure -> handleTokenizeResultFailure(result)
             }
         }
     }
 
     //Checkout process implementation needed
-    abstract fun startVenmoCheckout(context: Context, orderId: String, sessionToken: String, clientToken: String, customUrlScheme: String?)
+    abstract fun startVenmoCheckout(context: Context, orderId: String, sessionToken: String, clientToken: String, profileId: String?, amount: Int, customUrlScheme: String?)
 
     internal fun handleTokenizeResultSuccess(
         context: Context,
+        profileId: String?,
+        amount: Int,
         customUrlScheme:String?,
         result: PSResult.Success<PaymentHandle>
     ) {
@@ -367,9 +376,10 @@ internal abstract class PSVenmoController internal constructor(
             tokenizeCallback?.onFailure(paysafeException)
             return
         }
+
         // Checkout process implementation needed
         tokenizationAlreadyInProgress = false
-        startVenmoCheckout(context, orderId, sessionToken, clientToken, customUrlScheme)
+        startVenmoCheckout(context, orderId, sessionToken, clientToken, profileId, amount, customUrlScheme)
     }
 
     internal fun handleTokenizeResultFailure(result: PSResult.Failure) {

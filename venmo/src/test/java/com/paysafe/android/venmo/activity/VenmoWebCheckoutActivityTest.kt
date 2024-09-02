@@ -44,12 +44,16 @@ class VenmoWebCheckoutActivityTest {
 
     private val sessionToken = "SESSION_TOKEN_MOCK"
     private val clientToken = "CLIENT_TOKEN_MOCK"
+    private val profileId = "PROFILE_ID_MOCK"
+    private val amount = "AMOUNT"
     private val customUrlScheme = "CUSTOM_URL_SCHEME_MOCK"
     private lateinit var venmoAccountNonce: VenmoAccountNonce
 
     private val intent = Intent().apply {
         putExtra(VenmoConstants.INTENT_EXTRA_SESSION_TOKEN, sessionToken)
         putExtra(VenmoConstants.INTENT_EXTRA_CLIENT_TOKEN, clientToken)
+        putExtra(VenmoConstants.INTENT_EXTRA_PROFILE_ID, profileId)
+        putExtra(VenmoConstants.INTENT_EXTRA_AMOUNT, amount)
         putExtra(VenmoConstants.INTENT_EXTRA_CUSTOM_URL_SCHEME, customUrlScheme)
     }
 
@@ -63,6 +67,8 @@ class VenmoWebCheckoutActivityTest {
         mockVenmoClient = mockk(relaxed = true)
         spyActivity = spyk(Robolectric.buildActivity(VenmoWebCheckoutActivity::class.java, intent).get()) {
             every { sessionToken } returns this@VenmoWebCheckoutActivityTest.sessionToken
+            every { clientToken } returns this@VenmoWebCheckoutActivityTest.clientToken
+            every { profileId } returns this@VenmoWebCheckoutActivityTest.profileId
         }
         venmoAccountNonce = mockk {
             every { string } returns "mockedString"
@@ -158,6 +164,7 @@ class VenmoWebCheckoutActivityTest {
         // Verify
         Assert.assertEquals(sessionToken, spyActivity.sessionToken)
         Assert.assertEquals(clientToken, spyActivity.clientToken)
+        Assert.assertEquals(profileId, spyActivity.profileId)
         Assert.assertEquals(customUrlScheme, spyActivity.customUrlScheme)
     }
 
@@ -271,7 +278,7 @@ class VenmoWebCheckoutActivityTest {
         Assert.assertNotNull(capturedRequest)
         Assert.assertTrue(capturedRequest.collectCustomerBillingAddress)
         Assert.assertTrue(capturedRequest.collectCustomerShippingAddress)
-        Assert.assertEquals(sessionToken, capturedRequest.profileId)
+        Assert.assertEquals(profileId, capturedRequest.profileId)
         Assert.assertFalse(capturedRequest.shouldVault)
     }
 }

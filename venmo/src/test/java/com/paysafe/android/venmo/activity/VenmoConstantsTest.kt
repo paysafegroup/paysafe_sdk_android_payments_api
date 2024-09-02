@@ -24,6 +24,11 @@ class VenmoConstantsTest {
     }
 
     @Test
+    fun `test INTENT_EXTRA_PROFILE_ID constant value`() {
+        Assert.assertEquals("PROFILE_ID", venmoServiceConstants.getIntentExtraProfileId())
+    }
+
+    @Test
     fun `test RESULT_SUCCESS constant value`() {
         Assert.assertEquals(1_000, venmoServiceConstants.getResultSuccess())
     }
