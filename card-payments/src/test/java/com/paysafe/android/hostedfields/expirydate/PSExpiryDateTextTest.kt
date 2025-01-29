@@ -259,7 +259,7 @@ class PSExpiryDateTextTest {
         sut(expiryDateStateInput)
 
         // Act
-        expiryDateTextField().performTextInput("1224")
+        expiryDateTextField().performTextInput("1230")
         expiryDateTextField().performTextInputSelection(TextRange(4))
 
         // Assert

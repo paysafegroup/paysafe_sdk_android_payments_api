@@ -11,23 +11,29 @@ plugins {
     id(TopLevelGradle.navigationSafeArgsPlugin)
 }
 
-private val privateKeysProperties = Properties().apply {
-    val file = File(rootProject.projectDir, "private-keys.properties")
-    if (file.exists())
-        load(file.inputStream())
-}
+private val privateKeysProperties =
+    Properties().apply {
+        val file = File(rootProject.projectDir, "private-keys.properties")
+        if (file.exists()) {
+            load(file.inputStream())
+        }
+    }
 
 private val releaseBuild = "release"
 
-private val keystorePassword = if (System.getenv("KEYSTORE_PASSWORD") != null)
-    System.getenv("KEYSTORE_PASSWORD")
-else
-    privateKeysProperties["keystorePassword"] as String?
+private val keystorePassword =
+    if (System.getenv("KEYSTORE_PASSWORD") != null) {
+        System.getenv("KEYSTORE_PASSWORD")
+    } else {
+        privateKeysProperties["keystorePassword"] as String?
+    }
 
-private val keystoreAlias = if (System.getenv("KEYSTORE_ALIAS") != null)
-    System.getenv("KEYSTORE_ALIAS")
-else
-    privateKeysProperties["keystoreAlias"] as String?
+private val keystoreAlias =
+    if (System.getenv("KEYSTORE_ALIAS") != null) {
+        System.getenv("KEYSTORE_ALIAS")
+    } else {
+        privateKeysProperties["keystoreAlias"] as String?
+    }
 
 // if (keystorePassword.isNullOrEmpty() || keystoreAlias.isNullOrEmpty())
 //     throw Exception("Error: Cant load keystore credentials")
@@ -51,21 +57,12 @@ android {
         buildConfig = true
     }
 
-    signingConfigs {
-        create(releaseBuild) {
-            keyAlias = keystoreAlias
-            keyPassword = keystorePassword
-            storeFile = file("../paysafe-sample-keystore.jks")
-            storePassword = keystorePassword
-        }
-    }
-
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName(releaseBuild)
             isMinifyEnabled = ConfigData.minifyEnabled
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
             )
         }
     }
@@ -86,15 +83,16 @@ android {
         noLines = LintConfig.noLines
         textOutput = LintConfig.getTextOutputFileName("example")
         htmlOutput = LintConfig.getHtmlOutputFile("example")
-        disable += LintConfig.disableRules.apply {
-            addAll(
-                arrayOf(
-                    "SelectableText",
-                    "HardcodedText",
-                    "SetTextI18n"
+        disable +=
+            LintConfig.disableRules.apply {
+                addAll(
+                    arrayOf(
+                        "SelectableText",
+                        "HardcodedText",
+                        "SetTextI18n",
+                    ),
                 )
-            )
-        }
+            }
     }
     testOptions {
         unitTests.all { test ->
