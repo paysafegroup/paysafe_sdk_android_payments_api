@@ -7,7 +7,6 @@ buildscript {
     repositories {
         google()
         maven { url = uri("https://jitpack.io") }
-        mavenLocal()
     }
     dependencies {
         classpath(TopLevelGradle.navigationSafeArgsClasspath)
