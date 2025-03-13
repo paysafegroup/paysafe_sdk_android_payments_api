@@ -14,7 +14,6 @@ import com.paysafe.android.PaysafeSDK
 import com.paysafe.android.core.data.entity.PSCallback
 import com.paysafe.android.core.data.entity.PSResult
 import com.paysafe.android.core.data.entity.PSResultCallback
-import com.paysafe.android.core.data.entity.value
 import com.paysafe.android.core.data.service.PSApiClient
 import com.paysafe.android.core.domain.exception.PaysafeException
 import com.paysafe.android.core.exception.genericDisplayMessage
@@ -49,6 +48,7 @@ import com.paysafe.android.tokenization.PSTokenizationService
 import com.paysafe.android.tokenization.domain.model.cardadapter.AuthenticationStatus
 import com.paysafe.android.tokenization.domain.model.paymentHandle.CardRequest
 import com.paysafe.android.tokenization.domain.model.paymentHandle.PaymentHandle
+import com.paysafe.android.tokenization.domain.model.paymentHandle.PaymentHandleAction
 import com.paysafe.android.tokenization.domain.model.paymentHandle.PaymentHandleTokenStatus
 import com.paysafe.android.tokenization.domain.model.paymentHandle.TransactionType
 import io.mockk.Runs
@@ -138,8 +138,6 @@ class PSCardFormControllerTest {
     )
 
     internal fun fieldsHaveInvalidValue(vararg fields: String) = "Fields have invalid value: ${fields.joinToString(", ")}"
-
-
 
     @Before
     fun setUp() {
@@ -861,31 +859,105 @@ class PSCardFormControllerTest {
             id = "id",
             paymentHandleToken = "token",
             merchantRefNum = "refNum",
-            status = PaymentHandleTokenStatus.COMPLETED.status
+            status = PaymentHandleTokenStatus.PAYABLE.status,
+            action = PaymentHandleAction.NONE.toString()
         )
         coEvery {
             mockPSTokenizationService.tokenize(any(), any())
         } returns PSResult.Success(paymentHandle)
 
         // Mock other dependencies
-        val mockPaysafe3DS = mockk<Paysafe3DS>()
-        coEvery { mockPaysafe3DS.start(any(), any(), any(), any()) } returns PSResult.Success("deviceFingerprint")
-        mockkConstructor(Paysafe3DS::class)
-        coEvery { anyConstructed<Paysafe3DS>().start(any(), any(), any(), any()) } returns PSResult.Success("deviceFingerprint")
         coEvery {mockPSTokenizationService.refreshToken(paymentHandle)} returns PSResult.Success(paymentHandle)
 
-        // Mock CardAdapterAuthRepository
-        val mockCardAdapterAuthRepository = mockk<CardAdapterAuthRepository>()
-        val authenticationResponse = AuthenticationResponse(
-            status = AuthenticationStatus.COMPLETED,
-            sdkChallengePayload = null
+        // Act
+        val result = psCardFormController.tokenize(
+            cardTokenizeOptions = psCardTokenizeOptions
+        )
+
+        // Assert
+        assertTrue(result is PSResult.Success)
+        assertEquals("token", (result as PSResult.Success).value)
+        assertFalse(psCardFormController.tokenizationAlreadyInProgress)
+    }
+
+    @Test
+    fun `tokenize returns Success when action is UNKNOWN and status is PAYABLE`() = runTest {
+        // Arrange
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        val mockCardCvvView = mockk<PSCvvView>()
+        every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+        every { mockCardCvvView.placeholderString } returns ""
+        every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.data } returns "123"
+        justRun { mockCardCvvView.reset() }
+        val psCardFormController = PSCardFormController(
+            cardCvvView = mockCardCvvView,
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient
+        )
+        PSCardFormController.supportedCardTypes = listOf(PSCreditCardType.VISA)
+        val paymentHandle = PaymentHandle(
+            id = "id",
+            paymentHandleToken = "token",
+            merchantRefNum = "refNum",
+            status = PaymentHandleTokenStatus.PAYABLE.status,
+            action = "UNKNOWN"
         )
         coEvery {
-            mockCardAdapterAuthRepository.startAuthentication(any(), any())
-        } returns PSResult.Success(authenticationResponse)
+            mockPSTokenizationService.tokenize(any(), any())
+        } returns PSResult.Success(paymentHandle)
 
-        // Replace the repository in the controller
-        setPrivateProperty(psCardFormController, "cardAdapterAuthRepository", mockCardAdapterAuthRepository)
+        // Mock other dependencies
+        coEvery {mockPSTokenizationService.refreshToken(paymentHandle)} returns PSResult.Success(paymentHandle)
+
+        // Act
+        val result = psCardFormController.tokenize(
+            cardTokenizeOptions = psCardTokenizeOptions
+        )
+
+        // Assert
+        assertTrue(result is PSResult.Success)
+        assertEquals("token", (result as PSResult.Success).value)
+        assertFalse(psCardFormController.tokenizationAlreadyInProgress)
+    }
+
+    @Test
+    fun `tokenize returns Success when action is UNKNOWN and status is COMPLETED`() = runTest {
+        // Arrange
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        val mockCardCvvView = mockk<PSCvvView>()
+        every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+        every { mockCardCvvView.placeholderString } returns ""
+        every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.data } returns "123"
+        justRun { mockCardCvvView.reset() }
+        val psCardFormController = PSCardFormController(
+            cardCvvView = mockCardCvvView,
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient
+        )
+        PSCardFormController.supportedCardTypes = listOf(PSCreditCardType.VISA)
+        val paymentHandle = PaymentHandle(
+            id = "id",
+            paymentHandleToken = "token",
+            merchantRefNum = "refNum",
+            status = PaymentHandleTokenStatus.COMPLETED.status,
+            action = "UNKNOWN"
+        )
+        coEvery {
+            mockPSTokenizationService.tokenize(any(), any())
+        } returns PSResult.Success(paymentHandle)
+
+        // Mock other dependencies
+        coEvery {mockPSTokenizationService.refreshToken(paymentHandle)} returns PSResult.Success(paymentHandle)
 
         // Act
         val result = psCardFormController.tokenize(
@@ -922,31 +994,12 @@ class PSCardFormControllerTest {
             id = "id",
             paymentHandleToken = "",
             merchantRefNum = "refNum",
-            status = PaymentHandleTokenStatus.COMPLETED.status
+            status = PaymentHandleTokenStatus.FAILED.status,
+            action = PaymentHandleAction.NONE.toString()
         )
         coEvery {
             mockPSTokenizationService.tokenize(any(), any())
         } returns PSResult.Success(paymentHandle)
-
-        // Mock other dependencies
-        val mockPaysafe3DS = mockk<Paysafe3DS>()
-        coEvery { mockPaysafe3DS.start(any(), any(), any(), any()) } returns PSResult.Success("deviceFingerprint")
-        mockkConstructor(Paysafe3DS::class)
-        coEvery { anyConstructed<Paysafe3DS>().start(any(), any(), any(), any()) } returns PSResult.Success("deviceFingerprint")
-        coEvery {mockPSTokenizationService.refreshToken(paymentHandle)} returns PSResult.Failure(Exception())
-
-        // Mock CardAdapterAuthRepository
-        val mockCardAdapterAuthRepository = mockk<CardAdapterAuthRepository>()
-        val authenticationResponse = AuthenticationResponse(
-            status = AuthenticationStatus.COMPLETED,
-            sdkChallengePayload = null
-        )
-        coEvery {
-            mockCardAdapterAuthRepository.startAuthentication(any(), any())
-        } returns PSResult.Success(authenticationResponse)
-
-        // Replace the repository in the controller
-        setPrivateProperty(psCardFormController, "cardAdapterAuthRepository", mockCardAdapterAuthRepository)
 
         // Act
         val result = psCardFormController.tokenize(
@@ -981,17 +1034,47 @@ class PSCardFormControllerTest {
             id = null,
             paymentHandleToken = "token",
             merchantRefNum = "refNum",
-            status = PaymentHandleTokenStatus.COMPLETED.status
+            status = PaymentHandleTokenStatus.FAILED.status,
+            action = PaymentHandleAction.NONE.toString()
         )
         coEvery {
             mockPSTokenizationService.tokenize(any(), any())
         } returns PSResult.Success(paymentHandle)
 
-        // Mock other dependencies
-        val mockPaysafe3DS = mockk<Paysafe3DS>()
-        coEvery { mockPaysafe3DS.start(any(), any(), any(), any()) } returns PSResult.Success("deviceFingerprint")
-        mockkConstructor(Paysafe3DS::class)
-        coEvery { anyConstructed<Paysafe3DS>().start(any(), any(), any(), any()) } returns PSResult.Success("deviceFingerprint")
+        // Act
+        val result = psCardFormController.tokenize(
+            cardTokenizeOptions = psCardTokenizeOptions
+        )
+
+        // Assert
+        assertTrue(result is PSResult.Failure)
+        assertFalse(psCardFormController.tokenizationAlreadyInProgress)
+    }
+
+    @Test
+    fun `tokenize returns Failure when paymentHandle is null`() = runTest {
+        // Arrange
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        val mockCardCvvView = mockk<PSCvvView>()
+        every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+        every { mockCardCvvView.placeholderString } returns ""
+        every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.data } returns "123"
+        justRun { mockCardCvvView.reset() }
+        val psCardFormController = PSCardFormController(
+            cardCvvView = mockCardCvvView,
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient
+        )
+        PSCardFormController.supportedCardTypes = listOf(PSCreditCardType.VISA)
+        val paymentHandle = null
+        coEvery {
+            mockPSTokenizationService.tokenize(any(), any())
+        } returns PSResult.Success(paymentHandle)
 
         // Act
         val result = psCardFormController.tokenize(
@@ -1027,7 +1110,8 @@ class PSCardFormControllerTest {
             id = "id",
             paymentHandleToken = "token",
             merchantRefNum = "refNum",
-            status = PaymentHandleTokenStatus.COMPLETED.status
+            status = PaymentHandleTokenStatus.FAILED.status,
+            action = PaymentHandleAction.NONE.toString()
         )
         coEvery {
             mockPSTokenizationService.tokenize(any(), any())
@@ -1073,7 +1157,9 @@ class PSCardFormControllerTest {
             id = "id",
             paymentHandleToken = "token",
             merchantRefNum = "refNum",
-            status = PaymentHandleTokenStatus.COMPLETED.status
+            status = PaymentHandleTokenStatus.INITIATED.status,
+            action = PaymentHandleAction.REDIRECT.toString(),
+            cardBin = "1234"
         )
         coEvery {
             mockPSTokenizationService.tokenize(any(), any())
@@ -1119,7 +1205,7 @@ class PSCardFormControllerTest {
     }
 
     @Test
-    fun `continueAuthenticationFlow returns FinalizeAuthenticationResponse when challenge is completed`() = runTest {
+    fun `continueAuthenticationFlow returns FinalizeAuthenticationResponse when challenge is completed when status is INITIATED`() = runTest {
         // Arrange
         val testDispatcher = UnconfinedTestDispatcher(testScheduler)
         Dispatchers.setMain(testDispatcher)
@@ -1142,7 +1228,9 @@ class PSCardFormControllerTest {
             id = "id",
             paymentHandleToken = "token",
             merchantRefNum = "refNum",
-            status = PaymentHandleTokenStatus.COMPLETED.status
+            status = PaymentHandleTokenStatus.INITIATED.status,
+            action = PaymentHandleAction.REDIRECT.toString(),
+            cardBin = "1234"
         )
         val mockPaysafe3DS = mockk<Paysafe3DS>()
         coEvery { mockPaysafe3DS.launch3dsChallenge(any(), any()) } returns PSResult.Success(
@@ -1172,6 +1260,618 @@ class PSCardFormControllerTest {
         // Assert
         assertNotNull(result)
         assertEquals(AuthenticationStatus.COMPLETED, result?.status)
+    }
+
+    @Test
+    fun `continueAuthenticationFlow returns FinalizeAuthenticationResponse when challenge is completed when status is PROCESSING`() = runTest {
+        // Arrange
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        val mockCardCvvView = mockk<PSCvvView>()
+        every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+        every { mockCardCvvView.placeholderString } returns ""
+        every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.data } returns "123"
+        justRun { mockCardCvvView.reset() }
+        val psCardFormController = PSCardFormController(
+            cardCvvView = mockCardCvvView,
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient
+        )
+        PSCardFormController.supportedCardTypes = listOf(PSCreditCardType.VISA)
+        val paymentHandle = PaymentHandle(
+            id = "id",
+            paymentHandleToken = "token",
+            merchantRefNum = "refNum",
+            status = PaymentHandleTokenStatus.PROCESSING.status,
+            action = PaymentHandleAction.REDIRECT.toString(),
+            cardBin = "1234"
+        )
+        val mockPaysafe3DS = mockk<Paysafe3DS>()
+        coEvery { mockPaysafe3DS.launch3dsChallenge(any(), any()) } returns PSResult.Success(
+            ThreeDSChallengePayload(authenticationId = "authId")
+        )
+        mockkConstructor(Paysafe3DS::class)
+        coEvery { anyConstructed<Paysafe3DS>().launch3dsChallenge(any(), any()) } returns PSResult.Success(
+            ThreeDSChallengePayload(authenticationId = "authId")
+        )
+        val mockCardAdapterAuthRepository = mockk<CardAdapterAuthRepository>()
+        coEvery {
+            mockCardAdapterAuthRepository.finalizeAuthentication(any(), any())
+        } returns PSResult.Success(FinalizeAuthenticationResponse(status = AuthenticationStatus.COMPLETED))
+
+        // Use reflection to set private field
+        setPrivateProperty(psCardFormController, "cardAdapterAuthRepository", mockCardAdapterAuthRepository)
+
+        // Act
+        val result = callPrivateContinueAuthenticationFlow(
+            psCardFormController,
+            mockActivity,
+            mockPaysafe3DS,
+            "challengePayload",
+            paymentHandle.id!!
+        )
+
+        // Assert
+        assertNotNull(result)
+        assertEquals(AuthenticationStatus.COMPLETED, result?.status)
+    }
+
+    @Test
+    fun `tokenize returns PSResult Success when status is COMPLETED and action is NONE`() = runTest {
+        // Arrange
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        val mockCardCvvView = mockk<PSCvvView>()
+        every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+        every { mockCardCvvView.placeholderString } returns ""
+        every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.data } returns "123"
+        justRun { mockCardCvvView.reset() }
+        val psCardFormController = PSCardFormController(
+            cardCvvView = mockCardCvvView,
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient
+        )
+        PSCardFormController.supportedCardTypes = listOf(PSCreditCardType.VISA)
+        val paymentHandle = PaymentHandle(
+            id = "id",
+            paymentHandleToken = "token",
+            merchantRefNum = "refNum",
+            status = PaymentHandleTokenStatus.COMPLETED.status,
+            action = PaymentHandleAction.NONE.toString(),
+            cardBin = "1234"
+        )
+        coEvery {
+            mockPSTokenizationService.tokenize(any(), any())
+        } returns PSResult.Success(paymentHandle)
+
+        // Mock handleAuthenticationStatusFailed()
+        every { mockPSApiClient.logErrorEvent(any(), any()) } just Runs
+
+        // Act
+        val result = psCardFormController.tokenize(
+            cardTokenizeOptions = psCardTokenizeOptions
+        )
+
+        // Assert
+        assertTrue(result is PSResult.Success)
+        assertEquals("token", (result as PSResult.Success).value)
+        assertFalse(psCardFormController.tokenizationAlreadyInProgress)
+    }
+
+    @Test
+    fun `tokenize returns PSResult Failure when status is PROCESSING and action is NONE`() = runTest {
+        // Arrange
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        val mockCardCvvView = mockk<PSCvvView>()
+        every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+        every { mockCardCvvView.placeholderString } returns ""
+        every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.data } returns "123"
+        justRun { mockCardCvvView.reset() }
+        val psCardFormController = PSCardFormController(
+            cardCvvView = mockCardCvvView,
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient
+        )
+        PSCardFormController.supportedCardTypes = listOf(PSCreditCardType.VISA)
+        val paymentHandle = PaymentHandle(
+            id = "id",
+            paymentHandleToken = "token",
+            merchantRefNum = "refNum",
+            status = PaymentHandleTokenStatus.PROCESSING.status,
+            action = PaymentHandleAction.NONE.toString(),
+            cardBin = "1234"
+        )
+        coEvery {
+            mockPSTokenizationService.tokenize(any(), any())
+        } returns PSResult.Success(paymentHandle)
+
+        // Mock handleAuthenticationStatusFailed()
+        val expectedException = paymentHandleCreationFailedException(
+            status = PaymentHandleTokenStatus.PROCESSING.status,
+            correlationId = correlationId
+        )
+        every { mockPSApiClient.logErrorEvent(any(), any()) } just Runs
+
+        // Act
+        val result = psCardFormController.tokenize(
+            cardTokenizeOptions = psCardTokenizeOptions
+        )
+
+        // Assert
+        assertTrue(result is PSResult.Failure)
+        val failureResult = result as PSResult.Failure
+        assertTrue(failureResult.exception is PaysafeException)
+        assertEquals(expectedException, failureResult.exception)
+        assertFalse(psCardFormController.tokenizationAlreadyInProgress)
+    }
+
+    @Test
+    fun `tokenize returns PSResult Failure when status is INITIATED and action is NONE`() = runTest {
+        // Arrange
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        val mockCardCvvView = mockk<PSCvvView>()
+        every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+        every { mockCardCvvView.placeholderString } returns ""
+        every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.data } returns "123"
+        justRun { mockCardCvvView.reset() }
+        val psCardFormController = PSCardFormController(
+            cardCvvView = mockCardCvvView,
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient
+        )
+        PSCardFormController.supportedCardTypes = listOf(PSCreditCardType.VISA)
+        val paymentHandle = PaymentHandle(
+            id = "id",
+            paymentHandleToken = "token",
+            merchantRefNum = "refNum",
+            status = PaymentHandleTokenStatus.INITIATED.status,
+            action = PaymentHandleAction.NONE.toString(),
+            cardBin = "1234"
+        )
+        coEvery {
+            mockPSTokenizationService.tokenize(any(), any())
+        } returns PSResult.Success(paymentHandle)
+
+        // Mock handleAuthenticationStatusFailed()
+        val expectedException = paymentHandleCreationFailedException(
+            status = PaymentHandleTokenStatus.INITIATED.status,
+            correlationId = correlationId
+        )
+        every { mockPSApiClient.logErrorEvent(any(), any()) } just Runs
+
+        // Act
+        val result = psCardFormController.tokenize(
+            cardTokenizeOptions = psCardTokenizeOptions
+        )
+
+        // Assert
+        assertTrue(result is PSResult.Failure)
+        val failureResult = result as PSResult.Failure
+        assertTrue(failureResult.exception is PaysafeException)
+        assertEquals(expectedException, failureResult.exception)
+        assertFalse(psCardFormController.tokenizationAlreadyInProgress)
+    }
+
+    @Test
+    fun `tokenize returns PSResult Success when status is PAYABLE and action is REDIRECT`() = runTest {
+        // Arrange
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        val mockCardCvvView = mockk<PSCvvView>()
+        every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+        every { mockCardCvvView.placeholderString } returns ""
+        every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.data } returns "123"
+        justRun { mockCardCvvView.reset() }
+        val psCardFormController = PSCardFormController(
+            cardCvvView = mockCardCvvView,
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient
+        )
+        PSCardFormController.supportedCardTypes = listOf(PSCreditCardType.VISA)
+        val paymentHandle = PaymentHandle(
+            id = "id",
+            paymentHandleToken = "token",
+            merchantRefNum = "refNum",
+            status = PaymentHandleTokenStatus.PAYABLE.status,
+            action = PaymentHandleAction.REDIRECT.toString(),
+            cardBin = "1234"
+        )
+        coEvery {
+            mockPSTokenizationService.tokenize(any(), any())
+        } returns PSResult.Success(paymentHandle)
+
+        // Mock other dependencies
+        coEvery {mockPSTokenizationService.refreshToken(paymentHandle)} returns PSResult.Success(paymentHandle)
+
+        // Act
+        val result = psCardFormController.tokenize(
+            cardTokenizeOptions = psCardTokenizeOptions
+        )
+
+        // Assert
+        assertTrue(result is PSResult.Success)
+        assertEquals("token", (result as PSResult.Success).value)
+        assertFalse(psCardFormController.tokenizationAlreadyInProgress)
+    }
+
+    @Test
+    fun `tokenize returns PSResult Success when status is COMPLETED and action is REDIRECT`() = runTest {
+        // Arrange
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        val mockCardCvvView = mockk<PSCvvView>()
+        every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+        every { mockCardCvvView.placeholderString } returns ""
+        every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.data } returns "123"
+        justRun { mockCardCvvView.reset() }
+        val psCardFormController = PSCardFormController(
+            cardCvvView = mockCardCvvView,
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient
+        )
+        PSCardFormController.supportedCardTypes = listOf(PSCreditCardType.VISA)
+        val paymentHandle = PaymentHandle(
+            id = "id",
+            paymentHandleToken = "token",
+            merchantRefNum = "refNum",
+            status = PaymentHandleTokenStatus.COMPLETED.status,
+            action = PaymentHandleAction.REDIRECT.toString(),
+            cardBin = "1234"
+        )
+        coEvery {
+            mockPSTokenizationService.tokenize(any(), any())
+        } returns PSResult.Success(paymentHandle)
+
+        // Mock other dependencies
+        coEvery {mockPSTokenizationService.refreshToken(paymentHandle)} returns PSResult.Success(paymentHandle)
+
+        // Act
+        val result = psCardFormController.tokenize(
+            cardTokenizeOptions = psCardTokenizeOptions
+        )
+
+        // Assert
+        assertTrue(result is PSResult.Success)
+        assertEquals("token", (result as PSResult.Success).value)
+        assertFalse(psCardFormController.tokenizationAlreadyInProgress)
+    }
+
+    @Test
+    fun `tokenize returns PSResult Failure when status is FAILED and action is REDIRECT`() = runTest {
+        // Arrange
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        val mockCardCvvView = mockk<PSCvvView>()
+        every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+        every { mockCardCvvView.placeholderString } returns ""
+        every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.data } returns "123"
+        justRun { mockCardCvvView.reset() }
+        val psCardFormController = PSCardFormController(
+            cardCvvView = mockCardCvvView,
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient
+        )
+        PSCardFormController.supportedCardTypes = listOf(PSCreditCardType.VISA)
+        val paymentHandle = PaymentHandle(
+            id = "id",
+            paymentHandleToken = "token",
+            merchantRefNum = "refNum",
+            status = PaymentHandleTokenStatus.FAILED.status,
+            action = PaymentHandleAction.REDIRECT.toString(),
+            cardBin = "1234"
+        )
+        coEvery {
+            mockPSTokenizationService.tokenize(any(), any())
+        } returns PSResult.Success(paymentHandle)
+
+        // Mock handleAuthenticationStatusFailed()
+        val expectedException = paymentHandleCreationFailedException(
+            status = PaymentHandleTokenStatus.FAILED.status,
+            correlationId = correlationId
+        )
+        every { mockPSApiClient.logErrorEvent(any(), any()) } just Runs
+
+        // Act
+        val result = psCardFormController.tokenize(
+            cardTokenizeOptions = psCardTokenizeOptions
+        )
+
+        // Assert
+        assertTrue(result is PSResult.Failure)
+        val failureResult = result as PSResult.Failure
+        assertTrue(failureResult.exception is PaysafeException)
+        assertEquals(expectedException, failureResult.exception)
+        assertFalse(psCardFormController.tokenizationAlreadyInProgress)
+    }
+
+    @Test
+    fun `tokenize returns PSResult Failure when status is EXPIRED and action is REDIRECT`() = runTest {
+        // Arrange
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        val mockCardCvvView = mockk<PSCvvView>()
+        every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+        every { mockCardCvvView.placeholderString } returns ""
+        every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.data } returns "123"
+        justRun { mockCardCvvView.reset() }
+        val psCardFormController = PSCardFormController(
+            cardCvvView = mockCardCvvView,
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient
+        )
+        PSCardFormController.supportedCardTypes = listOf(PSCreditCardType.VISA)
+        val paymentHandle = PaymentHandle(
+            id = "id",
+            paymentHandleToken = "token",
+            merchantRefNum = "refNum",
+            status = PaymentHandleTokenStatus.EXPIRED.status,
+            action = PaymentHandleAction.REDIRECT.toString(),
+            cardBin = "1234"
+        )
+        coEvery {
+            mockPSTokenizationService.tokenize(any(), any())
+        } returns PSResult.Success(paymentHandle)
+
+        // Mock handleAuthenticationStatusFailed()
+        val expectedException = paymentHandleCreationFailedException(
+            status = PaymentHandleTokenStatus.EXPIRED.status,
+            correlationId = correlationId
+        )
+        every { mockPSApiClient.logErrorEvent(any(), any()) } just Runs
+
+        // Act
+        val result = psCardFormController.tokenize(
+            cardTokenizeOptions = psCardTokenizeOptions
+        )
+
+        // Assert
+        assertTrue(result is PSResult.Failure)
+        val failureResult = result as PSResult.Failure
+        assertTrue(failureResult.exception is PaysafeException)
+        assertEquals(expectedException, failureResult.exception)
+        assertFalse(psCardFormController.tokenizationAlreadyInProgress)
+    }
+
+    @Test
+    fun `tokenize returns PSResult Failure when status is EXPIRED and action is UNKNOWN`() = runTest {
+        // Arrange
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        val mockCardCvvView = mockk<PSCvvView>()
+        every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+        every { mockCardCvvView.placeholderString } returns ""
+        every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.data } returns "123"
+        justRun { mockCardCvvView.reset() }
+        val psCardFormController = PSCardFormController(
+            cardCvvView = mockCardCvvView,
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient
+        )
+        PSCardFormController.supportedCardTypes = listOf(PSCreditCardType.VISA)
+        val paymentHandle = PaymentHandle(
+            id = "id",
+            paymentHandleToken = "token",
+            merchantRefNum = "refNum",
+            status = PaymentHandleTokenStatus.EXPIRED.status,
+            action = "UNKNOWN",
+            cardBin = "1234"
+        )
+        coEvery {
+            mockPSTokenizationService.tokenize(any(), any())
+        } returns PSResult.Success(paymentHandle)
+
+        // Mock handleAuthenticationStatusFailed()
+        val expectedException = paymentHandleCreationFailedException(
+            status = PaymentHandleTokenStatus.EXPIRED.status,
+            correlationId = correlationId
+        )
+        every { mockPSApiClient.logErrorEvent(any(), any()) } just Runs
+
+        // Act
+        val result = psCardFormController.tokenize(
+            cardTokenizeOptions = psCardTokenizeOptions
+        )
+
+        // Assert
+        assertTrue(result is PSResult.Failure)
+        val failureResult = result as PSResult.Failure
+        assertTrue(failureResult.exception is PaysafeException)
+        assertEquals(expectedException, failureResult.exception)
+        assertFalse(psCardFormController.tokenizationAlreadyInProgress)
+    }
+
+    @Test
+    fun `tokenize returns PSResult Failure when status is FAILED and action is UNKNOWN`() = runTest {
+        // Arrange
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        val mockCardCvvView = mockk<PSCvvView>()
+        every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+        every { mockCardCvvView.placeholderString } returns ""
+        every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.data } returns "123"
+        justRun { mockCardCvvView.reset() }
+        val psCardFormController = PSCardFormController(
+            cardCvvView = mockCardCvvView,
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient
+        )
+        PSCardFormController.supportedCardTypes = listOf(PSCreditCardType.VISA)
+        val paymentHandle = PaymentHandle(
+            id = "id",
+            paymentHandleToken = "token",
+            merchantRefNum = "refNum",
+            status = PaymentHandleTokenStatus.FAILED.status,
+            action = "UNKNOWN",
+            cardBin = "1234"
+        )
+        coEvery {
+            mockPSTokenizationService.tokenize(any(), any())
+        } returns PSResult.Success(paymentHandle)
+
+        // Mock handleAuthenticationStatusFailed()
+        val expectedException = paymentHandleCreationFailedException(
+            status = PaymentHandleTokenStatus.FAILED.status,
+            correlationId = correlationId
+        )
+        every { mockPSApiClient.logErrorEvent(any(), any()) } just Runs
+
+        // Act
+        val result = psCardFormController.tokenize(
+            cardTokenizeOptions = psCardTokenizeOptions
+        )
+
+        // Assert
+        assertTrue(result is PSResult.Failure)
+        val failureResult = result as PSResult.Failure
+        assertTrue(failureResult.exception is PaysafeException)
+        assertEquals(expectedException, failureResult.exception)
+        assertFalse(psCardFormController.tokenizationAlreadyInProgress)
+    }
+
+    @Test
+    fun `tokenize returns Failure when status is EXPIRED and action in NONE`() = runTest {
+        // Arrange
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        val mockCardCvvView = mockk<PSCvvView>()
+        every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+        every { mockCardCvvView.placeholderString } returns ""
+        every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.data } returns "123"
+        justRun { mockCardCvvView.reset() }
+        val psCardFormController = PSCardFormController(
+            cardCvvView = mockCardCvvView,
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient
+        )
+        PSCardFormController.supportedCardTypes = listOf(PSCreditCardType.VISA)
+        val paymentHandle = PaymentHandle(
+            id = "id",
+            paymentHandleToken = "token",
+            merchantRefNum = "refNum",
+            status = PaymentHandleTokenStatus.EXPIRED.status,
+            action = PaymentHandleAction.NONE.toString(),
+            cardBin = "1234"
+        )
+        coEvery {
+            mockPSTokenizationService.tokenize(any(), any())
+        } returns PSResult.Success(paymentHandle)
+
+        // Mock handleAuthenticationStatusFailed()
+        val expectedException = paymentHandleCreationFailedException(
+            status = PaymentHandleTokenStatus.EXPIRED.status,
+            correlationId = correlationId
+        )
+        every { mockPSApiClient.logErrorEvent(any(), any()) } just Runs
+
+        // Act
+        val result = psCardFormController.tokenize(
+            cardTokenizeOptions = psCardTokenizeOptions
+        )
+
+        // Assert
+        assertTrue(result is PSResult.Failure)
+        val failureResult = result as PSResult.Failure
+        assertTrue(failureResult.exception is PaysafeException)
+        assertEquals(expectedException, failureResult.exception)
+        assertFalse(psCardFormController.tokenizationAlreadyInProgress)
+    }
+
+    @Test
+    fun `tokenize returns Failure when status is FAILED and action in NONE`() = runTest {
+        // Arrange
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        val mockCardCvvView = mockk<PSCvvView>()
+        every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+        every { mockCardCvvView.placeholderString } returns ""
+        every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.data } returns "123"
+        justRun { mockCardCvvView.reset() }
+        val psCardFormController = PSCardFormController(
+            cardCvvView = mockCardCvvView,
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient
+        )
+        PSCardFormController.supportedCardTypes = listOf(PSCreditCardType.VISA)
+        val paymentHandle = PaymentHandle(
+            id = "id",
+            paymentHandleToken = "token",
+            merchantRefNum = "refNum",
+            status = PaymentHandleTokenStatus.FAILED.status,
+            action = PaymentHandleAction.NONE.toString(),
+            cardBin = "1234"
+        )
+        coEvery {
+            mockPSTokenizationService.tokenize(any(), any())
+        } returns PSResult.Success(paymentHandle)
+
+        // Mock handleAuthenticationStatusFailed()
+        val expectedException = paymentHandleCreationFailedException(
+            status = AuthenticationStatus.FAILED.value,
+            correlationId = correlationId
+        )
+        every { mockPSApiClient.logErrorEvent(any(), any()) } just Runs
+
+        // Act
+        val result = psCardFormController.tokenize(
+            cardTokenizeOptions = psCardTokenizeOptions
+        )
+
+        // Assert
+        assertTrue(result is PSResult.Failure)
+        val failureResult = result as PSResult.Failure
+        assertTrue(failureResult.exception is PaysafeException)
+        assertEquals(expectedException, failureResult.exception)
+        assertFalse(psCardFormController.tokenizationAlreadyInProgress)
     }
 
     @Test

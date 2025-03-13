@@ -18,7 +18,8 @@ fun PaymentHandleResponseSerializable.toDomain() = PaymentHandle(
     merchantRefNum = merchantRefNum,
     paymentHandleToken = paymentHandleToken,
     status = status,
-    gatewayResponse = gatewayResponse
+    gatewayResponse = gatewayResponse,
+    action = action
 )
 
 fun paymentHandleTokenStatusToDomain(status: String): PaymentHandleTokenStatus =

@@ -39,6 +39,8 @@ data class PaymentHandleResponseSerializable(
     val status: String,
 
     @SerialName("gatewayResponse")
-    val gatewayResponse: GatewayResponseSerializable? = null
+    val gatewayResponse: GatewayResponseSerializable? = null,
 
+    @SerialName("action")
+    val action: String,
 )

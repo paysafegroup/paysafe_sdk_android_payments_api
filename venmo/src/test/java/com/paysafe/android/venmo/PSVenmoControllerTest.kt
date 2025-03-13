@@ -496,6 +496,7 @@ class PSVenmoControllerTest {
                 merchantRefNum = "",
                 paymentHandleToken = "",
                 status = "",
+                action = "NONE"
             )
             coEvery {
                 mockPSTokenizationService.tokenize(any())
@@ -552,7 +553,8 @@ class PSVenmoControllerTest {
                         merchantRefNum = "",
                         paymentHandleToken = "",
                         status = "",
-                        id = null
+                        id = null,
+                        action = "NONE"
                     )
                 )
             )
@@ -579,7 +581,8 @@ class PSVenmoControllerTest {
                         merchantRefNum = "merchantRefNum",
                         paymentHandleToken = "paymentHandleToken",
                         status = "PAYABLE",
-                        id = "ID"
+                        id = "ID",
+                        action = "NONE"
                     )
                 )
             )
@@ -605,7 +608,8 @@ class PSVenmoControllerTest {
                         merchantRefNum = "merchantRefNum",
                         paymentHandleToken = "paymentHandleToken",
                         status = "PROCESSING",
-                        id = "ID"
+                        id = "ID",
+                        action = "NONE"
                     )
                 )
             )
@@ -632,7 +636,8 @@ class PSVenmoControllerTest {
                         paymentHandleToken = "paymentHandleToken",
                         status = "PROCESSING",
                         id = "ID",
-                        gatewayResponse = GatewayResponseSerializable(sessionToken = "")
+                        gatewayResponse = GatewayResponseSerializable(sessionToken = ""),
+                        action = "NONE"
                     )
                 )
             )
@@ -661,7 +666,8 @@ class PSVenmoControllerTest {
                         id = "ID",
                         gatewayResponse = GatewayResponseSerializable(
                             sessionToken = "session-token"
-                        )
+                        ),
+                        action = "NONE"
                     )
                 )
             )
@@ -688,7 +694,8 @@ class PSVenmoControllerTest {
                         paymentHandleToken = "paymentHandleToken",
                         status = "PROCESSING",
                         id = "ID",
-                        gatewayResponse = GatewayResponseSerializable()
+                        gatewayResponse = GatewayResponseSerializable(),
+                        action = "NONE"
                     )
                 )
             )
@@ -714,7 +721,8 @@ class PSVenmoControllerTest {
                         merchantRefNum = "merchantRefNum",
                         paymentHandleToken = "paymentHandleToken",
                         status = "EXPIRED",
-                        id = "ID"
+                        id = "ID",
+                        action = "NONE"
                     )
                 )
             )
@@ -788,7 +796,8 @@ class PSVenmoControllerTest {
                 merchantRefNum = "",
                 paymentHandleToken = "",
                 status = "",
-                id = "ID"
+                id = "ID",
+                action = "NONE"
             )
             coEvery {
                 mockPSTokenizationService.tokenize(any())
@@ -821,7 +830,8 @@ class PSVenmoControllerTest {
                 merchantRefNum = "merchantRefNum",
                 paymentHandleToken = "paymentHandleToken",
                 status = "",
-                id = "ID"
+                id = "ID",
+                action = "NONE"
             )
             psVenmoController.paymentHandle = paymentHandle
             psVenmoController.lifecycleScopeWeakRef.clear()
@@ -844,7 +854,8 @@ class PSVenmoControllerTest {
                 merchantRefNum = "merchantRefNum",
                 paymentHandleToken = "paymentHandleToken",
                 status = "",
-                id = "ID"
+                id = "ID",
+                action = "NONE"
             )
             coEvery {
                 mockPSTokenizationService.refreshToken(paymentHandle)
@@ -875,7 +886,8 @@ class PSVenmoControllerTest {
                 merchantRefNum = "merchantRefNum",
                 paymentHandleToken = "paymentHandleToken",
                 status = "",
-                id = "ID"
+                id = "ID",
+                action = "NONE"
             )
             coEvery {
                 mockPSTokenizationService.refreshToken(paymentHandle)
@@ -903,7 +915,8 @@ class PSVenmoControllerTest {
                 merchantRefNum = "merchantRefNum",
                 paymentHandleToken = "paymentHandleToken",
                 status = "",
-                id = "ID"
+                id = "ID",
+                action = "NONE"
             )
             coEvery {
                 mockPSTokenizationService.refreshToken(paymentHandle)
@@ -934,7 +947,8 @@ class PSVenmoControllerTest {
                 merchantRefNum = "merchantRefNum",
                 paymentHandleToken = "paymentHandleToken",
                 status = "",
-                id = "ID"
+                id = "ID",
+                action = "NONE"
             )
             coEvery {
                 mockPSTokenizationService.refreshToken(paymentHandle)
@@ -991,7 +1005,8 @@ class PSVenmoControllerTest {
             merchantRefNum = "ref123",
             paymentHandleToken = "token123",
             status = "INITIATED",
-            gatewayResponse = GatewayResponseSerializable()
+            gatewayResponse = GatewayResponseSerializable(),
+            action = "NONE"
         )
 
         val domain = response.toDomain()
@@ -1015,7 +1030,8 @@ class PSVenmoControllerTest {
             merchantRefNum = "ref123",
             paymentHandleToken = "token123",
             status = "INITIATED",
-            gatewayResponse = GatewayResponseSerializable()
+            gatewayResponse = GatewayResponseSerializable(),
+            action = "NONE"
         )
 
         val domain = response.toDomain()

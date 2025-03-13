@@ -31,5 +31,8 @@ data class PaymentHandle(
     /** Status for payment handle. */
     val status: String,
 
-    val gatewayResponse: GatewayResponseSerializable? = null
+    val gatewayResponse: GatewayResponseSerializable? = null,
+
+    /** Action for 3DS. */
+    val action: String
 )

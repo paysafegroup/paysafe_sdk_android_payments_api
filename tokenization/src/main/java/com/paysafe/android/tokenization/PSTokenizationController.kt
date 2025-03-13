@@ -88,13 +88,13 @@ internal class PSTokenizationController(
             "RefreshToken paymentTokenStatus: ${paymentTokenStatus?.status}"
         )
         return when (paymentTokenStatus?.status) {
-            PaymentHandleTokenStatus.PAYABLE ->
+            PaymentHandleTokenStatus.PAYABLE,
+            PaymentHandleTokenStatus.COMPLETED, ->
                 handleRefreshTokenStatusPayable(
                     paymentHandle,
                     paymentTokenStatus.status
                 )
 
-            PaymentHandleTokenStatus.COMPLETED,
             PaymentHandleTokenStatus.INITIATED,
             PaymentHandleTokenStatus.PROCESSING ->
                 handleRefreshTokenStatusCompletedInitiatedAndProcessing(

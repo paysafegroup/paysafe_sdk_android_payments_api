@@ -64,7 +64,9 @@ import com.paysafe.android.tokenization.domain.model.cardadapter.AuthenticationS
 import com.paysafe.android.tokenization.domain.model.paymentHandle.CardExpiryRequest
 import com.paysafe.android.tokenization.domain.model.paymentHandle.CardRequest
 import com.paysafe.android.tokenization.domain.model.paymentHandle.PaymentHandle
+import com.paysafe.android.tokenization.domain.model.paymentHandle.PaymentHandleAction
 import com.paysafe.android.tokenization.domain.model.paymentHandle.PaymentHandleRequest
+import com.paysafe.android.tokenization.domain.model.paymentHandle.PaymentHandleTokenStatus
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -95,7 +97,7 @@ class PSCardFormController internal constructor(
     private val tokenizationService: PSTokenizationService,
     private val mainDispatcher: CoroutineDispatcher,
     private val ioDispatcher: CoroutineDispatcher,
-    private val psApiClient: PSApiClient
+    private val psApiClient: PSApiClient,
 ) {
 
     var onCardBrandRecognition: ((PSCreditCardType) -> Unit)? = null
@@ -155,7 +157,7 @@ class PSCardFormController internal constructor(
             cardHolderNameView: PSCardholderNameView? = null,
             cardExpiryDateView: PSExpiryDateView? = null,
             cardCvvView: PSCvvView? = null,
-            callback: PSCallback<PSCardFormController>
+            callback: PSCallback<PSCardFormController>,
         ) {
             if (!PaysafeSDK.isInitialized()) {
                 callback.onFailure(sdkNotInitializedException())
@@ -179,7 +181,7 @@ class PSCardFormController internal constructor(
             cardExpiryDateView: PSExpiryDateView?,
             cardCvvView: PSCvvView?,
             callback: PSCallback<PSCardFormController>,
-            dispatchers: Pair<CoroutineDispatcher, CoroutineDispatcher>
+            dispatchers: Pair<CoroutineDispatcher, CoroutineDispatcher>,
         ) {
             val (mainDispatcher, ioDispatcher) = dispatchers
             if (!this::coroutineScope.isInitialized)
@@ -218,7 +220,7 @@ class PSCardFormController internal constructor(
         internal suspend fun validatePaymentMethods(
             cardFormConfig: PSCardFormConfig,
             psApiClient: PSApiClient,
-            paymentMethodsService: PaymentMethodsService = PaymentMethodsServiceImpl(psApiClient)
+            paymentMethodsService: PaymentMethodsService = PaymentMethodsServiceImpl(psApiClient),
         ): PSResult<Unit> {
             val accountId = cardFormConfig.accountId
             val currencyCode = cardFormConfig.currencyCode
@@ -342,7 +344,7 @@ class PSCardFormController internal constructor(
         }
     }
 
-    private  fun handleTokenizationInProgressError(): PSResult.Failure {
+    private fun handleTokenizationInProgressError(): PSResult.Failure {
         val paysafeException = tokenizationAlreadyInProgressException(correlationId)
         PaysafeSDK.getPSApiClient()
             .logErrorEvent(paysafeException.errorName(), paysafeException)
@@ -353,7 +355,7 @@ class PSCardFormController internal constructor(
         tokenizeResult: PSResult<PaymentHandle>,
         paymentHandleRequest: PaymentHandleRequest,
         paymentHandleRequestWithRenderType: PaymentHandleRequestWithRenderType,
-        activity: Activity?
+        activity: Activity?,
     ): PSResult<String> {
         return when (tokenizeResult) {
             is PSResult.Failure -> tokenizeResult
@@ -370,10 +372,53 @@ class PSCardFormController internal constructor(
         tokenizeResult: PSResult.Success<PaymentHandle>,
         paymentHandleRequest: PaymentHandleRequest,
         paymentHandleRequestWithRenderType: PaymentHandleRequestWithRenderType,
-        activity: Activity?
+        activity: Activity?,
     ): PSResult<String> {
         val paymentHandle = tokenizeResult.value
-        val bin = paymentHandle?.networkTokenBin ?: paymentHandle?.cardBin ?: ""
+        val bin = paymentHandle?.networkTokenBin ?: paymentHandle?.cardBin
+
+        if (paymentHandle?.action == PaymentHandleAction.REDIRECT.toString() &&
+            (paymentHandle.status == PaymentHandleTokenStatus.INITIATED.status ||
+                    paymentHandle.status == PaymentHandleTokenStatus.PROCESSING.status) &&
+            bin != null
+        ) {
+            return start3DS(
+                activity,
+                bin,
+                paymentHandle,
+                paymentHandleRequest,
+                paymentHandleRequestWithRenderType
+            )
+        }
+
+        LocalLog.d("PSTokenizationController", "Status processing")
+        return when (paymentHandle?.status) {
+            PaymentHandleTokenStatus.PAYABLE.status,
+            PaymentHandleTokenStatus.COMPLETED.status ->
+                PSResult.Success(paymentHandle.paymentHandleToken)
+            else -> handleStatus(paymentHandle?.status)
+        }
+    }
+
+    private fun handleStatus(
+        status: String?,
+    ): PSResult.Failure {
+        val paysafeException =
+            paymentHandleCreationFailedException(
+                status = status ?: PaymentHandleTokenStatus.FAILED.status,
+                correlationId = psApiClient.getCorrelationId()
+            )
+        psApiClient.logErrorEvent(paysafeException.errorName(), paysafeException)
+        return PSResult.Failure(paysafeException)
+    }
+
+    private suspend fun PSCardFormController.start3DS(
+        activity: Activity?,
+        bin: String,
+        paymentHandle: PaymentHandle?,
+        paymentHandleRequest: PaymentHandleRequest,
+        paymentHandleRequestWithRenderType: PaymentHandleRequestWithRenderType,
+    ): PSResult<String> {
         LocalLog.d("PSTokenizationController", "Initialize 3DS")
         val paysafe3DS = Paysafe3DS()
         val deviceFingerprint = paysafe3DS.start(
@@ -396,7 +441,7 @@ class PSCardFormController internal constructor(
         paymentHandleRequest: PaymentHandleRequest,
         activity: Activity?,
         paysafe3DS: Paysafe3DS,
-        deviceFingerprint: String
+        deviceFingerprint: String,
     ): PSResult<String> {
         val authenticationRequest = AuthenticationRequest(
             paymentHandleId = paymentHandle.id!!,
@@ -421,6 +466,7 @@ class PSCardFormController internal constructor(
                 }
                 onRefreshToken(paymentHandle = paymentHandle)
             }
+
             authenticationResponse?.status == AuthenticationStatus.FAILED -> handleAuthenticationStatusFailed()
             authenticationResponse?.status != AuthenticationStatus.COMPLETED -> handleGenericError()
             else -> onRefreshToken(paymentHandle = paymentHandle)
@@ -441,7 +487,7 @@ class PSCardFormController internal constructor(
         activity: Activity,
         paysafe3DS: Paysafe3DS,
         sdkChallengePayload: String,
-        paymentHandleId: String
+        paymentHandleId: String,
     ): FinalizeAuthenticationResponse? {
         LocalLog.d("PSTokenizationController", "Launch 3DS Challenge")
         val challengePayloadResult = paysafe3DS.launch3dsChallenge(
@@ -469,7 +515,7 @@ class PSCardFormController internal constructor(
     fun tokenize(
         lifecycleOwner: LifecycleOwner,
         cardTokenizeOptions: PSCardTokenizeOptions,
-        callback: PSResultCallback<String>
+        callback: PSResultCallback<String>,
     ) {
         lifecycleOwner.lifecycleScope.launch(ioDispatcher) {
             val result = tokenize(cardTokenizeOptions)
@@ -548,7 +594,7 @@ class PSCardFormController internal constructor(
     @Throws(PaysafeException::class)
     private fun validateUsesSupportedCreditCard(
         creditCardType: PSCreditCardType,
-        supportedCreditCards: List<PSCreditCardType>?
+        supportedCreditCards: List<PSCreditCardType>?,
     ) {
         if (supportedCreditCards?.contains(creditCardType) == false)
             throw unsupportedCardBrandException(correlationId)
@@ -622,7 +668,7 @@ class PSCardFormController internal constructor(
         cardNumberView: PSCardNumberView?,
         cardHolderNameView: PSCardholderNameView?,
         cardExpiryDateView: PSExpiryDateView?,
-        cardCvvView: PSCvvView?
+        cardCvvView: PSCvvView?,
     ) {
         val notAvailable = "N/A"
         val cardNumberPlaceholder = getNotEmptyOrDefault(cardNumberView?.placeholderString)
@@ -649,19 +695,18 @@ class PSCardFormController internal constructor(
 }
 
 
-
 @Serializable
-internal data class  Field(
+internal data class Field(
     @SerialName("placeHolder")
     val placeHolder: String,
     @SerialName("accessibilityLabel")
     val accessibilityLabel: String,
     @SerialName("accessibilityErrorMessage")
-    val accessibilityErrorMessage: String
+    val accessibilityErrorMessage: String,
 )
 
 @Serializable
-internal data class  Fields(
+internal data class Fields(
     @SerialName("cardNumber")
     val cardNumber: Field?,
     @SerialName("cardHolderName")
@@ -669,5 +714,5 @@ internal data class  Fields(
     @SerialName("expiryDate")
     val expiryDate: Field?,
     @SerialName("cvvField")
-    val cvvField: Field?
+    val cvvField: Field?,
 )
