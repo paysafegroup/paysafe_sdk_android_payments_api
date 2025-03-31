@@ -79,9 +79,9 @@ object Versions {
     const val testJUnit = "1.1.5"
 
     // Compose
-    const val composeUi = "1.5.1"
-    const val composeUiTest = "1.5.4"
-    const val composeBom = "2023.08.00"
+    const val composeUi = "1.7.8"
+    const val composeUiTest = "1.7.8"
+    const val composeBom = "2024.03.00"
     const val material3 = "material3"
 
     // Google
@@ -144,6 +144,8 @@ object Compose {
     val material3 by lazy { "androidx.compose.material3:${Versions.material3}" }
     val uiTestJUnit4 by lazy { "androidx.compose.ui:ui-test-junit4:${Versions.composeUiTest}" }
     val uiTestManifest by lazy { "androidx.compose.ui:ui-test-manifest:${Versions.composeUiTest}" }
+    val foundation by lazy { "androidx.compose.foundation:foundation:${Versions.composeUi}" }
+    val composeRunTime by lazy { "androidx.compose.runtime:runtime:${Versions.composeUi}" }
 }
 
 object Google {

@@ -83,8 +83,14 @@
             android:id="@+id/action_add_new_credit_card"
             app:destination="@id/nav_credit_card" />
         <action
+            android:id="@+id/action_add_new_credit_card_compose"
+            app:destination="@id/nav_credit_card_compose" />
+        <action
             android:id="@+id/action_select_saved_card"
             app:destination="@id/nav_saved_card_cvv" />
+        <action
+            android:id="@+id/action_select_saved_card_compose"
+            app:destination="@id/nav_saved_card_cvv_compose" />
     </fragment>
 
     <fragment
@@ -101,8 +107,37 @@
     </fragment>
 
     <fragment
+        android:id="@+id/nav_credit_card_compose"
+        android:name="com.paysafe.example.creditcard.FragmentCreditCardCompose"
+        android:label="Credit Card"
+        tools:layout="@layout/fragment_credit_card">
+        <argument
+            android:name="productToUseCreditCard"
+            app:argType="com.paysafe.example.grid.UiProductData" />
+        <action
+            android:id="@+id/action_newcc_to_payment_successful"
+            app:destination="@id/nav_payment_successful" />
+    </fragment>
+
+    <fragment
         android:id="@+id/nav_saved_card_cvv"
         android:name="com.paysafe.example.savedcard.FragmentSavedCardCvv"
+        android:label="Saved Card CVV"
+        tools:layout="@layout/fragment_saved_card_cvv">
+        <argument
+            android:name="productForCheckout"
+            app:argType="com.paysafe.example.grid.UiProductData" />
+        <argument
+            android:name="savedCardChosen"
+            app:argType="com.paysafe.example.savedcard.UiSavedCardData" />
+        <action
+            android:id="@+id/action_savedcvv_to_payment_successful"
+            app:destination="@id/nav_payment_successful" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_saved_card_cvv_compose"
+        android:name="com.paysafe.example.savedcard.FragmentSavedCardCvvCompose"
         android:label="Saved Card CVV"
         tools:layout="@layout/fragment_saved_card_cvv">
         <argument

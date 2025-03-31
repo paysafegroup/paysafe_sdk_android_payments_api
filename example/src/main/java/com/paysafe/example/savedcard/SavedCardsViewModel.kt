@@ -7,6 +7,8 @@ package com.paysafe.example.savedcard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.paysafe.android.core.data.entity.PSResult
+import com.paysafe.android.hostedfields.R
+import com.paysafe.android.paymentmethods.domain.model.PSCreditCardType
 import com.paysafe.example.merchantbackend.MerchantBackendRepository
 import com.paysafe.example.merchantbackend.MerchantBackendRepositoryImpl
 import com.paysafe.example.merchantbackend.data.domain.payment.toUI
@@ -25,8 +27,21 @@ class SavedCardsViewModel : ViewModel() {
         viewModelScope.launch {
             when (val result = repository.requestSingleUseCustomerTokens()) {
                 is PSResult.Success -> {
+                    val composeSevedCard = UiSavedCardData(
+                        R.drawable.ic_cc_mastercard,
+                        PSCreditCardType.MASTERCARD,
+                        lastDigits = "0000",
+                        holderName = "Compose saved card",
+                        expiryMonth = "12",
+                        expiryYear = "2099",
+                        expiryDate = "12-2099",
+                        paymentHandleTokenFrom = "Cmfy9rokKZRyFmI",
+                        singleUseCustomerToken = "SP5PhDcXzlI8qEoP"
+                    )
                     val data = result.value?.paymentHandles?.map {
                         it.toUI(result.value?.singleUseCustomerToken)
+                    }?.toMutableList()?.apply {
+                        add(composeSevedCard)
                     }
 
                     _savedCardsLiveData.value = SavedCardsUiState.SUCCESS(data ?: emptyList())

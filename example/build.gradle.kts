@@ -99,6 +99,10 @@ android {
             test.enabled = false
         }
     }
+    buildFeatures.compose = true
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.4.8"
+    }
 }
 
 dependencies {
@@ -120,6 +124,9 @@ dependencies {
     implementation(Google.material)
     implementation(Retrofit.retrofit)
     implementation(Retrofit.gsonConverter)
+    implementation(Compose.foundation)
+    implementation(Compose.composeRunTime)
+    implementation("androidx.compose.material3:material3:1.1.0")
 
     // Runtime
     runtimeOnly(Kotlin.coroutines)

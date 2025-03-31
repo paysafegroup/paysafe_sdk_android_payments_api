@@ -1,9 +1,10 @@
 /*
- * Copyright (c) 2024 Paysafe Group
+ * Copyright (c) 2025 Paysafe Group
  */
 
-package com.paysafe.example.savedcard
+package com.paysafe.example.creditcard
 
+import PSCardForm
 import android.app.Activity
 import android.os.Bundle
 import android.util.Log
@@ -11,6 +12,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.NavHostFragment
@@ -21,8 +32,12 @@ import com.paysafe.android.core.data.entity.value
 import com.paysafe.android.core.util.launchCatching
 import com.paysafe.android.hostedfields.PSCardFormConfig
 import com.paysafe.android.hostedfields.PSCardFormController
+import com.paysafe.android.hostedfields.cardnumber.PSCardNumberView
+import com.paysafe.android.hostedfields.cvv.PSCvvView
 import com.paysafe.android.hostedfields.domain.model.PSCardTokenizeOptions
 import com.paysafe.android.hostedfields.domain.model.RenderType
+import com.paysafe.android.hostedfields.expirydate.PSExpiryDatePickerView
+import com.paysafe.android.hostedfields.holdername.PSCardholderNameView
 import com.paysafe.android.tokenization.domain.model.paymentHandle.BillingDetails
 import com.paysafe.android.tokenization.domain.model.paymentHandle.MerchantDescriptor
 import com.paysafe.android.tokenization.domain.model.paymentHandle.ShippingDetails
@@ -35,44 +50,48 @@ import com.paysafe.android.tokenization.domain.model.paymentHandle.profile.Profi
 import com.paysafe.android.tokenization.domain.model.paymentHandle.profile.ProfileLocale
 import com.paysafe.android.tokenization.domain.model.paymentHandle.threeds.ThreeDS
 import com.paysafe.example.R
-import com.paysafe.example.databinding.FragmentSavedCardCvvBinding
 import com.paysafe.example.successful.SuccessDisplay
 import com.paysafe.example.util.Consts
 import com.paysafe.example.util.ErrorHandlingDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class FragmentSavedCardCvv : Fragment() {
+class FragmentCreditCardCompose: Fragment() {
 
-    private val args: FragmentSavedCardCvvArgs by navArgs()
+    private var cardController: PSCardFormController? = null
+
+    private val args: FragmentCreditCardComposeArgs by navArgs()
+    private var cardTokenizeOptionsAccountId = ""
+    private var cardTokenizeOptionsMerchantRefNum = ""
     private val navController by lazy {
         val navHostFragment = requireActivity().supportFragmentManager
             .findFragmentById(R.id.nav_sample_app) as NavHostFragment
         navHostFragment.navController
     }
 
-    private lateinit var binding: FragmentSavedCardCvvBinding
-    private lateinit var cardController: PSCardFormController
-
-    private var cardTokenizeOptionsAccountId = ""
-    private var cardTokenizeOptionsMerchantRefNum = ""
-
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?,
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?,
     ): View {
-        binding = FragmentSavedCardCvvBinding.inflate(inflater, container, false)
-        setupUI(binding)
+        val context = requireContext()
+
+        val cardNumberView = PSCardNumberView(context)
+        val cardHolderNameView = PSCardholderNameView(context)
+        val expiryDateView = PSExpiryDatePickerView(context)
+        val cvvView = PSCvvView(context)
+        val isSubmitEnabled = mutableStateOf(false)
+
         PSCardFormController.initialize(
-            cardFormConfig = PSCardFormConfig(
-                currencyCode = "USD",
-                accountId = Consts.CARDS_ACCOUNT_ID
-            ),
-            cardCvvView = binding.savedCardCvvField,
+            cardFormConfig = PSCardFormConfig("USD", "1001234110"),
+            cardNumberView = cardNumberView,
+            cardHolderNameView = cardHolderNameView,
+            cardExpiryDateView = expiryDateView,
+            cardCvvView = cvvView,
             callback = object : PSCallback<PSCardFormController> {
                 override fun onSuccess(value: PSCardFormController) {
                     cardController = value
+                    cardController?.isSubmitEnabledLiveData?.observe(viewLifecycleOwner) { isEnabled ->
+                        isSubmitEnabled.value = isEnabled
+                    }
                 }
 
                 override fun onFailure(exception: Exception) {
@@ -80,12 +99,10 @@ class FragmentSavedCardCvv : Fragment() {
                         ErrorHandlingDialog.newInstance(
                             exception = exception,
                             title = "CardForm init error"
-                        ).show(
-                            parentFragmentManager, ErrorHandlingDialog.TAG
-                        )
+                        ).show(parentFragmentManager, ErrorHandlingDialog.TAG)
                     } else {
                         Log.w(
-                            "FragmentSavedCardCvv",
+                            "FragmentCreditCardCompose",
                             "Fragment is not attached, skipping error dialog."
                         )
                     }
@@ -93,53 +110,58 @@ class FragmentSavedCardCvv : Fragment() {
             }
         )
 
-        return binding.root
-    }
-
-    private fun setupUI(binding: FragmentSavedCardCvvBinding) {
-        binding.savedCardCvvField.cardType = args.savedCardChosen.cardBrandType
-        binding.savedCardCvvBackImg.setOnClickListener {
-            navController.navigateUp()
-        }
-        binding.savedCardCvvCCardBrand.setImageResource(args.savedCardChosen.cardBrandRes)
-        binding.savedCardCvvLastDigits.text = "*" + args.savedCardChosen.lastDigits
-        binding.savedCardCvvHolderName.text = args.savedCardChosen.holderName
-        binding.savedCardCvvExpiryDate.text = args.savedCardChosen.expiryDate
-        binding.savedCardCvvPlaceOrderButton.setOnClickListener {
-            hideKeyboard(it)
-            binding.savedCardCvvField.clearFocus()
-            onPlaceOrderClick()
-        }
-        binding.savedCardCvvCancelButton.setOnClickListener {
-            navController.navigateUp()
-        }
-        binding.savedCardCvvField.isValidLiveData.observe(viewLifecycleOwner) { isSubmitEnabled ->
-            binding.savedCardCvvPlaceOrderButton.isEnabled = isSubmitEnabled
+        return ComposeView(context).apply {
+            setContent {
+                MaterialTheme {
+                    Surface {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            val focusManager = LocalFocusManager.current
+                            PSCardForm(
+                                isSubmitEnabled = isSubmitEnabled.value,
+                                onSubmit = {
+                                    focusManager.clearFocus()
+                                    processPayment()
+                                },
+                                onCancel = {
+                                    focusManager.clearFocus()
+                                    navController.navigateUp()
+                                },
+                                remember { cardNumberView },
+                                remember { cardHolderNameView },
+                                remember { expiryDateView },
+                                remember { cvvView },
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 
     private fun hideKeyboard(view: View) {
-        (requireActivity().getSystemService(
-            Activity.INPUT_METHOD_SERVICE
-        ) as InputMethodManager).hideSoftInputFromWindow(view.windowToken, 0)
+        (requireActivity().getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(
+            view.windowToken,
+            0
+        )
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        cardController?.dispose()
+    }
 
-    private fun onPlaceOrderClick() {
-        binding.savedCardCvvPlaceOrderButton.text = "Loading..."
-        binding.savedCardCvvPlaceOrderButton.isEnabled = false
+    private fun processPayment() {
+        view?.let { hideKeyboard(it) }
 
         val cardTokenizeOptions = getCardTokenizeOptions(
-            (args.productForCheckout.totalRaw * 100).toInt(),
-            args.savedCardChosen.paymentHandleTokenFrom,
-            args.savedCardChosen.singleUseCustomerToken,
+            (args.productToUseCreditCard.totalRaw * 100).toInt()
         )
 
         cardTokenizeOptionsAccountId = cardTokenizeOptions.accountId
         cardTokenizeOptionsMerchantRefNum = cardTokenizeOptions.merchantRefNum
 
         lifecycleScope.launchCatching(Dispatchers.IO) {
-            val paymentHandleToken = cardController.tokenize(cardTokenizeOptions).value()
+            val paymentHandleToken = cardController?.tokenize(cardTokenizeOptions)?.value()
             withContext(Dispatchers.Main) {
                 onPaymentResult(
                     SuccessDisplay(
@@ -149,39 +171,29 @@ class FragmentSavedCardCvv : Fragment() {
                     )
                 )
             }
-
         }.onFailure {
             onPaymentError(it)
         }
     }
 
     private fun onPaymentResult(resultToDisplay: SuccessDisplay) {
-        binding.savedCardCvvPlaceOrderButton.text = "Place order"
-        binding.savedCardCvvPlaceOrderButton.isEnabled = true
         navController.navigate(
-            FragmentSavedCardCvvDirections.actionSavedcvvToPaymentSuccessful(resultToDisplay)
+            FragmentCreditCardComposeDirections.actionNewccToPaymentSuccessful(resultToDisplay)
         )
     }
 
     private fun onPaymentError(it: Exception) {
-        Log.e("SampleAppError", "FragmentSavedCardCvv: $it")
-        binding.savedCardCvvPlaceOrderButton.text = "Place order"
-        binding.savedCardCvvPlaceOrderButton.isEnabled = true
         if (isAdded) {
             ErrorHandlingDialog.newInstance(it).show(parentFragmentManager, ErrorHandlingDialog.TAG)
         } else {
             Log.w(
-                "FragmentSavedCardCvv",
+                "FragmentCreditCardCompose",
                 "Fragment is not attached, skipping error dialog."
             )
         }
     }
 
-    private fun getCardTokenizeOptions(
-        amount: Int,
-        paymentHandleTokenFrom: String,
-        singleUseCustomerToken: String,
-    ) = PSCardTokenizeOptions(
+    private fun getCardTokenizeOptions(amount: Int) = PSCardTokenizeOptions(
         amount = amount,
         currencyCode = "USD",
         transactionType = TransactionType.PAYMENT,
@@ -207,7 +219,7 @@ class FragmentSavedCardCvv : Fragment() {
             email = "email@mail.com",
             phone = "0123456789",
             mobile = "0123456789",
-            gender = Gender.MALE,
+            gender = Gender.FEMALE,
             nationality = "nationality",
             identityDocuments = listOf(IdentityDocument(documentNumber = "SSN123456"))
         ),
@@ -225,13 +237,10 @@ class FragmentSavedCardCvv : Fragment() {
             countryCode = "US",
             zip = "36051",
         ),
-        singleUseCustomerToken = singleUseCustomerToken,
-        paymentHandleTokenFrom = paymentHandleTokenFrom,
         renderType = RenderType.BOTH,
         threeDS = ThreeDS(
             merchantUrl = "https://api.qa.paysafe.com/checkout/v2/index.html#/desktop",
             process = true
         )
     )
-
 }

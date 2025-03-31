@@ -1,18 +1,24 @@
 /*
- * Copyright (c) 2024 Paysafe Group
+ * Copyright (c) 2025 Paysafe Group
  */
 
 package com.paysafe.example.savedcard
 
-import android.app.Activity
+import SavedCardCvvScreen
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.InputMethodManager
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.navArgs
 import com.paysafe.android.PaysafeSDK
@@ -21,6 +27,7 @@ import com.paysafe.android.core.data.entity.value
 import com.paysafe.android.core.util.launchCatching
 import com.paysafe.android.hostedfields.PSCardFormConfig
 import com.paysafe.android.hostedfields.PSCardFormController
+import com.paysafe.android.hostedfields.cvv.PSCvvView
 import com.paysafe.android.hostedfields.domain.model.PSCardTokenizeOptions
 import com.paysafe.android.hostedfields.domain.model.RenderType
 import com.paysafe.android.tokenization.domain.model.paymentHandle.BillingDetails
@@ -35,14 +42,14 @@ import com.paysafe.android.tokenization.domain.model.paymentHandle.profile.Profi
 import com.paysafe.android.tokenization.domain.model.paymentHandle.profile.ProfileLocale
 import com.paysafe.android.tokenization.domain.model.paymentHandle.threeds.ThreeDS
 import com.paysafe.example.R
-import com.paysafe.example.databinding.FragmentSavedCardCvvBinding
 import com.paysafe.example.successful.SuccessDisplay
 import com.paysafe.example.util.Consts
 import com.paysafe.example.util.ErrorHandlingDialog
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class FragmentSavedCardCvv : Fragment() {
+class FragmentSavedCardCvvCompose : Fragment() {
 
     private val args: FragmentSavedCardCvvArgs by navArgs()
     private val navController by lazy {
@@ -51,28 +58,37 @@ class FragmentSavedCardCvv : Fragment() {
         navHostFragment.navController
     }
 
-    private lateinit var binding: FragmentSavedCardCvvBinding
     private lateinit var cardController: PSCardFormController
 
     private var cardTokenizeOptionsAccountId = ""
     private var cardTokenizeOptionsMerchantRefNum = ""
+
+    private val isPlaceOrderEnabled = mutableStateOf(false)
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View {
-        binding = FragmentSavedCardCvvBinding.inflate(inflater, container, false)
-        setupUI(binding)
+        val context = requireContext()
+        val cvvView = PSCvvView(context)
+
         PSCardFormController.initialize(
             cardFormConfig = PSCardFormConfig(
                 currencyCode = "USD",
                 accountId = Consts.CARDS_ACCOUNT_ID
             ),
-            cardCvvView = binding.savedCardCvvField,
+            cardCvvView = cvvView,
             callback = object : PSCallback<PSCardFormController> {
                 override fun onSuccess(value: PSCardFormController) {
                     cardController = value
+                    lifecycleScope.launch {
+                        repeatOnLifecycle(Lifecycle.State.STARTED) {
+                            cvvView.isValidLiveData.observe(viewLifecycleOwner) { isEnabled ->
+                                isPlaceOrderEnabled.value = isEnabled
+                            }
+                        }
+                    }
                 }
 
                 override fun onFailure(exception: Exception) {
@@ -80,12 +96,10 @@ class FragmentSavedCardCvv : Fragment() {
                         ErrorHandlingDialog.newInstance(
                             exception = exception,
                             title = "CardForm init error"
-                        ).show(
-                            parentFragmentManager, ErrorHandlingDialog.TAG
-                        )
+                        ).show(parentFragmentManager, ErrorHandlingDialog.TAG)
                     } else {
                         Log.w(
-                            "FragmentSavedCardCvv",
+                            "FragmentSavedCardCvvCompose",
                             "Fragment is not attached, skipping error dialog."
                         )
                     }
@@ -93,41 +107,37 @@ class FragmentSavedCardCvv : Fragment() {
             }
         )
 
-        return binding.root
-    }
+        return ComposeView(context).apply {
+            setContent {
+                MaterialTheme {
+                    Surface {
+                        val focusManager = LocalFocusManager.current
 
-    private fun setupUI(binding: FragmentSavedCardCvvBinding) {
-        binding.savedCardCvvField.cardType = args.savedCardChosen.cardBrandType
-        binding.savedCardCvvBackImg.setOnClickListener {
-            navController.navigateUp()
-        }
-        binding.savedCardCvvCCardBrand.setImageResource(args.savedCardChosen.cardBrandRes)
-        binding.savedCardCvvLastDigits.text = "*" + args.savedCardChosen.lastDigits
-        binding.savedCardCvvHolderName.text = args.savedCardChosen.holderName
-        binding.savedCardCvvExpiryDate.text = args.savedCardChosen.expiryDate
-        binding.savedCardCvvPlaceOrderButton.setOnClickListener {
-            hideKeyboard(it)
-            binding.savedCardCvvField.clearFocus()
-            onPlaceOrderClick()
-        }
-        binding.savedCardCvvCancelButton.setOnClickListener {
-            navController.navigateUp()
-        }
-        binding.savedCardCvvField.isValidLiveData.observe(viewLifecycleOwner) { isSubmitEnabled ->
-            binding.savedCardCvvPlaceOrderButton.isEnabled = isSubmitEnabled
+                        SavedCardCvvScreen(
+                            args = args,
+                            onBackClick = {
+                                focusManager.clearFocus()
+                                navController.navigateUp()
+                            },
+                            onPlaceOrderClick = {
+                                focusManager.clearFocus()
+                                onPlaceOrderClick()
+                            },
+                            onCancelClick = {
+                                focusManager.clearFocus()
+                                navController.navigateUp()
+                            },
+                            isPlaceOrderEnabled = isPlaceOrderEnabled.value,
+                            cvvView = cvvView
+                        )
+                    }
+                }
+            }
         }
     }
-
-    private fun hideKeyboard(view: View) {
-        (requireActivity().getSystemService(
-            Activity.INPUT_METHOD_SERVICE
-        ) as InputMethodManager).hideSoftInputFromWindow(view.windowToken, 0)
-    }
-
 
     private fun onPlaceOrderClick() {
-        binding.savedCardCvvPlaceOrderButton.text = "Loading..."
-        binding.savedCardCvvPlaceOrderButton.isEnabled = false
+        if (!isPlaceOrderEnabled.value) return
 
         val cardTokenizeOptions = getCardTokenizeOptions(
             (args.productForCheckout.totalRaw * 100).toInt(),
@@ -149,29 +159,25 @@ class FragmentSavedCardCvv : Fragment() {
                     )
                 )
             }
-
         }.onFailure {
             onPaymentError(it)
         }
     }
 
     private fun onPaymentResult(resultToDisplay: SuccessDisplay) {
-        binding.savedCardCvvPlaceOrderButton.text = "Place order"
-        binding.savedCardCvvPlaceOrderButton.isEnabled = true
         navController.navigate(
             FragmentSavedCardCvvDirections.actionSavedcvvToPaymentSuccessful(resultToDisplay)
         )
     }
 
-    private fun onPaymentError(it: Exception) {
-        Log.e("SampleAppError", "FragmentSavedCardCvv: $it")
-        binding.savedCardCvvPlaceOrderButton.text = "Place order"
-        binding.savedCardCvvPlaceOrderButton.isEnabled = true
+    private fun onPaymentError(exception: Exception) {
         if (isAdded) {
-            ErrorHandlingDialog.newInstance(it).show(parentFragmentManager, ErrorHandlingDialog.TAG)
+            Log.e("SampleAppError", "FragmentSavedCardCvvCompose: $exception")
+            ErrorHandlingDialog.newInstance(exception)
+                .show(parentFragmentManager, ErrorHandlingDialog.TAG)
         } else {
             Log.w(
-                "FragmentSavedCardCvv",
+                "FragmentSavedCardCvvCompose",
                 "Fragment is not attached, skipping error dialog."
             )
         }
@@ -189,7 +195,7 @@ class FragmentSavedCardCvv : Fragment() {
         billingDetails = BillingDetails(
             nickName = "John Doe's card",
             street = "5335 Gate Parkway Fourth Floor",
-            city = "Jacksonvillle",
+            city = "Jacksonville",
             state = "FL",
             country = "US",
             zip = "32256"
@@ -199,11 +205,7 @@ class FragmentSavedCardCvv : Fragment() {
             lastName = "lastName",
             locale = ProfileLocale.EN_GB,
             merchantCustomerId = "merchantCustomerId",
-            dateOfBirth = DateOfBirth(
-                day = 1,
-                month = 1,
-                year = 1990
-            ),
+            dateOfBirth = DateOfBirth(1, 1, 1990),
             email = "email@mail.com",
             phone = "0123456789",
             mobile = "0123456789",
@@ -233,5 +235,5 @@ class FragmentSavedCardCvv : Fragment() {
             process = true
         )
     )
-
 }
+

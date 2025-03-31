@@ -42,7 +42,7 @@ class FragmentSelectSavedCard : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         binding = FragmentSelectSavedCardBinding.inflate(inflater, container, false)
         val savedCardsRecyclerView: RecyclerView = binding.recyclerSavedCardsList
@@ -56,6 +56,9 @@ class FragmentSelectSavedCard : Fragment() {
         }
         binding.selectSavedCardAddNewCard.setOnClickListener {
             onAddNewCardClick()
+        }
+        binding.selectSavedCardAddNewCardCompose.setOnClickListener {
+            onAddNewCardComposeClick()
         }
 
         viewModel.onRequestSingleUseCustomerTokens()
@@ -82,12 +85,26 @@ class FragmentSelectSavedCard : Fragment() {
         )
     }
 
-    private fun onSavedCardClick(selectedSavedCard: UiSavedCardData) {
+    private fun onAddNewCardComposeClick() {
         navController.navigate(
-            FragmentSelectSavedCardDirections.actionSelectSavedCard(
-                args.productForCheckout, selectedSavedCard
-            )
+            FragmentSelectSavedCardDirections.actionAddNewCreditCardCompose(args.productForCheckout)
         )
+    }
+
+    private fun onSavedCardClick(selectedSavedCard: UiSavedCardData) {
+        if (selectedSavedCard.holderName == "Compose saved card") {
+            navController.navigate(
+                FragmentSelectSavedCardDirections.actionSelectSavedCardCompose(
+                    args.productForCheckout, selectedSavedCard
+                )
+            )
+        } else {
+            navController.navigate(
+                FragmentSelectSavedCardDirections.actionSelectSavedCard(
+                    args.productForCheckout, selectedSavedCard
+                )
+            )
+        }
     }
 
     private fun observeSavedCardsData() {
@@ -98,6 +115,7 @@ class FragmentSelectSavedCard : Fragment() {
                         binding.savedCardsProgressBar.isVisible = false
                         savedCardsAdapter.updateData(state.data)
                     }
+
                     is SavedCardsUiState.LOADING -> binding.savedCardsProgressBar.isVisible = true
                     is SavedCardsUiState.FAILURE -> {
                         binding.savedCardsProgressBar.isVisible = false

@@ -19,6 +19,7 @@ plugins {
     id(TopLevelGradle.androidLibPlugin) version Versions.androidPlugins apply false
     id(TopLevelGradle.jetbrainsSerializationPlugin) version Versions.jetbrainsSerializationPlugin apply false
     id(TopLevelGradle.dokkaPlugin) version Versions.dokka apply false
+
 }
 
 
