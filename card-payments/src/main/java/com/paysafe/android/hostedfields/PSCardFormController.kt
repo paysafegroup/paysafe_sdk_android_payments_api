@@ -537,28 +537,29 @@ class PSCardFormController internal constructor(
             return PSResult.Failure(paysafeException)
         }
 
-        when (val refreshTokenResult = tokenizationService.refreshToken(paymentHandle)) {
+        return when (val refreshTokenResult = tokenizationService.refreshToken(paymentHandle)) {
             is PSResult.Failure -> {
-                return refreshTokenFailureHandler(refreshTokenResult)
+                refreshTokenFailureHandler(refreshTokenResult)
             }
+
             is PSResult.Success -> {
-                return refreshTokenSuccessHandler(refreshTokenResult)
+                refreshTokenSuccessHandler(refreshTokenResult)
             }
         }
     }
 
     private fun refreshTokenSuccessHandler(refreshTokenResult: PSResult.Success<PaymentHandle>): PSResult<String> {
         val refreshedPaymentHandle = refreshTokenResult.value
-        if (refreshedPaymentHandle != null) {
+        return if (refreshedPaymentHandle != null) {
             LocalLog.d("PSCardFormController", "Token was refreshed with success.")
             tokenizationAlreadyInProgress = false
-            return PSResult.Success(refreshedPaymentHandle.paymentHandleToken)
+            PSResult.Success(refreshedPaymentHandle.paymentHandleToken)
         } else {
             LocalLog.d("PSCardFormController", "Refreshed PaymentHandle is null")
             val paysafeException = genericApiErrorException(psApiClient.getCorrelationId())
             psApiClient.logErrorEvent(paysafeException.errorName(), paysafeException)
             tokenizationAlreadyInProgress = false
-            return PSResult.Failure(paysafeException)
+            PSResult.Failure(paysafeException)
         }
     }
 
@@ -568,12 +569,12 @@ class PSCardFormController internal constructor(
             "Refresh token failed with ${refreshTokenResult.exception.message}"
         )
         tokenizationAlreadyInProgress = false
-        if (refreshTokenResult.exception is PaysafeException) {
-            return PSResult.Failure(refreshTokenResult.exception)
+        return if (refreshTokenResult.exception is PaysafeException) {
+            PSResult.Failure(refreshTokenResult.exception)
         } else {
             val paysafeException = genericApiErrorException(psApiClient.getCorrelationId())
             psApiClient.logErrorEvent(paysafeException.errorName(), paysafeException)
-            return PSResult.Failure(paysafeException)
+            PSResult.Failure(paysafeException)
         }
     }
 

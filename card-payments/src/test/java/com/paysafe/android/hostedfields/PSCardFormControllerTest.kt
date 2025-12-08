@@ -54,6 +54,7 @@ import com.paysafe.android.tokenization.domain.model.paymentHandle.TransactionTy
 import io.mockk.Runs
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.just
@@ -2021,6 +2022,7 @@ class PSCardFormControllerTest {
                 psApiClient = mockPSApiClient
             )
         )
+        setPrivateProperty(psCardFormController, "tokenizationAlreadyInProgress", true)
 
         // Act
         val result = callPrivateRefreshTokenSuccessHandler(psCardFormController, refreshTokenResult)
@@ -2035,6 +2037,76 @@ class PSCardFormControllerTest {
             assertEquals("Unhandled error occurred.", paysafeException.detailedMessage)
             assertEquals("correlationId", paysafeException.correlationId)
         }
+    }
+
+    @Test
+    fun `refreshTokenSuccessHandler logs error and resets flag when PaymentHandle is null`() {
+        // when
+        val refreshTokenResult = PSResult.Success<PaymentHandle>(null)
+        val mockPSApiClient = mockk<PSApiClient>()
+        every { mockPSApiClient.getCorrelationId() } returns "correlationId"
+        justRun { mockPSApiClient.logErrorEvent(any(), any()) }
+
+        val psCardFormController = spyk(
+            PSCardFormController(
+                cardCvvView = mockk(relaxed = true),
+                tokenizationService = mockk(relaxed = true),
+                mainDispatcher = Dispatchers.Unconfined,
+                ioDispatcher = Dispatchers.Unconfined,
+                psApiClient = mockPSApiClient
+            )
+        )
+
+        setPrivateProperty(psCardFormController, "tokenizationAlreadyInProgress", true)
+
+        // when
+        val result = callPrivateRefreshTokenSuccessHandler(psCardFormController, refreshTokenResult)
+
+        // then
+        assertTrue(result is PSResult.Failure)
+        assertFalse(psCardFormController.tokenizationAlreadyInProgress)
+        verify(exactly = 1) { mockPSApiClient.logErrorEvent(any(), any()) }
+    }
+
+    @Test
+    fun `refreshTokenSuccessHandler returns success when PaymentHandle is valid and resets flag`() {
+        // Arrange
+        val paymentHandleToken = "test-payment-handle-token-123"
+        val paymentHandle = PaymentHandle(
+            accountId = accountId,
+            cardBin = "424242",
+            networkTokenBin = null,
+            id = "payment-handle-id",
+            merchantRefNum = "merchant-ref-123",
+            paymentHandleToken = paymentHandleToken,
+            status = "PAYABLE",
+            gatewayResponse = null,
+            action = "NONE"
+        )
+        val refreshTokenResult = PSResult.Success(paymentHandle)
+        val mockPSApiClient = mockk<PSApiClient>()
+        every { mockPSApiClient.getCorrelationId() } returns "correlationId"
+
+        val psCardFormController = spyk(
+            PSCardFormController(
+                cardCvvView = mockk(relaxed = true),
+                tokenizationService = mockk(relaxed = true),
+                mainDispatcher = Dispatchers.Unconfined,
+                ioDispatcher = Dispatchers.Unconfined,
+                psApiClient = mockPSApiClient
+            )
+        )
+        setPrivateProperty(psCardFormController, "tokenizationAlreadyInProgress", true)
+
+        // Act
+        val result = callPrivateRefreshTokenSuccessHandler(psCardFormController, refreshTokenResult)
+
+        // Assert
+        assertTrue(result is PSResult.Success)
+        if (result is PSResult.Success) {
+            assertEquals(paymentHandleToken, result.value)
+        }
+        assertFalse(psCardFormController.tokenizationAlreadyInProgress)
     }
 
 
@@ -2104,6 +2176,207 @@ class PSCardFormControllerTest {
         return method.invoke(controller, refreshTokenResult) as PSResult.Failure
     }
 
+    @Test
+    fun `onRefreshToken returns failure and resets flag when paymentHandle is invalid`() = runTest {
+        // Arrange
+        val mockPSApiClient = mockk<PSApiClient>()
+        every { mockPSApiClient.getCorrelationId() } returns "correlationId"
+        justRun { mockPSApiClient.logErrorEvent(any(), any()) }
 
+        val psCardFormController = spyk(
+            PSCardFormController(
+                cardCvvView = mockk(relaxed = true),
+                tokenizationService = mockk(relaxed = true),
+                mainDispatcher = Dispatchers.Unconfined,
+                ioDispatcher = Dispatchers.Unconfined,
+                psApiClient = mockPSApiClient
+            )
+        )
+        setPrivateProperty(psCardFormController, "tokenizationAlreadyInProgress", true)
+
+        // Act & Assert - Test with null paymentHandle
+        val resultNull = psCardFormController.onRefreshToken(null)
+        assertTrue(resultNull is PSResult.Failure)
+        if (resultNull is PSResult.Failure) {
+            assertTrue(resultNull.exception is PaysafeException)
+            assertEquals(9014, (resultNull.exception as PaysafeException).code)
+            assertEquals("correlationId", (resultNull.exception as PaysafeException).correlationId)
+        }
+        assertFalse(psCardFormController.tokenizationAlreadyInProgress)
+        verify(exactly = 1) { mockPSApiClient.logErrorEvent(any(), any()) }
+
+        // Reset for second test
+        setPrivateProperty(psCardFormController, "tokenizationAlreadyInProgress", true)
+
+        // Act & Assert - Test with empty token
+        val paymentHandleWithEmptyToken = PaymentHandle(
+            accountId = accountId,
+            cardBin = "424242",
+            networkTokenBin = null,
+            id = "payment-handle-id",
+            merchantRefNum = "merchant-ref-123",
+            paymentHandleToken = "",
+            status = "PAYABLE",
+            gatewayResponse = null,
+            action = "NONE"
+        )
+        val resultEmpty = psCardFormController.onRefreshToken(paymentHandleWithEmptyToken)
+        assertTrue(resultEmpty is PSResult.Failure)
+        if (resultEmpty is PSResult.Failure) {
+            assertTrue(resultEmpty.exception is PaysafeException)
+        }
+        assertFalse(psCardFormController.tokenizationAlreadyInProgress)
+    }
+
+    @Test
+    fun `onRefreshToken returns success when tokenizationService refreshToken succeeds`() = runTest {
+        // given
+        val paymentHandleToken = "test-payment-handle-token-123"
+        val paymentHandle = PaymentHandle(
+            accountId = accountId,
+            cardBin = "424242",
+            networkTokenBin = null,
+            id = "payment-handle-id",
+            merchantRefNum = "merchant-ref-123",
+            paymentHandleToken = paymentHandleToken,
+            status = "PAYABLE",
+            gatewayResponse = null,
+            action = "NONE"
+        )
+
+        val refreshedToken = "refreshed-token-456"
+        val refreshedPaymentHandle = PaymentHandle(
+            accountId = accountId,
+            cardBin = "424242",
+            networkTokenBin = null,
+            id = "payment-handle-id",
+            merchantRefNum = "merchant-ref-123",
+            paymentHandleToken = refreshedToken,
+            status = "PAYABLE",
+            gatewayResponse = null,
+            action = "NONE"
+        )
+
+        val mockPSApiClient = mockk<PSApiClient>()
+        every { mockPSApiClient.getCorrelationId() } returns "correlationId"
+
+        val mockTokenizationService = mockk<PSTokenization>()
+        coEvery { mockTokenizationService.refreshToken(paymentHandle) } returns PSResult.Success(refreshedPaymentHandle)
+
+        val psCardFormController = spyk(
+            PSCardFormController(
+                cardCvvView = mockk(relaxed = true),
+                tokenizationService = mockTokenizationService,
+                mainDispatcher = Dispatchers.Unconfined,
+                ioDispatcher = Dispatchers.Unconfined,
+                psApiClient = mockPSApiClient
+            )
+        )
+
+        // when
+        val result = psCardFormController.onRefreshToken(paymentHandle)
+
+        // then
+        assertTrue(result is PSResult.Success)
+        if (result is PSResult.Success) {
+            assertEquals(refreshedToken, result.value)
+        }
+        coVerify(exactly = 1) { mockTokenizationService.refreshToken(paymentHandle) }
+    }
+
+    @Test
+    fun `onRefreshToken returns failure when tokenizationService refreshToken fails`() = runTest {
+        // given
+        val paymentHandleToken = "test-payment-handle-token-123"
+        val paymentHandle = PaymentHandle(
+            accountId = accountId,
+            cardBin = "424242",
+            networkTokenBin = null,
+            id = "payment-handle-id",
+            merchantRefNum = "merchant-ref-123",
+            paymentHandleToken = paymentHandleToken,
+            status = "PAYABLE",
+            gatewayResponse = null,
+            action = "NONE"
+        )
+
+        val paysafeException = PaysafeException(
+            code = 9999,
+            displayMessage = "Refresh failed",
+            detailedMessage = "Token refresh failed",
+            correlationId = "correlationId"
+        )
+
+        val mockPSApiClient = mockk<PSApiClient>()
+        every { mockPSApiClient.getCorrelationId() } returns "correlationId"
+
+        val mockTokenizationService = mockk<PSTokenization>()
+        coEvery { mockTokenizationService.refreshToken(paymentHandle) } returns PSResult.Failure(paysafeException)
+
+        val psCardFormController = spyk(
+            PSCardFormController(
+                cardCvvView = mockk(relaxed = true),
+                tokenizationService = mockTokenizationService,
+                mainDispatcher = Dispatchers.Unconfined,
+                ioDispatcher = Dispatchers.Unconfined,
+                psApiClient = mockPSApiClient
+            )
+        )
+
+        // when
+        val result = psCardFormController.onRefreshToken(paymentHandle)
+
+        // then
+        assertTrue(result is PSResult.Failure)
+        if (result is PSResult.Failure) {
+            assertTrue(result.exception is PaysafeException)
+            assertEquals(9999, (result.exception as PaysafeException).code)
+        }
+    }
+
+    @Test
+    fun `onRefreshToken returns failure when tokenizationService returns Success with null PaymentHandle`() = runTest {
+        // given
+        val paymentHandleToken = "test-payment-handle-token-123"
+        val paymentHandle = PaymentHandle(
+            accountId = accountId,
+            cardBin = "424242",
+            networkTokenBin = null,
+            id = "payment-handle-id",
+            merchantRefNum = "merchant-ref-123",
+            paymentHandleToken = paymentHandleToken,
+            status = "PAYABLE",
+            gatewayResponse = null,
+            action = "NONE"
+        )
+
+        val mockPSApiClient = mockk<PSApiClient>()
+        every { mockPSApiClient.getCorrelationId() } returns "correlationId"
+        justRun { mockPSApiClient.logErrorEvent(any(), any()) }
+
+        val mockTokenizationService = mockk<PSTokenization>()
+        coEvery { mockTokenizationService.refreshToken(paymentHandle) } returns PSResult.Success(null)
+
+        val psCardFormController = spyk(
+            PSCardFormController(
+                cardCvvView = mockk(relaxed = true),
+                tokenizationService = mockTokenizationService,
+                mainDispatcher = Dispatchers.Unconfined,
+                ioDispatcher = Dispatchers.Unconfined,
+                psApiClient = mockPSApiClient
+            )
+        )
+
+        // when
+        val result = psCardFormController.onRefreshToken(paymentHandle)
+
+        // then
+        assertTrue(result is PSResult.Failure)
+        if (result is PSResult.Failure) {
+            assertTrue(result.exception is PaysafeException)
+            val exception = result.exception as PaysafeException
+            assertEquals(9014, exception.code)
+        }
+    }
 
 }

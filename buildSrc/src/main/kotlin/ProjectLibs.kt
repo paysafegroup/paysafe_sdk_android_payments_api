@@ -70,6 +70,7 @@ object Versions {
     const val constraintLayout = "2.1.4"
     const val desugarJdk = "2.0.3"
     const val activity = "1.8.1"
+    const val lifecycleVersion = "2.8.2"
 
     // Jetpack
     const val coreKtx = "1.12.0"
@@ -94,6 +95,8 @@ object Versions {
     // Kotlin
     const val coroutines = "1.7.3"
     const val jsonSerialization = "1.5.1"
+    const val kotlinReflect = "1.9.0"
+    const val kotlinReflectNew = "1.9.20"
 
     // Network
     const val okHttp3Bom = "4.10.0"
@@ -123,6 +126,7 @@ object AndroidBase {
     val constraintLayout by lazy { "androidx.constraintlayout:constraintlayout:${Versions.constraintLayout}" }
     val desugarJdk by lazy { "com.android.tools:desugar_jdk_libs:${Versions.desugarJdk}" }
     val activity by lazy { "androidx.activity:activity-ktx:${Versions.activity}" }
+    val lifecycleRuntimeKtx by lazy { "androidx.lifecycle:lifecycle-runtime-ktx:${Versions.lifecycleVersion}" }
 }
 
 object Jetpack {
@@ -158,6 +162,8 @@ object Google {
 
 object Kotlin {
     val coroutines by lazy { "org.jetbrains.kotlinx:kotlinx-coroutines-android:${Versions.coroutines}" }
+    val reflect by lazy { "org.jetbrains.kotlin:kotlin-reflect:${Versions.kotlinReflect}" }
+    val reflectNew by lazy { "org.jetbrains.kotlin:kotlin-reflect:${Versions.kotlinReflectNew}" }
     val jsonSerialization by lazy { "org.jetbrains.kotlinx:kotlinx-serialization-json:${Versions.jsonSerialization}" }
 }
 

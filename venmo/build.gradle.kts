@@ -95,7 +95,8 @@ dependencies {
     implementation(Venmo.venmoPayments)
 
     implementation(AndroidBase.appCompat)
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.2")
+    implementation(AndroidBase.lifecycleRuntimeKtx)
+
     // Tests
     testImplementation(Testing.jUnit)
     testImplementation(Testing.mockK)
