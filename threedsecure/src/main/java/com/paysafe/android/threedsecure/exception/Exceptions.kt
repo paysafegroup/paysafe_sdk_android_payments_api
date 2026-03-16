@@ -19,6 +19,7 @@ internal const val CHALLENGE_3DS_TIMEOUT = 9199
 internal const val CHALLENGE_3DS_USER_CANCELLED = 9200
 internal const val CHALLENGE_3DS_FAILED_VALIDATION = 9201
 internal const val GENERIC_API_ERROR = 9014
+internal const val CARDINAL_OBSERVER_NOT_INITIALISED = 9132
 
 
 internal fun PaysafeException.errorName(): String = when (code) {
@@ -127,6 +128,13 @@ internal fun challenge3DSFailedValidationException(correlationId: String) = Pays
 internal fun genericApiErrorException(correlationId: String) = PaysafeException(
     code = GENERIC_API_ERROR,
     displayMessage = genericDisplayMessage(GENERIC_API_ERROR),
+    detailedMessage = "Unhandled error occurred.",
+    correlationId = correlationId
+)
+
+internal fun cardinalObserverErrorException(correlationId: String) = PaysafeException(
+    code = CARDINAL_OBSERVER_NOT_INITIALISED,
+    displayMessage = genericDisplayMessage(CARDINAL_OBSERVER_NOT_INITIALISED),
     detailedMessage = "Unhandled error occurred.",
     correlationId = correlationId
 )

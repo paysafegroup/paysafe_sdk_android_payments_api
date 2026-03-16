@@ -75,11 +75,12 @@ class Paysafe3DS internal constructor(
     override fun launch3dsChallenge(
         activity: Activity,
         challengePayload: String,
-        callback: PSResultCallback<ThreeDSChallengePayload>
+        callback: PSResultCallback<ThreeDSChallengePayload>,
+        challengeManager: CardinalChallengeManager
     ) {
         val lifecycleOwner = activity as LifecycleOwner
         lifecycleOwner.lifecycleScope.launch(ioDispatcher) {
-            val result = launch3dsChallenge(activity, challengePayload)
+            val result = launch3dsChallenge(activity, challengePayload, challengeManager)
             withContext(mainDispatcher) {
                 resultAsCallback(result, callback)
             }
@@ -101,9 +102,10 @@ class Paysafe3DS internal constructor(
 
     override suspend fun launch3dsChallenge(
         activity: Activity,
-        challengePayload: String
+        challengePayload: String,
+        challengeManager: CardinalChallengeManager?
     ): PSResult<ThreeDSChallengePayload> = controller.continueCardinal3DSChallenge(
-        activity, challengePayload, httpClient
+        challengeManager, challengePayload, httpClient
     )
 
     override fun dispose() = controller.disposeCardinal()

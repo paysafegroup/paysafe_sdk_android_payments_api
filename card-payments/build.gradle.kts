@@ -97,6 +97,7 @@ dependencies {
     api(project(":tokenization"))
     implementation(project(":threedsecure"))
     implementation(Kotlin.reflect)
+    implementation(AndroidBase.androidFragment)
 
     val platformComposeBom = platform(Compose.bom)
 

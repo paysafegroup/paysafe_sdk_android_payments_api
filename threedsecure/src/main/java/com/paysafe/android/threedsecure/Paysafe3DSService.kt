@@ -43,7 +43,8 @@ interface Paysafe3DSService {
     fun launch3dsChallenge(
         activity: Activity,
         challengePayload: String,
-        callback: PSResultCallback<ThreeDSChallengePayload>
+        callback: PSResultCallback<ThreeDSChallengePayload>,
+        challengeManager: CardinalChallengeManager
     )
 
     /**
@@ -70,7 +71,8 @@ interface Paysafe3DSService {
     @JvmSynthetic
     suspend fun launch3dsChallenge(
         activity: Activity,
-        challengePayload: String
+        challengePayload: String,
+        challengeManager: CardinalChallengeManager?
     ): PSResult<ThreeDSChallengePayload>
 
     /**

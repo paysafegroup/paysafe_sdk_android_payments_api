@@ -7,6 +7,7 @@ package com.paysafe.android.hostedfields
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
@@ -57,6 +58,7 @@ import com.paysafe.android.paymentmethods.PaymentMethodsServiceImpl
 import com.paysafe.android.paymentmethods.domain.model.PSCreditCardType
 import com.paysafe.android.paymentmethods.domain.model.PaymentMethod
 import com.paysafe.android.paymentmethods.domain.model.PaymentMethodType
+import com.paysafe.android.threedsecure.CardinalChallengeManager
 import com.paysafe.android.threedsecure.Paysafe3DS
 import com.paysafe.android.tokenization.PSTokenization
 import com.paysafe.android.tokenization.PSTokenizationService
@@ -151,6 +153,8 @@ class PSCardFormController internal constructor(
 
         private lateinit var coroutineScope: CoroutineScope
 
+        internal var challengeManager: CardinalChallengeManager? = null
+
         fun initialize(
             cardFormConfig: PSCardFormConfig,
             cardNumberView: PSCardNumberView? = null,
@@ -212,6 +216,14 @@ class PSCardFormController internal constructor(
             }.onFailure {
                 callback.onFailure(Exception(it.message))
             }
+        }
+
+        fun addCardinalObserver(lifecycleOwner: LifecycleOwner) {
+            val fragmentActivity = lifecycleOwner as? FragmentActivity
+                ?: throw IllegalArgumentException("Activity must extend FragmentActivity for 3DS challenges")
+
+            challengeManager = CardinalChallengeManager(fragmentActivity)
+            challengeManager?.initObserver()
         }
 
         private fun provideDispatchersPair(): Pair<CoroutineDispatcher, CoroutineDispatcher> =
@@ -338,6 +350,8 @@ class PSCardFormController internal constructor(
             PSResult.Failure(exception)
         } finally {
             tokenizationAlreadyInProgress = false
+            challengeManager?.cleanup()
+            challengeManager = null
             withContext(coroutineContext + Dispatchers.Main) {
                 resetFields()
             }
@@ -363,7 +377,7 @@ class PSCardFormController internal constructor(
                 tokenizeResult,
                 paymentHandleRequest,
                 paymentHandleRequestWithRenderType,
-                activity
+                activity,
             )
         }
     }
@@ -394,8 +408,9 @@ class PSCardFormController internal constructor(
         LocalLog.d("PSTokenizationController", "Status processing")
         return when (paymentHandle?.status) {
             PaymentHandleTokenStatus.PAYABLE.status,
-            PaymentHandleTokenStatus.COMPLETED.status ->
-                PSResult.Success(paymentHandle.paymentHandleToken)
+            PaymentHandleTokenStatus.COMPLETED.status,
+                -> PSResult.Success(paymentHandle.paymentHandleToken)
+
             else -> handleStatus(paymentHandle?.status)
         }
     }
@@ -433,7 +448,13 @@ class PSCardFormController internal constructor(
         }
 
         LocalLog.d("PSTokenizationController", "Start Authentication")
-        return startAuthentication(paymentHandle, paymentHandleRequest, activity, paysafe3DS, deviceFingerprint)
+        return startAuthentication(
+            paymentHandle,
+            paymentHandleRequest,
+            activity,
+            paysafe3DS,
+            deviceFingerprint
+        )
     }
 
     private suspend fun startAuthentication(
@@ -455,24 +476,41 @@ class PSCardFormController internal constructor(
 
         return when {
             authenticationResponse?.status == AuthenticationStatus.PENDING && authenticationResponse.sdkChallengePayload != null -> {
-                val finalizeResult = activity?.let {
-                    continueAuthenticationFlow(activity = it, paysafe3DS = paysafe3DS, sdkChallengePayload = authenticationResponse.sdkChallengePayload, paymentHandleId = paymentHandle.id!!)
-                }
-                if (finalizeResult?.status == AuthenticationStatus.FAILED) {
-                    return handleAuthenticationStatusFailed()
-                }
-                if (finalizeResult?.status != AuthenticationStatus.COMPLETED) {
-                    return handleGenericError()
-                }
-                onRefreshToken(paymentHandle = paymentHandle)
+                handleAuthenticationStatusPending(
+                    activity = activity,
+                    paysafe3DS = paysafe3DS,
+                    sdkChallengePayload = authenticationResponse.sdkChallengePayload,
+                    paymentHandle = paymentHandle
+                )
             }
-
             authenticationResponse?.status == AuthenticationStatus.FAILED -> handleAuthenticationStatusFailed()
             authenticationResponse?.status != AuthenticationStatus.COMPLETED -> handleGenericError()
             else -> onRefreshToken(paymentHandle = paymentHandle)
         }
     }
 
+    private suspend fun handleAuthenticationStatusPending(
+        activity: Activity?,
+        paysafe3DS: Paysafe3DS,
+        sdkChallengePayload: String,
+        paymentHandle: PaymentHandle,
+    ): PSResult<String> {
+        val finalizeResult = activity?.let {
+            continueAuthenticationFlow(
+                activity = it,
+                paysafe3DS = paysafe3DS,
+                sdkChallengePayload = sdkChallengePayload,
+                paymentHandleId = paymentHandle.id!!
+            )
+        }
+        if (finalizeResult?.status == AuthenticationStatus.FAILED) {
+            return handleAuthenticationStatusFailed()
+        }
+        if (finalizeResult?.status != AuthenticationStatus.COMPLETED) {
+            return handleGenericError()
+        }
+        return onRefreshToken(paymentHandle = paymentHandle)
+    }
 
     private fun handleAuthenticationStatusFailed(): PSResult.Failure {
         val paysafeException = paymentHandleCreationFailedException(
@@ -492,7 +530,8 @@ class PSCardFormController internal constructor(
         LocalLog.d("PSTokenizationController", "Launch 3DS Challenge")
         val challengePayloadResult = paysafe3DS.launch3dsChallenge(
             activity = activity,
-            challengePayload = sdkChallengePayload
+            challengePayload = sdkChallengePayload,
+            challengeManager = challengeManager
         )
         val authenticationId =
             (challengePayloadResult as? PSResult.Success)?.value?.authenticationId ?: return null
@@ -502,6 +541,10 @@ class PSCardFormController internal constructor(
             paymentHandleId = paymentHandleId,
             authenticationId = authenticationId
         )
+
+        challengeManager?.cleanup()
+        challengeManager = null
+
         return (finalizeAuthenticationResult as? PSResult.Success)?.value
     }
 

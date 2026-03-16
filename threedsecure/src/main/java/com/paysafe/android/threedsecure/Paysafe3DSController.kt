@@ -4,9 +4,9 @@
 
 package com.paysafe.android.threedsecure
 
-import android.app.Activity
 import android.content.Context
 import com.cardinalcommerce.cardinalmobilesdk.Cardinal
+import com.cardinalcommerce.cardinalmobilesdk.enums.CCADatabase
 import com.cardinalcommerce.cardinalmobilesdk.enums.CardinalEnvironment
 import com.cardinalcommerce.cardinalmobilesdk.enums.CardinalRenderType
 import com.cardinalcommerce.cardinalmobilesdk.enums.CardinalUiType
@@ -24,6 +24,7 @@ import com.paysafe.android.threedsecure.domain.model.ThreeDSChallengePayload
 import com.paysafe.android.threedsecure.domain.model.ThreeDSJwtParams
 import com.paysafe.android.threedsecure.domain.model.ThreeDSRenderType
 import com.paysafe.android.threedsecure.domain.repository.ThreeDSecureRepository
+import com.paysafe.android.threedsecure.exception.cardinalObserverErrorException
 import com.paysafe.android.threedsecure.exception.challenge3DSFailedValidationException
 import com.paysafe.android.threedsecure.exception.challenge3DSSessionFailureException
 import com.paysafe.android.threedsecure.exception.challenge3DSTimeoutException
@@ -138,6 +139,7 @@ internal class Paysafe3DSController(
         renderType = provideRenderType(cardinalUiType)
         challengeTimeout = 5
         uiType = cardinalUiType
+        setCCAUrl(CCADatabase.CGKURLS)
     }
 
     private fun PSEnvironment.toCardinalEnvironment() = when (this) {
@@ -161,12 +163,18 @@ internal class Paysafe3DSController(
     }
 
     suspend fun continueCardinal3DSChallenge(
-        activity: Activity,
+        challengeManager: CardinalChallengeManager?,
         encodedChallengePayload: String,
         psApiClient: PSApiClient
     ): PSResult<ThreeDSChallengePayload> {
+        if (challengeManager == null) {
+            val paysafeException = cardinalObserverErrorException(psApiClient.getCorrelationId())
+            psApiClient.logErrorEvent(paysafeException.errorName(), paysafeException, true)
+            return PSResult.Failure(paysafeException)
+        }
+
         val challengePayloadResult = launchCardinal3DSChallenge(
-            activity, encodedChallengePayload, psApiClient
+            challengeManager, encodedChallengePayload, psApiClient
         )
 
         if (challengePayloadResult is PSResult.Failure)
@@ -203,7 +211,7 @@ internal class Paysafe3DSController(
     }
 
     private suspend fun launchCardinal3DSChallenge(
-        activity: Activity,
+        challengeManager: CardinalChallengeManager,
         encodedChallengePayload: String,
         psApiClient: PSApiClient
     ): PSResult<ThreeDSChallengePayload> =
@@ -212,20 +220,27 @@ internal class Paysafe3DSController(
                 val payloadJsonString = encodedChallengePayload.base64Decode()
                 val payloadResponse =
                     json.decodeFromString<ThreeDSChallengePayloadResponse>(payloadJsonString)
-                cardinal.cca_continue(
-                    payloadResponse.transactionId,
-                    payloadResponse.payload,
-                    activity
-                ) { _, validateResponse, serverJwt ->
+
+                val transactionId = payloadResponse.transactionId
+                val payload = payloadResponse.payload
+
+                if (transactionId.isNullOrEmpty() || payload.isNullOrEmpty()) {
+                    handleGenericException(psApiClient, continuation)
+                    return@suspendCoroutine
+                }
+
+                challengeManager.setValidateReceiverCallback { validateResponse, serverJwt ->
                     handleCardinalValidateReceiver(
-                        validateResponse,
-                        payloadResponse,
-                        serverJwt,
-                        continuation,
-                        psApiClient
+                        validateResponse = validateResponse,
+                        payloadResponse = payloadResponse,
+                        serverJwt = serverJwt,
+                        continuation = continuation,
+                        psApiClient = psApiClient
                     )
                 }
-            } catch (ex: Exception) {
+
+                challengeManager.continue3DS(transactionId, payload)
+            } catch (_: Exception) {
                 handleGenericException(psApiClient, continuation)
             }
         }
@@ -239,7 +254,8 @@ internal class Paysafe3DSController(
     ) {
         when (validateResponse.actionCode) {
             CardinalActionCode.SUCCESS,
-            CardinalActionCode.NOACTION -> handleCardinalValidateActionSuccessAndNoAction(
+            CardinalActionCode.NOACTION,
+                -> handleCardinalValidateActionSuccessAndNoAction(
                 validateResponse,
                 payloadResponse,
                 serverJwt,
@@ -248,7 +264,8 @@ internal class Paysafe3DSController(
             )
 
             CardinalActionCode.FAILURE,
-            CardinalActionCode.ERROR -> handleCardinalValidateActionFailureAndError(
+            CardinalActionCode.ERROR,
+                -> handleCardinalValidateActionFailureAndError(
                 validateResponse,
                 psApiClient,
                 continuation

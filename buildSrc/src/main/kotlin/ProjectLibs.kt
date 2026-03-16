@@ -63,6 +63,7 @@ object Versions {
     const val jetbrainsSerializationPlugin = "1.6.10"
     const val dokka = "1.9.0"
     const val ktxCompilerExt = "1.4.8"
+    const val androidFragment = "1.8.9"
 
     // Android Base
     const val appCompat = "1.6.1"
@@ -127,6 +128,7 @@ object AndroidBase {
     val desugarJdk by lazy { "com.android.tools:desugar_jdk_libs:${Versions.desugarJdk}" }
     val activity by lazy { "androidx.activity:activity-ktx:${Versions.activity}" }
     val lifecycleRuntimeKtx by lazy { "androidx.lifecycle:lifecycle-runtime-ktx:${Versions.lifecycleVersion}" }
+    val androidFragment by lazy { "androidx.fragment:fragment-ktx:${Versions.androidFragment}" }
 }
 
 object Jetpack {

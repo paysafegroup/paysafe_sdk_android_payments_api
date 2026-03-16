@@ -292,7 +292,7 @@ class FragmentSelectPaymentMethod : Fragment() {
                 consumerId = "consumerrr@mail.com",
                 merchantAccountId = "merch-acc-id",
                 profileId = "profile-di"
-                )
+            )
         )
 
     private fun provideBillingDetails() = BillingDetails(
