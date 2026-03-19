@@ -31,6 +31,7 @@ class PSCardholderNameView @JvmOverloads constructor(
     private val _isValidLiveData = MutableLiveData(false)
     private val hintString = provideHint(attrs)
     private val animateTopPlaceholderLabel = provideAnimateTopPlaceholderLabel(attrs)
+    private val labelTextState = mutableStateOf(provideLabelText(attrs))
 
     val isValidLiveData: LiveData<Boolean> get() = _isValidLiveData
 
@@ -38,11 +39,18 @@ class PSCardholderNameView @JvmOverloads constructor(
     internal val data: String
         get() = cardHolderNameState.value.value
 
+    /** Property to set or get the label text of this field. */
+    var labelText: String
+        get() = labelTextState.value
+        set(value) {
+            labelTextState.value = value
+        }
+
     override fun isEmpty() = data.isEmpty()
     override fun isValid() = CardholderNameChecks.validations(data)
 
-    override val placeholderString: String =
-        resources.getString(R.string.card_holder_name_placeholder)
+    override val placeholderString: String
+        get() = labelTextState.value
 
     override fun reset() {
         cardHolderNameState.value = PSCardholderNameStateImpl()
@@ -60,4 +68,19 @@ class PSCardholderNameView @JvmOverloads constructor(
         psTheme = psTheme,
         eventHandler = DefaultPSCardFieldEventHandler(_isValidLiveData)
     )
+
+    private fun provideLabelText(attrs: AttributeSet?): String {
+        val styledAttributes = context.theme.obtainStyledAttributes(
+            /* set = */ attrs,
+            /* attrs = */ R.styleable.PSCardholderNameView,
+            /* defStyleAttr = */ 0,
+            /* defStyleRes = */ 0
+        )
+        try {
+            return styledAttributes.getString(R.styleable.PSCardholderNameView_label_text)
+                ?: resources.getString(R.string.card_holder_name_placeholder)
+        } finally {
+            styledAttributes.recycle()
+        }
+    }
 }

@@ -40,6 +40,7 @@ class PSCardNumberView @JvmOverloads constructor(
     private val hintString = provideHint(attrs)
     private val animateTopPlaceholderLabel = provideAnimateTopPlaceholderLabel(attrs)
     private val separator = provideSeparator(attrs)
+    private val labelTextState = mutableStateOf(provideLabelText(attrs))
 
     @get:JvmSynthetic
     internal val data: String
@@ -50,10 +51,18 @@ class PSCardNumberView @JvmOverloads constructor(
 
     val isValidLiveData: LiveData<Boolean> get() = _isValidLiveData
 
+    /** Property to set or get the label text of this field. */
+    var labelText: String
+        get() = labelTextState.value
+        set(value) {
+            labelTextState.value = value
+        }
+
     override fun isEmpty() = data.isEmpty()
     override fun isValid() = CardNumberChecks.validations(data)
 
-    override val placeholderString: String = resources.getString(R.string.card_number_placeholder)
+    override val placeholderString: String
+        get() = labelTextState.value
 
     override fun reset() {
         creditCardNumberState.value = PSCardNumberStateImpl()
@@ -89,6 +98,21 @@ class PSCardNumberView @JvmOverloads constructor(
         val enumValue = styledAttributes.getInt(R.styleable.PSCardNumberView_psSeparator, 0)
         try {
             return CardNumberSeparator[enumValue]
+        } finally {
+            styledAttributes.recycle()
+        }
+    }
+
+    private fun provideLabelText(attrs: AttributeSet?): String {
+        val styledAttributes = context.theme.obtainStyledAttributes(
+            /* set = */ attrs,
+            /* attrs = */ R.styleable.PSCardNumberView,
+            /* defStyleAttr = */ 0,
+            /* defStyleRes = */ 0
+        )
+        try {
+            return styledAttributes.getString(R.styleable.PSCardNumberView_label_text)
+                ?: resources.getString(R.string.card_number_placeholder)
         } finally {
             styledAttributes.recycle()
         }

@@ -33,6 +33,7 @@ class PSCvvView @JvmOverloads constructor(
     private val hintString = provideHint(attrs)
     private val animateTopPlaceholderLabel = provideAnimateTopPlaceholderLabel(attrs)
     private val isMasked = provideIsMasked(attrs)
+    private val labelTextState = mutableStateOf(provideLabelText(attrs))
 
     internal val data: String
         get() = cvvState.value.value
@@ -46,10 +47,18 @@ class PSCvvView @JvmOverloads constructor(
             cvvState.value.cardType = value
         }
 
+    /** Property to set or get the label text of this field. */
+    var labelText: String
+        get() = labelTextState.value
+        set(value) {
+            labelTextState.value = value
+        }
+
     override fun isEmpty() = data.isEmpty()
     override fun isValid() = CvvChecks.validations(data, cvvState.value.cardType)
 
-    override val placeholderString: String = resources.getString(R.string.card_cvv_placeholder)
+    override val placeholderString: String
+        get() = labelTextState.value
 
     override fun reset() {
         val previousCardType = cvvState.value.cardType
@@ -79,6 +88,20 @@ class PSCvvView @JvmOverloads constructor(
         )
         try {
             return styledAttributes.getBoolean(R.styleable.PSCvvView_psIsMasked, false)
+        } finally {
+            styledAttributes.recycle()
+        }
+    }
+
+    private fun provideLabelText(attrs: AttributeSet?): String {
+        val styledAttributes = context.theme.obtainStyledAttributes(
+            /* set = */ attrs,
+            /* attrs = */ R.styleable.PSCvvView,
+            /* defStyleAttr = */ 0,
+            /* defStyleRes = */ 0
+        )
+        try {
+            return styledAttributes.getString(R.styleable.PSCvvView_label_text) ?: "CVV Number"
         } finally {
             styledAttributes.recycle()
         }

@@ -80,4 +80,46 @@ class PSCvvViewTest {
         }
     }
 
+    @Test
+    fun `IF PSCvvView PERFORMING get labelText RETURNS default label text`() {
+        // Arrange
+        val expectedDefaultLabelText = "CVV Number"
+
+        // Act
+        val output = sut()
+
+        // Assert
+        assertEquals(expectedDefaultLabelText, output.labelText)
+    }
+
+    @Test
+    fun `IF PSCvvView PERFORMING set labelText RETURNS updated label text`() {
+        // Arrange
+        val customLabelText = "Custom CVV Label"
+        val output = sut()
+
+        // Act
+        output.labelText = customLabelText
+
+        // Assert
+        assertEquals(customLabelText, output.labelText)
+    }
+
+    @Test
+    fun `IF PSCvvView PERFORMING set labelText multiple times RETURNS latest label text`() {
+        // Arrange
+        val firstLabelText = "First Label"
+        val secondLabelText = "Second Label"
+        val thirdLabelText = "Third Label"
+        val output = sut()
+
+        // Act
+        output.labelText = firstLabelText
+        output.labelText = secondLabelText
+        output.labelText = thirdLabelText
+
+        // Assert
+        assertEquals(thirdLabelText, output.labelText)
+    }
+
 }

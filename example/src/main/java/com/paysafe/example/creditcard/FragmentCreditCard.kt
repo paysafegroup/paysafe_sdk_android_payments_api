@@ -61,7 +61,7 @@ class FragmentCreditCard : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         binding = FragmentCreditCardBinding.inflate(inflater, container, false)
         binding.creditCardLayout.setOnClickListener {
@@ -79,6 +79,9 @@ class FragmentCreditCard : Fragment() {
         binding.cancelOrderButton.setOnClickListener {
             navController.navigateUp()
         }
+
+        binding.creditCardCvvField.labelText =
+            getString(com.paysafe.android.hostedfields.R.string.card_cvv_placeholder)
 
         PSCardFormController.initialize(
             cardFormConfig = PSCardFormConfig(

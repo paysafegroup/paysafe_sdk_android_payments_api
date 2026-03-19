@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~ Copyright (c) 2024 Paysafe Group
   -->
 
@@ -50,6 +49,7 @@
             android:layout_marginStart="@dimen/app_padding"
             android:layout_marginTop="24dp"
             android:layout_marginEnd="@dimen/app_padding"
+            app:label_text="@string/card_number_placeholder"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/creditCardTitleLabel" />
@@ -61,6 +61,7 @@
             android:layout_marginStart="@dimen/app_padding"
             android:layout_marginTop="12dp"
             android:layout_marginEnd="@dimen/app_padding"
+            app:label_text="@string/card_holder_name_placeholder"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/creditCardNumberField" />
@@ -72,6 +73,7 @@
             android:layout_marginStart="@dimen/app_padding"
             android:layout_marginTop="12dp"
             android:layout_marginEnd="@dimen/app_padding"
+            app:label_text="@string/card_expiry_date_placeholder"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/creditCardHolderNameField" />

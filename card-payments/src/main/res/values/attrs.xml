@@ -33,10 +33,24 @@
             <enum name="dash" value="2" />
             <enum name="slash" value="3" />
         </attr>
+        <attr name="label_text" />
     </declare-styleable>
 
     <declare-styleable name="PSCvvView">
         <attr name="psIsMasked" format="boolean" />
+        <attr name="label_text" format="string" />
+    </declare-styleable>
+
+    <declare-styleable name="PSExpiryDatePickerView">
+        <attr name="label_text" />
+    </declare-styleable>
+
+    <declare-styleable name="PSExpiryDateTextView">
+        <attr name="label_text" />
+    </declare-styleable>
+
+    <declare-styleable name="PSCardholderNameView">
+        <attr name="label_text" />
     </declare-styleable>
 
 </resources>

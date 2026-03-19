@@ -32,6 +32,7 @@ class PSExpiryDatePickerView @JvmOverloads constructor(
     private val _isValidLiveData = MutableLiveData(false)
     private val hintString = provideHint(attrs)
     private val animateTopPlaceholderLabel = provideAnimateTopPlaceholderLabel(attrs)
+    private val labelTextState = mutableStateOf(provideLabelText(attrs))
 
     /** Property to enable the month data retrieval from expiry date. */
     override val monthData: String
@@ -46,11 +47,18 @@ class PSExpiryDatePickerView @JvmOverloads constructor(
     override val viewContext: Context
         get() = context
 
+    /** Property to set or get the label text of this field. */
+    var labelText: String
+        get() = labelTextState.value
+        set(value) {
+            labelTextState.value = value
+        }
+
     override fun isEmpty() = monthData.isEmpty() && yearData.isEmpty()
     override fun isValid() = ExpiryDateChecks.validations(expiryDateState.value.value)
 
-    override val placeholderString: String =
-        resources.getString(R.string.card_expiry_date_placeholder)
+    override val placeholderString: String
+        get() = labelTextState.value
 
     override fun reset() {
         expiryDateState.value = PSExpiryDateStateImpl()
@@ -68,5 +76,20 @@ class PSExpiryDatePickerView @JvmOverloads constructor(
         psTheme = psTheme,
         onEvent = onEvent
     )
+
+    private fun provideLabelText(attrs: AttributeSet?): String {
+        val styledAttributes = context.theme.obtainStyledAttributes(
+            /* set = */ attrs,
+            /* attrs = */ R.styleable.PSExpiryDatePickerView,
+            /* defStyleAttr = */ 0,
+            /* defStyleRes = */ 0
+        )
+        try {
+            return styledAttributes.getString(R.styleable.PSExpiryDatePickerView_label_text)
+                ?: resources.getString(R.string.card_expiry_date_placeholder)
+        } finally {
+            styledAttributes.recycle()
+        }
+    }
 
 }

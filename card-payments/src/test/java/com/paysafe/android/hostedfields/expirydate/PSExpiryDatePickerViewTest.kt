@@ -82,4 +82,59 @@ class PSExpiryDatePickerViewTest {
         }
     }
 
+    @Test
+    fun `IF PSExpiryDatePickerView PERFORMING get labelText RETURNS default label text`() {
+        // Arrange
+        val expectedDefaultLabelText = "Expiry date"
+
+        // Act
+        val output = sut()
+
+        // Assert
+        assertEquals(expectedDefaultLabelText, output.labelText)
+    }
+
+    @Test
+    fun `IF PSExpiryDatePickerView PERFORMING set labelText RETURNS updated label text`() {
+        // Arrange
+        val customLabelText = "Custom Expiry Label"
+        val output = sut()
+
+        // Act
+        output.labelText = customLabelText
+
+        // Assert
+        assertEquals(customLabelText, output.labelText)
+    }
+
+    @Test
+    fun `IF PSExpiryDatePickerView PERFORMING set labelText multiple times RETURNS latest label text`() {
+        // Arrange
+        val firstLabelText = "First Label"
+        val secondLabelText = "Second Label"
+        val thirdLabelText = "Third Label"
+        val output = sut()
+
+        // Act
+        output.labelText = firstLabelText
+        output.labelText = secondLabelText
+        output.labelText = thirdLabelText
+
+        // Assert
+        assertEquals(thirdLabelText, output.labelText)
+    }
+
+    @Test
+    fun `IF PSExpiryDatePickerView PERFORMING set labelText TRIGGER placeholderString update`() {
+        // Arrange
+        val customLabelText = "Updated Placeholder"
+        val output = sut()
+
+        // Act
+        output.labelText = customLabelText
+
+        // Assert
+        assertEquals(customLabelText, output.placeholderString)
+    }
+
 }
