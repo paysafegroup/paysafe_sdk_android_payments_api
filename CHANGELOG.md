@@ -1,5 +1,58 @@
 # Change Log
 
+## [2.1.1] - 2026-03-24
+
+### Updated
+
+#### ⚠️ CRITICAL: Braintree SDK Upgrade to 4.45.0 (SSL Certificate Update Required)
+
+**Action Required:** Upgraded the Braintree SDK dependency from version 4.39.0 to 4.45.0 to address expiring SSL certificates that will cause processing interruptions after March 30, 2026.
+
+**Why This Update Is Critical:**
+- Braintree's SSL certificates expire on **March 30, 2026**
+- Without this update, Venmo payment processing will fail after the expiration date
+- This update includes the renewed SSL certificates to ensure uninterrupted service
+
+**Recommendation:** Update to SDK version 2.1.1 immediately to avoid payment processing interruptions.
+
+##### Braintree SDK Changes (from Braintree release notes)
+
+**Version 4.45.0:**
+- Updated expiring pinned vendor SSL certificates
+- Added Google Play Store rejection fixes with `hasUserLocationConsent` property support
+- Bumped PayPalNativeCheckout to version 1.3.2
+- Bumped Magnes version to 5.5.1
+
+**Version 4.44.0:**
+- Fixes for Google Play Store rejection
+- Added `hasUserLocationConsent` property to LocalPayment, PayPal, and DataCollector APIs
+- Bumped Magnes SDK to version 5.5.0
+- Added new `GooglePayClient#isReadyToPay()` method
+
+**Version 4.43.0:**
+- Fixed metadata sending bug in Venmo SDK
+- Resolved Cardinal.getInstance memory leak in ThreeDSecure
+
+**Version 4.42.0:**
+- Added `setIsFinalAmount()` and `setFallbackToWeb()` to VenmoRequest
+- Web-based Venmo fallback support using App Links
+- Upgraded data-collector SDK to version 3.21.0 for Google Play policy compliance
+
+**Version 4.41.0:**
+- Added new PayPalLineItem properties: `imageUrl`, `upcCode`, `upcType`
+- Bumped native-checkout to version 1.2.1
+
+**Version 4.40.0 & 4.40.1:**
+- Fixed NPE when VenmoListener is null
+- Fixed inaccurate PayPal error messages
+- Bumped play-services-wallet to 19.2.1
+- Added `totalPriceLabel` to GooglePayRequest
+- Added `setUserAuthenticationEmail()` to PayPalNativeRequest
+
+##### Impact
+
+This is a dependency upgrade with no changes to the Paysafe SDK API. The update is backward-compatible with no breaking changes. The Venmo integration benefits from improved stability, bug fixes, and enhanced Google Play Store compliance provided by the Braintree SDK.
+
 ## [2.1.0] - 2026-03-17
 
 ### Added

@@ -106,7 +106,7 @@ object Versions {
     const val retrofit = "2.9.0"
 
     //Venmo
-    const val venmoDependency = "4.39.0"
+    const val venmoDependency = "4.45.0"
 
     // Testing
     const val jUnit = "4.13.2"
