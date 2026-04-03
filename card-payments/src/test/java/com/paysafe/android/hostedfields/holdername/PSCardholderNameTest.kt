@@ -148,7 +148,7 @@ class PSCardholderNameTest {
         var unwantedEventsCalled = false
         val eventHandler = object : PSCardFieldEventHandler {
             override fun handleEvent(event: PSCardFieldInputEvent) {
-                if (event != PSCardFieldInputEvent.FOCUS) unwantedEventsCalled = true
+                if (event != PSCardFieldInputEvent.FOCUS && event != PSCardFieldInputEvent.BLUR) unwantedEventsCalled = true
             }
         }
         sut(eventHandler = eventHandler)
@@ -293,7 +293,7 @@ class PSCardholderNameTest {
         var unwantedEventsCalled = false
         val eventHandler = object : PSCardFieldEventHandler {
             override fun handleEvent(event: PSCardFieldInputEvent) {
-                if (event != PSCardFieldInputEvent.FOCUS) unwantedEventsCalled = true
+                if (event != PSCardFieldInputEvent.FOCUS && event != PSCardFieldInputEvent.BLUR) unwantedEventsCalled = true
             }
         }
         val holderNameState = PSCardholderNameStateImpl()
@@ -319,6 +319,59 @@ class PSCardholderNameTest {
 
         // Assert
         assertTrue(holderNameState.alreadyShown)
+    }
+
+    @Test
+    fun `WHEN clearsErrorOnInput is true THEN isValidInUi should be true on input`() {
+        // Arrange
+        val holderNameState = PSCardholderNameStateImpl().apply {
+            isValidInUi = false
+        }
+
+        composeTestRule.setContent {
+            PSCardholderName(
+                state = holderNameState,
+                labelText = "Name on card",
+                animateTopLabelText = true,
+                psTheme = provideDefaultPSTheme(),
+                eventHandler = DefaultPSCardFieldEventHandler(MutableLiveData(false)),
+                clearsErrorOnInput = true
+            )
+        }
+
+        // Act
+        holderNameField().performTextInput("J")
+
+        // Assert
+        assertTrue("Expected isValidInUi to be true when clearsErrorOnInput is true", holderNameState.isValidInUi)
+    }
+
+    @Test
+    fun `WHEN validatesEmptyFieldOnBlur is false AND value is empty THEN isValidInUi should be true on blur`() {
+        // Arrange
+        val holderNameState = PSCardholderNameStateImpl().apply {
+            value = ""
+            alreadyShown = true
+        }
+
+        composeTestRule.setContent {
+            PSCardholderName(
+                state = holderNameState,
+                labelText = "Name on card",
+                animateTopLabelText = true,
+                psTheme = provideDefaultPSTheme(),
+                eventHandler = DefaultPSCardFieldEventHandler(MutableLiveData(false)),
+                validatesEmptyFieldOnBlur = false
+            )
+        }
+
+        // Act
+        holderNameField().performClick()
+        composeTestRule.waitForIdle()
+        holderNameField().performImeAction()
+
+        // Assert
+        assertTrue("Expected isValidInUi to be true when validatesEmptyFieldOnBlur is false and value is empty", holderNameState.isValidInUi)
     }
 
     @Test

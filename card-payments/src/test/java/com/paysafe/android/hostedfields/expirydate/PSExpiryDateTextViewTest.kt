@@ -6,6 +6,8 @@ package com.paysafe.android.hostedfields.expirydate
 
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
+import com.paysafe.android.hostedfields.domain.model.PSCardFieldInputEvent
 import com.paysafe.android.hostedfields.util.PS_EXPIRY_DATE_TEXT_TEST_TAG
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -80,6 +82,31 @@ class PSExpiryDateTextViewTest {
             ErrorExpiryDateText()
             PreviewPSExpiryDateText()
         }
+    }
+
+    @Test
+    fun `WHEN onEvent callback is set THEN PSCardFieldEventHandler callback is triggered`() {
+        // Arrange
+        var callbackTriggered = false
+        var capturedEvent: PSCardFieldInputEvent? = null
+        val output = sut()
+
+        output.onEvent = { event ->
+            callbackTriggered = true
+            capturedEvent = event
+        }
+
+        // Act
+        composeTestRule.setContent {
+            output.Content()
+        }
+
+        // Trigger an event by clicking on the field
+        composeTestRule.onNodeWithTag(PS_EXPIRY_DATE_TEXT_TEST_TAG).performClick()
+
+        // Assert
+        assertTrue("Expected callback to be triggered", callbackTriggered)
+        assertEquals("Expected FOCUS event", PSCardFieldInputEvent.FOCUS, capturedEvent)
     }
 
 }

@@ -18,6 +18,7 @@ import androidx.lifecycle.MutableLiveData
 import com.paysafe.android.hostedfields.domain.model.PSCardFieldInputEvent
 import com.paysafe.android.hostedfields.domain.model.PSExpiryDateState
 import com.paysafe.android.hostedfields.domain.model.PSExpiryDateStateImpl
+import com.paysafe.android.hostedfields.model.PSCardFieldEventHandler
 import com.paysafe.android.hostedfields.provideDefaultPSTheme
 import com.paysafe.android.hostedfields.util.PS_EXPIRY_DATE_TEXT_TEST_TAG
 import org.junit.Assert.assertEquals
@@ -42,7 +43,11 @@ class PSExpiryDateTextTest {
 
     private fun sut(
         state: PSExpiryDateState = PSExpiryDateStateImpl(),
-        onEvent: ((PSCardFieldInputEvent) -> Unit)? = null
+        eventHandler: PSCardFieldEventHandler = PSCardFieldEventHandler {
+            // no-op for tests
+        },
+        clearsErrorOnInput: Boolean = false,
+        validatesEmptyFieldOnBlur: Boolean = true
     ) {
         composeTestRule.setContent {
             PSExpiryDateText(
@@ -51,7 +56,9 @@ class PSExpiryDateTextTest {
                 animateTopLabelText = true,
                 isValidLiveData = MutableLiveData(false),
                 psTheme = provideDefaultPSTheme(),
-                onEvent = onEvent
+                eventHandler = eventHandler,
+                clearsErrorOnInput = clearsErrorOnInput,
+                validatesEmptyFieldOnBlur = validatesEmptyFieldOnBlur
             )
         }
     }
@@ -120,7 +127,7 @@ class PSExpiryDateTextTest {
         val onFocus: ((PSCardFieldInputEvent) -> Unit) = {
             if (it == PSCardFieldInputEvent.FOCUS) onFocusCalled = true
         }
-        sut(onEvent = onFocus)
+        sut(eventHandler = onFocus)
 
         // Act
         expiryDateTextField().performClick()
@@ -136,9 +143,9 @@ class PSExpiryDateTextTest {
         // Arrange
         var unwantedEventsCalled = false
         val nonFocus: ((PSCardFieldInputEvent) -> Unit) = {
-            if (it != PSCardFieldInputEvent.FOCUS) unwantedEventsCalled = true
+            if (it != PSCardFieldInputEvent.FOCUS && it != PSCardFieldInputEvent.BLUR) unwantedEventsCalled = true
         }
-        sut(onEvent = nonFocus)
+        sut(eventHandler = nonFocus)
 
         // Act
         expiryDateTextField().performClick()
@@ -160,7 +167,7 @@ class PSExpiryDateTextTest {
                 onInvalidCalled = true
             }
         }
-        sut(onEvent = onFieldValueChangeAndInvalid)
+        sut(eventHandler = onFieldValueChangeAndInvalid)
 
         // Act
         expiryDateTextField().performTextInput("1")
@@ -181,7 +188,7 @@ class PSExpiryDateTextTest {
                 else -> {}
             }
         }
-        sut(onEvent = nonFieldValueChange)
+        sut(eventHandler = nonFieldValueChange)
 
         // Act
         expiryDateTextField().performTextInput("1")
@@ -199,7 +206,7 @@ class PSExpiryDateTextTest {
                 onInvalidCharacterCalled = true
             }
         }
-        sut(onEvent = onInvalidCharacter)
+        sut(eventHandler = onInvalidCharacter)
 
         // Act
         expiryDateTextField().performTextInput("-")
@@ -220,7 +227,7 @@ class PSExpiryDateTextTest {
                 else -> {}
             }
         }
-        sut(onEvent = nonInvalidCharacter)
+        sut(eventHandler = nonInvalidCharacter)
 
         // Act
         expiryDateTextField().performTextInput("-")
@@ -242,7 +249,7 @@ class PSExpiryDateTextTest {
                 onValidCalled = true
             }
         }
-        sut(onEvent = onFieldValueChangeAndValid)
+        sut(eventHandler = onFieldValueChangeAndValid)
 
         // Act
         expiryDateTextField().performTextInput("1231")
@@ -266,4 +273,191 @@ class PSExpiryDateTextTest {
         assertTrue(expiryDateStateInput.isValid())
     }
 
+    @Test
+    fun `WHEN clearsErrorOnInput is true AND user inputs text THEN isValidInUi should be set to true`() {
+        // Arrange
+        val expiryDateState = PSExpiryDateStateImpl()
+        expiryDateState.isValidInUi = false
+        sut(
+            state = expiryDateState,
+            clearsErrorOnInput = true
+        )
+
+        // Act
+        expiryDateTextField().performTextInput("1")
+
+        // Assert
+        assertTrue("isValidInUi should be true when clearsErrorOnInput is true", expiryDateState.isValidInUi)
+    }
+
+    @Test
+    fun `WHEN clearsErrorOnInput is false AND user inputs text THEN isValidInUi should not be affected`() {
+        // Arrange
+        val expiryDateState = PSExpiryDateStateImpl()
+        expiryDateState.isValidInUi = false
+        sut(
+            state = expiryDateState,
+            clearsErrorOnInput = false
+        )
+
+        // Act
+        expiryDateTextField().performTextInput("1")
+
+        // Assert
+        assertFalse("isValidInUi should remain false when clearsErrorOnInput is false", expiryDateState.isValidInUi)
+    }
+
+    @Test
+    fun `WHEN clearsErrorOnInput is true AND user inputs invalid date THEN isValidInUi should be set to true`() {
+        // Arrange
+        val expiryDateState = PSExpiryDateStateImpl()
+        expiryDateState.isValidInUi = false
+        sut(
+            state = expiryDateState,
+            clearsErrorOnInput = true
+        )
+
+        // Act
+        expiryDateTextField().performTextInput("99")
+
+        // Assert
+        assertTrue("isValidInUi should be true even for invalid input when clearsErrorOnInput is true", expiryDateState.isValidInUi)
+    }
+
+    @Test
+    fun `WHEN clearsErrorOnInput is true AND user inputs valid date THEN isValidInUi should be set to true`() {
+        // Arrange
+        val expiryDateState = PSExpiryDateStateImpl()
+        expiryDateState.isValidInUi = false
+        sut(
+            state = expiryDateState,
+            clearsErrorOnInput = true
+        )
+
+        // Act
+        expiryDateTextField().performTextInput("1230")
+
+        // Assert
+        assertTrue("isValidInUi should be true for valid input when clearsErrorOnInput is true", expiryDateState.isValidInUi)
+    }
+
+    @Test
+    fun `WHEN onDonePressed is triggered AND validatesEmptyFieldOnBlur is true AND field is empty THEN isValidInUi should be false`() {
+        // Arrange
+        val expiryDateState = PSExpiryDateStateImpl()
+        expiryDateState.value = ""
+        expiryDateState.isValidInUi = true
+        expiryDateState.alreadyShown = true
+        sut(
+            state = expiryDateState,
+            validatesEmptyFieldOnBlur = true
+        )
+
+        // Act
+        expiryDateTextField().performClick()
+        expiryDateTextField().performImeAction()
+
+        // Assert
+        assertFalse("isValidInUi should be false for empty field when validatesEmptyFieldOnBlur is true", expiryDateState.isValidInUi)
+    }
+
+    @Test
+    fun `WHEN onDonePressed is triggered AND validatesEmptyFieldOnBlur is false AND field is empty THEN isValidInUi should be true`() {
+        // Arrange
+        val expiryDateState = PSExpiryDateStateImpl()
+        expiryDateState.value = ""
+        expiryDateState.isValidInUi = false
+        expiryDateState.alreadyShown = true
+        sut(
+            state = expiryDateState,
+            validatesEmptyFieldOnBlur = false
+        )
+
+        // Act
+        expiryDateTextField().performClick()
+        expiryDateTextField().performImeAction()
+
+        // Assert
+        assertTrue("isValidInUi should be true for empty field when validatesEmptyFieldOnBlur is false", expiryDateState.isValidInUi)
+    }
+
+    @Test
+    fun `WHEN onDonePressed is triggered AND field has valid date THEN isValidInUi should be true`() {
+        // Arrange
+        val expiryDateState = PSExpiryDateStateImpl()
+        expiryDateState.value = "1230"
+        expiryDateState.isValidInUi = false
+        expiryDateState.alreadyShown = true
+        sut(
+            state = expiryDateState,
+            validatesEmptyFieldOnBlur = true
+        )
+
+        // Act
+        expiryDateTextField().performClick()
+        expiryDateTextField().performImeAction()
+
+        // Assert
+        assertTrue("isValidInUi should be true for valid date when Done is pressed", expiryDateState.isValidInUi)
+    }
+
+    @Test
+    fun `WHEN onDonePressed is triggered AND field has invalid date THEN isValidInUi should be false`() {
+        // Arrange
+        val expiryDateState = PSExpiryDateStateImpl()
+        expiryDateState.value = "0120"
+        expiryDateState.isValidInUi = true
+        expiryDateState.alreadyShown = true
+        sut(
+            state = expiryDateState,
+            validatesEmptyFieldOnBlur = true
+        )
+
+        // Act
+        expiryDateTextField().performClick()
+        expiryDateTextField().performImeAction()
+
+        // Assert
+        assertFalse("isValidInUi should be false for invalid date when Done is pressed", expiryDateState.isValidInUi)
+    }
+
+    @Test
+    fun `WHEN onDonePressed is triggered AND field has incomplete date THEN isValidInUi should be false`() {
+        // Arrange
+        val expiryDateState = PSExpiryDateStateImpl()
+        expiryDateState.value = "12"
+        expiryDateState.isValidInUi = true
+        expiryDateState.alreadyShown = true
+        sut(
+            state = expiryDateState,
+            validatesEmptyFieldOnBlur = true
+        )
+
+        // Act
+        expiryDateTextField().performClick()
+        expiryDateTextField().performImeAction()
+
+        // Assert
+        assertFalse("isValidInUi should be false for incomplete date when Done is pressed", expiryDateState.isValidInUi)
+    }
+
+    @Test
+    fun `WHEN onDonePressed is triggered AND validatesEmptyFieldOnBlur is false AND field has non-empty invalid date THEN isValidInUi should be false`() {
+        // Arrange
+        val expiryDateState = PSExpiryDateStateImpl()
+        expiryDateState.value = "1399"
+        expiryDateState.isValidInUi = true
+        expiryDateState.alreadyShown = true
+        sut(
+            state = expiryDateState,
+            validatesEmptyFieldOnBlur = false
+        )
+
+        // Act
+        expiryDateTextField().performClick()
+        expiryDateTextField().performImeAction()
+
+        // Assert
+        assertFalse("isValidInUi should be false for invalid date even when validatesEmptyFieldOnBlur is false", expiryDateState.isValidInUi)
+    }
 }

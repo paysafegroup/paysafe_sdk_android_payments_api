@@ -1,5 +1,24 @@
 # Change Log
 
+## [2.2.0] - 2026-04-01
+
+### Fixed
+
+- **ABI crash**: Replaced experimental `LocalSoftwareKeyboardController` with stable `LocalFocusManager` in all field composables to prevent runtime crashes across Compose versions (#1)
+- **Placeholder never shown**: Pass `null` for `label` lambda when `animateTopLabelText = false` so `OutlinedTextField` displays placeholder text correctly (#2)
+- **Empty CVV hint**: Set `card_cvv_hint` to `"CVV"` and aligned `PSCvvView.provideLabelText()` fallback to use the string resource instead of a hardcoded string (#4)
+- **Event handler inconsistency**: Standardized `PSExpiryDateText` to use `PSCardFieldEventHandler` instead of a raw lambda, matching all other field composables (#5)
+
+### Added
+
+- **`BLUR` event**: Added `PSCardFieldInputEvent.BLUR` emitted when a field loses focus, enabling blur-based validation UX (#6)
+- **Error UX controls**: Added `clearsErrorOnInput` and `validatesEmptyFieldOnBlur` properties to opt into clearing errors on typing and skipping validation for empty fields (#7)
+- **Hide card brand icon**: Added `showBrandIcon` flag on `PSCardNumberView` to suppress the built-in trailing card brand icon (#8)
+- **`resetOnTokenize` opt-out**: Added `resetOnTokenize` property on `PSCardFormController` (default `true`) to preserve field values after tokenization for retry UX, matching iOS SDK (#9)
+- **Focused border width control**: Added `uniformBorderWidth` option to render a consistent 1dp border in all states instead of Material 3's default 2dp focused border (#10)
+- **Custom field height**: Added `compactFieldHeight` property to override the 56dp minimum height for compact layouts (#11)
+- **`clearsFocusOnReset` opt-out**: Added `clearsFocusOnReset` property (default `true`) on all field views to prevent `reset()` from dismissing the keyboard and clearing focus (#12)
+
 ## [2.1.1] - 2026-03-24
 
 ### Updated

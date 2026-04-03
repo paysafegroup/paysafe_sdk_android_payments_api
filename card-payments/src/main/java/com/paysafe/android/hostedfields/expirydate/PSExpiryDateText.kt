@@ -10,12 +10,11 @@ import androidx.compose.foundation.text.KeyboardActionScope
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusState
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.platform.SoftwareKeyboardController
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -27,6 +26,8 @@ import com.paysafe.android.hostedfields.R
 import com.paysafe.android.hostedfields.domain.model.PSCardFieldInputEvent
 import com.paysafe.android.hostedfields.domain.model.PSExpiryDateState
 import com.paysafe.android.hostedfields.domain.model.PSExpiryDateStateImpl
+import com.paysafe.android.hostedfields.model.DefaultPSCardFieldEventHandler
+import com.paysafe.android.hostedfields.model.PSCardFieldEventHandler
 import com.paysafe.android.hostedfields.provideDefaultPSTheme
 import com.paysafe.android.hostedfields.util.CardPreview
 import com.paysafe.android.hostedfields.util.PS_EXPIRY_DATE_TEXT_TEST_TAG
@@ -37,53 +38,71 @@ import com.paysafe.android.hostedfields.util.keyboardActionFromIme
 import com.paysafe.android.hostedfields.util.roundedCornerShapeWithPSTheme
 import com.paysafe.android.hostedfields.util.textFieldColorsWithPSTheme
 import com.paysafe.android.hostedfields.util.textStyleWithPSTheme
+import com.paysafe.android.hostedfields.util.uniformFieldBorder
 import com.paysafe.android.hostedfields.valid.ExpiryDateChecks
 
 //region HOSTED FIELD: Expiry Date
 private fun onExpiryDateChange(
     expiryDateState: PSExpiryDateState,
     isValidLiveData: MutableLiveData<Boolean>,
-    onEvent: ((PSCardFieldInputEvent) -> Unit)? = null
+    eventHandler: PSCardFieldEventHandler,
+    clearsErrorOnInput: Boolean = false
 ): (String) -> Unit = {
-    val newValue = ExpiryDateChecks.inputProtection(it, onEvent)
+    val newValue = ExpiryDateChecks.inputProtection(it, eventHandler::handleEvent)
     if (expiryDateState.value != newValue) { // is new value distinct?
         val isValid = ExpiryDateChecks.validations(newValue)
         val noInvalidCharacters = newValue == it
 
         // Security check to avoid double trigger for 'onFieldValueChange'; if 'it' contains an
         // invalid character its value would be different from the one returned by 'inputProtection'
-        if (noInvalidCharacters) onEvent?.invoke(PSCardFieldInputEvent.FIELD_VALUE_CHANGE)
-        onEvent?.invoke(if (isValid) PSCardFieldInputEvent.VALID else PSCardFieldInputEvent.INVALID)
+        if (noInvalidCharacters) eventHandler.handleEvent(PSCardFieldInputEvent.FIELD_VALUE_CHANGE)
+        eventHandler.handleEvent(if (isValid) PSCardFieldInputEvent.VALID else PSCardFieldInputEvent.INVALID)
+
+        if (clearsErrorOnInput) {
+            expiryDateState.isValidInUi = true
+        }
 
         isValidLiveData.postValue(isValid)
     }
     expiryDateState.value = newValue
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 private fun onDonePressed(
     expiryDateState: PSExpiryDateState,
-    keyboardController: SoftwareKeyboardController?
+    focusManager: FocusManager,
+    validatesEmptyFieldOnBlur: Boolean = true
 ): (KeyboardActionScope.() -> Unit) = {
-    keyboardController?.hide()
-    expiryDateState.isValidInUi = ExpiryDateChecks.validations(expiryDateState.value)
+    focusManager.clearFocus()
+    expiryDateState.isValidInUi = if (!validatesEmptyFieldOnBlur && expiryDateState.value.isEmpty()) {
+        true
+    } else {
+        ExpiryDateChecks.validations(expiryDateState.value)
+    }
 }
 
 private fun onExpiryDateFocusChange(
     focusState: FocusState,
     expiryDateState: PSExpiryDateState,
-    onEvent: ((PSCardFieldInputEvent) -> Unit)? = null
+    eventHandler: PSCardFieldEventHandler,
+    validatesEmptyFieldOnBlur: Boolean = true
 ) {
-    if (focusState.isFocused) onEvent?.invoke(PSCardFieldInputEvent.FOCUS)
+    if (focusState.isFocused) {
+        eventHandler.handleEvent(PSCardFieldInputEvent.FOCUS)
+    } else {
+        eventHandler.handleEvent(PSCardFieldInputEvent.BLUR)
+    }
     val isInactive = !focusState.isFocused
     expiryDateState.isFocused = focusState.isFocused
     if (isInactive && expiryDateState.alreadyShown) {
-        expiryDateState.isValidInUi = ExpiryDateChecks.validations(expiryDateState.value)
+        expiryDateState.isValidInUi = if (!validatesEmptyFieldOnBlur && expiryDateState.value.isEmpty()) {
+            true
+        } else {
+            ExpiryDateChecks.validations(expiryDateState.value)
+        }
     }
     expiryDateState.alreadyShown = true
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 @JvmSynthetic
 fun PSExpiryDateText(
@@ -94,25 +113,28 @@ fun PSExpiryDateText(
     animateTopLabelText: Boolean,
     isValidLiveData: MutableLiveData<Boolean>,
     psTheme: PSTheme,
-    onEvent: ((PSCardFieldInputEvent) -> Unit)? = null
+    eventHandler: PSCardFieldEventHandler,
+    clearsErrorOnInput: Boolean = false,
+    validatesEmptyFieldOnBlur: Boolean = true
 ) {
-    val onValueChange: (String) -> Unit = onExpiryDateChange(state, isValidLiveData, onEvent)
-    val keyboardController = LocalSoftwareKeyboardController.current
+    val onValueChange: (String) -> Unit = onExpiryDateChange(state, isValidLiveData, eventHandler, clearsErrorOnInput)
+    val focusManager = LocalFocusManager.current
     val keyboardImeAction: ImeAction = ImeAction.Done
     val onKeyboardAction: (KeyboardActionScope.() -> Unit) =
-        onDonePressed(state, keyboardController)
+        onDonePressed(state, focusManager, validatesEmptyFieldOnBlur)
+    val shape = roundedCornerShapeWithPSTheme(psTheme)
     OutlinedTextField(
         value = state.value,
         onValueChange = onValueChange,
         // Texts //
-        label = {
-            if (animateTopLabelText) {
+        label = if (animateTopLabelText) {
+            {
                 TextLabelWithPSTheme(
                     labelText = labelText,
                     psTheme = psTheme
                 )
             }
-        },
+        } else null,
         placeholder = {
             TextPlaceholderWithPSTheme(
                 placeholderText = placeholderText
@@ -132,9 +154,10 @@ fun PSExpiryDateText(
         isError = !state.isValidInUi,
         modifier = modifier
             .testTag(PS_EXPIRY_DATE_TEXT_TEST_TAG)
-            .onFocusChanged { onExpiryDateFocusChange(it, state, onEvent) },
+            .onFocusChanged { onExpiryDateFocusChange(it, state, eventHandler, validatesEmptyFieldOnBlur) }
+            .uniformFieldBorder(state.isFocused, !state.isValidInUi, psTheme, shape),
         colors = textFieldColorsWithPSTheme(psTheme),
-        shape = roundedCornerShapeWithPSTheme(psTheme),
+        shape = shape,
         textStyle = textStyleWithPSTheme(psTheme)
     )
 }
@@ -170,12 +193,16 @@ internal fun ErrorExpiryDateText() {
 internal fun PreviewPSExpiryDateText(
     expiryDateState: PSExpiryDateState = PSExpiryDateStateImpl()
 ) {
+    val isValidLiveData = MutableLiveData(false)
+    val eventHandler = DefaultPSCardFieldEventHandler(isValidLiveData)
+
     PSExpiryDateText(
         state = expiryDateState,
         animateTopLabelText = true,
         labelText = "Expiry date",
-        isValidLiveData = MutableLiveData(false),
+        isValidLiveData = isValidLiveData,
         psTheme = provideDefaultPSTheme(),
+        eventHandler = eventHandler,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 16.dp)

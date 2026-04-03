@@ -29,17 +29,23 @@ import com.paysafe.android.hostedfields.util.expiryDateVisualTransformation
 import com.paysafe.android.hostedfields.util.roundedCornerShapeWithPSTheme
 import com.paysafe.android.hostedfields.util.textFieldColorsWithPSTheme
 import com.paysafe.android.hostedfields.util.textStyleWithPSTheme
+import com.paysafe.android.hostedfields.util.uniformFieldBorder
 import com.paysafe.android.hostedfields.valid.ExpiryDateChecks
 
 //region HOSTED FIELD: Expiry Date
 fun onExpiryDateFocusChange(
     focusState: FocusState,
     expiryDateState: PSExpiryDateState,
+    validatesEmptyFieldOnBlur: Boolean = true
 ) {
     val isInactive = !focusState.isFocused
     expiryDateState.isFocused = focusState.isFocused
     if (isInactive && expiryDateState.alreadyShown) {
-        expiryDateState.isValidInUi = ExpiryDateChecks.validations(expiryDateState.value)
+        expiryDateState.isValidInUi = if (!validatesEmptyFieldOnBlur && expiryDateState.value.isEmpty()) {
+            true
+        } else {
+            ExpiryDateChecks.validations(expiryDateState.value)
+        }
     }
     expiryDateState.alreadyShown = true
 }
@@ -57,8 +63,10 @@ fun PSExpiryDatePicker(
     placeholderText: String? = null,
     animateTopLabelText: Boolean,
     modifier: Modifier = Modifier,
-    psTheme: PSTheme
+    psTheme: PSTheme,
+    validatesEmptyFieldOnBlur: Boolean = true
 ) {
+    val shape = roundedCornerShapeWithPSTheme(psTheme)
     OutlinedTextField(
         value = state.value,
         onValueChange = {},
@@ -81,7 +89,7 @@ fun PSExpiryDatePicker(
         // Optical //
         visualTransformation = expiryDateVisualTransformation(),
         colors = textFieldColorsWithPSTheme(psTheme, state.isValidInUi),
-        shape = roundedCornerShapeWithPSTheme(psTheme),
+        shape = shape,
         textStyle = textStyleWithPSTheme(psTheme),
         // Extra //
         enabled = false,
@@ -90,7 +98,8 @@ fun PSExpiryDatePicker(
         isError = !state.isValidInUi,
         modifier = modifier
             .testTag(PS_EXPIRY_DATE_PICKER_TEST_TAG)
-            .onFocusChanged { onExpiryDateFocusChange(it, state) }
+            .onFocusChanged { onExpiryDateFocusChange(it, state, validatesEmptyFieldOnBlur) }
+            .uniformFieldBorder(state.isFocused, !state.isValidInUi, psTheme, shape)
     )
 }
 //endregion

@@ -21,6 +21,7 @@ import androidx.lifecycle.MutableLiveData
 import com.paysafe.android.hostedfields.PSTheme
 import com.paysafe.android.hostedfields.domain.model.PSCardFieldInputEvent
 import com.paysafe.android.hostedfields.domain.model.PSExpiryDateState
+import com.paysafe.android.hostedfields.model.PSCardFieldEventHandler
 import com.paysafe.android.hostedfields.util.PS_EXPIRY_DATE_TEXT_NO_ANIM_LABEL_TEST_TAG
 import com.paysafe.android.hostedfields.util.TextLabelReplacement
 import com.paysafe.android.hostedfields.util.WrapperToAvoidPaste
@@ -36,7 +37,7 @@ import com.paysafe.android.hostedfields.util.rememberExpiryDateState
  * @param placeholderText Helper placeholder shown inside [OutlinedTextField].
  * @param animateTopLabelText If 'true' it will show the default animation for [OutlinedTextField], otherwise the label will remain in place.
  * @param isValidLiveData [LiveData] that stores if expiration date is valid.
- * @param onEvent Callback function that reacts to several [PSCardFieldInputEvent].
+ * @param eventHandler Event handler that reacts to several [PSCardFieldInputEvent].
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -48,7 +49,9 @@ fun PSExpiryDateTextField(
     animateTopLabelText: Boolean,
     psTheme: PSTheme,
     isValidLiveData: MutableLiveData<Boolean>,
-    onEvent: ((PSCardFieldInputEvent) -> Unit)? = null
+    eventHandler: PSCardFieldEventHandler,
+    clearsErrorOnInput: Boolean = false,
+    validatesEmptyFieldOnBlur: Boolean = true
 ) {
     CompositionLocalProvider(
         LocalTextToolbar provides WrapperToAvoidPaste,
@@ -65,7 +68,9 @@ fun PSExpiryDateTextField(
                 animateTopLabelText = animateTopLabelText,
                 isValidLiveData = isValidLiveData,
                 psTheme = psTheme,
-                onEvent = onEvent
+                eventHandler = eventHandler,
+                clearsErrorOnInput = clearsErrorOnInput,
+                validatesEmptyFieldOnBlur = validatesEmptyFieldOnBlur
             )
             if (expiryDateState.showLabelWithoutAnimation(animateTopLabelText, labelText)) {
                 TextLabelReplacement(

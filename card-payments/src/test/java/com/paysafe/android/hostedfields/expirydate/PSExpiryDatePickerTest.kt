@@ -15,6 +15,7 @@ import com.paysafe.android.hostedfields.util.PS_EXPIRY_DATE_PICKER_TEST_TAG
 import com.paysafe.android.hostedfields.util.TextPlaceholderWithPSTheme
 import com.paysafe.android.hostedfields.valid.ExpiryDateChecks
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -65,6 +66,43 @@ class PSExpiryDatePickerTest {
 
         // Assert
         assertFalse("Expected isFocused to be false", expiryDateState.isFocused)
+    }
+
+    @Test
+    fun `WHEN validatesEmptyFieldOnBlur is false AND value is empty THEN isValidInUi should be true`() {
+        // Arrange
+        val expiryDateState = PSExpiryDateStateImpl().apply {
+            value = "" // Empty value
+            alreadyShown = true
+            isFocused = true
+        }
+        val focusState = FakeFocusState(isFocused = false)
+
+        // Act
+        onExpiryDateFocusChange(focusState, expiryDateState, validatesEmptyFieldOnBlur = false)
+
+        // Assert
+        assertFalse("Expected isFocused to be false", expiryDateState.isFocused)
+        assertTrue("Expected isValidInUi to be true when validatesEmptyFieldOnBlur is false and value is empty", expiryDateState.isValidInUi)
+    }
+
+    @Test
+    fun `WHEN validatesEmptyFieldOnBlur is true AND value is empty THEN isValidInUi should be false`() {
+        // Arrange
+        val expiryDateState = PSExpiryDateStateImpl().apply {
+            value = ""
+            alreadyShown = true
+            isFocused = true
+            isValidInUi = true
+        }
+        val focusState = FakeFocusState(isFocused = false)
+
+        // Act
+        onExpiryDateFocusChange(focusState, expiryDateState, validatesEmptyFieldOnBlur = true)
+
+        // Assert
+        assertFalse("Expected isFocused to be false", expiryDateState.isFocused)
+        assertFalse("Expected isValidInUi to be false when validatesEmptyFieldOnBlur is true and value is empty", expiryDateState.isValidInUi)
     }
 
     @Test

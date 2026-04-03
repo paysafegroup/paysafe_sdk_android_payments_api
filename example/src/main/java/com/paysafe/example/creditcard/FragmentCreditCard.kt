@@ -80,9 +80,6 @@ class FragmentCreditCard : Fragment() {
             navController.navigateUp()
         }
 
-        binding.creditCardCvvField.labelText =
-            getString(com.paysafe.android.hostedfields.R.string.card_cvv_placeholder)
-
         PSCardFormController.initialize(
             cardFormConfig = PSCardFormConfig(
                 currencyCode = "USD",
@@ -95,6 +92,29 @@ class FragmentCreditCard : Fragment() {
             callback = object : PSCallback<PSCardFormController> {
                 override fun onSuccess(value: PSCardFormController) {
                     cardController = value
+
+                    cardController?.resetOnTokenize = false
+                    binding.apply {
+                        creditCardNumberField.clearsErrorOnInput = true
+                        creditCardCvvField.clearsErrorOnInput = true
+                        creditCardExpiryDateField.clearsErrorOnInput = true
+                        creditCardHolderNameField.clearsErrorOnInput = true
+                        creditCardNumberField.validatesEmptyFieldOnBlur = false
+                        creditCardCvvField.validatesEmptyFieldOnBlur = false
+                        creditCardExpiryDateField.validatesEmptyFieldOnBlur = false
+                        creditCardHolderNameField.validatesEmptyFieldOnBlur = false
+
+                        creditCardNumberField.compactFieldHeight = 60f
+                        creditCardCvvField.compactFieldHeight = 60f
+                        creditCardExpiryDateField.compactFieldHeight = 60f
+                        creditCardHolderNameField.compactFieldHeight = 60f
+
+                        creditCardNumberField.clearsFocusOnReset = false
+                        creditCardCvvField.clearsFocusOnReset = false
+                        creditCardExpiryDateField.clearsFocusOnReset = false
+                        creditCardHolderNameField.clearsFocusOnReset = false
+                    }
+
                     cardController?.isSubmitEnabledLiveData?.observe(viewLifecycleOwner) { isSubmitEnabled ->
                         binding.placeOrderButton.isEnabled = isSubmitEnabled
                     }

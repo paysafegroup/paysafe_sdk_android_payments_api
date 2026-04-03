@@ -67,6 +67,39 @@ abstract class PSCardView @JvmOverloads constructor(
     open var eventHandler: PSCardFieldEventHandler? = null
     open var onEvent: ((PSCardFieldInputEvent) -> Unit)? = null
 
+    /**
+     * If true, clears error border when the user starts typing.
+     * Default is false (preserve original behavior).
+     */
+    var clearsErrorOnInput: Boolean = false
+
+    /**
+     * If false, skip error validation on blur when the field value is empty.
+     * Default is true (preserve original behavior).
+     */
+    var validatesEmptyFieldOnBlur: Boolean = true
+
+    /**
+     * If true, shows the built-in card brand icon in card number field.
+     * Default is true (preserve original behavior).
+     * Only applicable to card number field; ignored by other field types.
+     */
+    var showBrandIcon: Boolean = true
+
+    /**
+     * Custom field height in dp. When set, overrides Material 3's default 56dp minimum height.
+     * Useful for compact layouts (e.g., 48dp for iOS parity) or when animateTopLabelText is false.
+     * Default is null (use Material 3's 56dp default).
+     */
+    var compactFieldHeight: Float? = null
+
+    /**
+     * When true (default), reset() clears focus from the field.
+     * Set false to preserve focus on reset, useful for programmatic resets without disrupting user input.
+     * Default is true (preserve original behavior).
+     */
+    var clearsFocusOnReset: Boolean = true
+
     var psTheme: PSTheme
         get() = mutablePSTheme.value
         set(value) {

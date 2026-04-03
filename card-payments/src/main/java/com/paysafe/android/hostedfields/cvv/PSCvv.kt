@@ -10,12 +10,11 @@ import androidx.compose.foundation.text.KeyboardActionScope
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusState
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.platform.SoftwareKeyboardController
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -41,13 +40,15 @@ import com.paysafe.android.hostedfields.util.keyboardActionFromIme
 import com.paysafe.android.hostedfields.util.roundedCornerShapeWithPSTheme
 import com.paysafe.android.hostedfields.util.textFieldColorsWithPSTheme
 import com.paysafe.android.hostedfields.util.textStyleWithPSTheme
+import com.paysafe.android.hostedfields.util.uniformFieldBorder
 import com.paysafe.android.hostedfields.valid.CvvChecks
 
 //region HOSTED FIELD: Cvv
 private fun onCvvChange(
     cvvState: PSCvvState,
     isValidLiveData: MutableLiveData<Boolean>,
-    eventHandler: PSCardFieldEventHandler
+    eventHandler: PSCardFieldEventHandler,
+    clearsErrorOnInput: Boolean = false
 ): (String) -> Unit = {
     val newValue = CvvChecks.inputProtection(it, cvvState.cardType, eventHandler::handleEvent)
     if (cvvState.value != newValue) {
@@ -57,30 +58,47 @@ private fun onCvvChange(
         if (noInvalidCharacters) eventHandler.handleEvent(PSCardFieldInputEvent.FIELD_VALUE_CHANGE)
         eventHandler.handleEvent(if (isValid) PSCardFieldInputEvent.VALID else PSCardFieldInputEvent.INVALID)
 
+        if (clearsErrorOnInput) {
+            cvvState.isValidInUi = true
+        }
+
         isValidLiveData.postValue(isValid)
     }
     cvvState.value = newValue
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 private fun onDonePressed(
     cvvState: PSCvvState,
-    keyboardController: SoftwareKeyboardController?
+    focusManager: FocusManager,
+    validatesEmptyFieldOnBlur: Boolean = true
 ): (KeyboardActionScope.() -> Unit) = {
-    keyboardController?.hide()
-    cvvState.isValidInUi = CvvChecks.validations(cvvState.value, cvvState.cardType)
+    focusManager.clearFocus()
+    cvvState.isValidInUi = if (!validatesEmptyFieldOnBlur && cvvState.value.isEmpty()) {
+        true
+    } else {
+        CvvChecks.validations(cvvState.value, cvvState.cardType)
+    }
 }
 
 private fun onCvvFocusChange(
     focusState: FocusState,
     cvvState: PSCvvState,
-    eventHandler: PSCardFieldEventHandler
+    eventHandler: PSCardFieldEventHandler,
+    validatesEmptyFieldOnBlur: Boolean = true
 ) {
-    if (focusState.isFocused) eventHandler.handleEvent(PSCardFieldInputEvent.FOCUS)
+    if (focusState.isFocused) {
+        eventHandler.handleEvent(PSCardFieldInputEvent.FOCUS)
+    } else {
+        eventHandler.handleEvent(PSCardFieldInputEvent.BLUR)
+    }
     val isInactive = !focusState.isFocused
     cvvState.isFocused = focusState.isFocused
     if (isInactive && cvvState.alreadyShown) {
-        cvvState.isValidInUi = CvvChecks.validations(cvvState.value, cvvState.cardType)
+        cvvState.isValidInUi = if (!validatesEmptyFieldOnBlur && cvvState.value.isEmpty()) {
+            true
+        } else {
+            CvvChecks.validations(cvvState.value, cvvState.cardType)
+        }
     }
     cvvState.alreadyShown = true
 }
@@ -91,7 +109,6 @@ private fun provideVisualTransformation(isMasked: Boolean): VisualTransformation
     else
         VisualTransformation.None
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun PSCvv(
     state: PSCvvState,
@@ -103,23 +120,26 @@ internal fun PSCvv(
     psTheme: PSTheme,
     isMasked: Boolean,
     eventHandler: PSCardFieldEventHandler,
+    clearsErrorOnInput: Boolean = false,
+    validatesEmptyFieldOnBlur: Boolean = true
 ) {
-    val onValueChange: (String) -> Unit = onCvvChange(state, isValidLiveData, eventHandler)
-    val keyboardController = LocalSoftwareKeyboardController.current
+    val onValueChange: (String) -> Unit = onCvvChange(state, isValidLiveData, eventHandler, clearsErrorOnInput)
+    val focusManager = LocalFocusManager.current
     val keyboardImeAction: ImeAction = ImeAction.Done
     val onKeyboardAction: (KeyboardActionScope.() -> Unit) =
-        onDonePressed(state, keyboardController)
+        onDonePressed(state, focusManager, validatesEmptyFieldOnBlur)
+    val shape = roundedCornerShapeWithPSTheme(psTheme)
     OutlinedTextField(
         value = state.value,
         onValueChange = onValueChange,
-        label = {
-            if (animateTopLabelText) {
+        label = if (animateTopLabelText) {
+            {
                 TextLabelWithPSTheme(
                     labelText = labelText,
                     psTheme = psTheme
                 )
             }
-        },
+        } else null,
         placeholder = {
             TextPlaceholderWithPSTheme(
                 placeholderText = placeholderText
@@ -138,9 +158,10 @@ internal fun PSCvv(
         isError = !state.isValidInUi,
         modifier = modifier
             .testTag(PS_CVV_TEST_TAG)
-            .onFocusChanged { onCvvFocusChange(it, state, eventHandler) },
+            .onFocusChanged { onCvvFocusChange(it, state, eventHandler, validatesEmptyFieldOnBlur) }
+            .uniformFieldBorder(state.isFocused, !state.isValidInUi, psTheme, shape),
         colors = textFieldColorsWithPSTheme(psTheme),
-        shape = roundedCornerShapeWithPSTheme(psTheme),
+        shape = shape,
         textStyle = textStyleWithPSTheme(psTheme)
     )
 }

@@ -104,6 +104,14 @@ class PSCardFormController internal constructor(
 
     var onCardBrandRecognition: ((PSCreditCardType) -> Unit)? = null
 
+    /**
+     * If true, automatically resets all card fields after tokenization attempt (success or failure).
+     * If false, fields are preserved to allow retry scenarios (e.g., user corrects CVV and retries).
+     * Default is true (preserve original behavior).
+     * Matches iOS SDK's resetOnTokenize property for cross-platform parity.
+     */
+    var resetOnTokenize: Boolean = true
+
     private val cardAdapterAuthRepository: CardAdapterAuthRepository =
         CardAdapterAuthRepositoryImpl(CardAdapterAuthApi(psApiClient), psApiClient)
 
@@ -352,8 +360,10 @@ class PSCardFormController internal constructor(
             tokenizationAlreadyInProgress = false
             challengeManager?.cleanup()
             challengeManager = null
-            withContext(coroutineContext + Dispatchers.Main) {
-                resetFields()
+            if (resetOnTokenize) {
+                withContext(coroutineContext + Dispatchers.Main) {
+                    resetFields()
+                }
             }
         }
     }

@@ -30,6 +30,12 @@ data class PSTheme(
     /** Card component border corner radius. */
     @Dimension
     var borderCornerRadius: Float,
+    /** Card component unfocused border width. Default is 1dp (Material 3 default). */
+    @Dimension
+    var borderWidth: Float? = null,
+    /** Card component focused border width. Default is 2dp (Material 3 default). Set to same value as borderWidth for uniform borders. */
+    @Dimension
+    var focusedBorderWidth: Float? = null,
     /** Card component border & placeholder color for invalid/error state. */
     @ColorInt
     var errorColor: Int,

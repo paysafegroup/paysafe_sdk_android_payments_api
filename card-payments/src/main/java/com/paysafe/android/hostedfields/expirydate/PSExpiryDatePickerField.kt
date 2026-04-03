@@ -35,6 +35,7 @@ import com.paysafe.android.hostedfields.PSTheme
 import com.paysafe.android.hostedfields.R
 import com.paysafe.android.hostedfields.domain.model.PSCardFieldInputEvent
 import com.paysafe.android.hostedfields.domain.model.PSExpiryDateState
+import com.paysafe.android.hostedfields.model.PSCardFieldEventHandler
 import com.paysafe.android.hostedfields.util.PS_EXPIRY_DATE_PICKER_NO_ANIM_LABEL_TEST_TAG
 import com.paysafe.android.hostedfields.util.TextLabelReplacement
 import com.paysafe.android.hostedfields.util.WrapperToAvoidPaste
@@ -51,7 +52,7 @@ import com.paysafe.android.hostedfields.valid.ExpiryDateChecks
  * @param placeholderText Helper placeholder shown inside [OutlinedTextField].
  * @param animateTopLabelText If 'true' it will show the default animation for [OutlinedTextField], otherwise the label will remain in place.
  * @param isValidLiveData [LiveData] that stores if expiration date is valid.
- * @param onEvent Callback function that reacts to several [PSCardFieldInputEvent].
+ * @param eventHandler Event handler that reacts to several [PSCardFieldInputEvent].
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -63,7 +64,8 @@ fun PSExpiryDatePickerField(
     animateTopLabelText: Boolean,
     isValidLiveData: MutableLiveData<Boolean>,
     psTheme: PSTheme,
-    onEvent: ((PSCardFieldInputEvent) -> Unit)? = null
+    eventHandler: PSCardFieldEventHandler,
+    validatesEmptyFieldOnBlur: Boolean = true
 ) {
     val requesterToClearFocus = remember { FocusRequester() }
     var alreadyHasFocus by rememberSaveable { mutableStateOf(false) }
@@ -92,7 +94,7 @@ fun PSExpiryDatePickerField(
                     .onFocusChanged { focusState -> // Don't call 'onFocus' if already has focus
                         if (focusState.isFocused && !alreadyHasFocus) {
                             alreadyHasFocus = true
-                            onEvent?.invoke(PSCardFieldInputEvent.FOCUS)
+                            eventHandler.handleEvent(PSCardFieldInputEvent.FOCUS)
                         } else if (!focusState.isFocused) {
                             alreadyHasFocus = false
                         } else {
@@ -107,7 +109,8 @@ fun PSExpiryDatePickerField(
                     placeholderText = placeholderText,
                     animateTopLabelText = animateTopLabelText,
                     modifier = modifier,
-                    psTheme = psTheme
+                    psTheme = psTheme,
+                    validatesEmptyFieldOnBlur = validatesEmptyFieldOnBlur
                 )
                 if (expiryDateState.showLabelWithoutAnimation(animateTopLabelText, labelText)) {
                     TextLabelReplacement(
@@ -127,7 +130,7 @@ fun PSExpiryDatePickerField(
                 expiryDateState = expiryDateState,
                 psTheme = psTheme,
                 isValidLiveData = isValidLiveData,
-                onEvent = onEvent
+                eventHandler = eventHandler
             )
         }
     }
@@ -139,7 +142,7 @@ private fun PSMonthYearPickerDialogIfPickerOpen(
     expiryDateState: PSExpiryDateState,
     psTheme: PSTheme,
     isValidLiveData: MutableLiveData<Boolean>,
-    onEvent: ((PSCardFieldInputEvent) -> Unit)?
+    eventHandler: PSCardFieldEventHandler
 ) {
     PSMonthYearPickerDialog(
         title = pickerTitleText,
@@ -154,9 +157,9 @@ private fun PSMonthYearPickerDialogIfPickerOpen(
             expiryDateState.isValidInUi = ExpiryDateChecks.validations(it)
 
             if (isNewValueDifferent) {
-                onEvent?.invoke(PSCardFieldInputEvent.FIELD_VALUE_CHANGE)
+                eventHandler.handleEvent(PSCardFieldInputEvent.FIELD_VALUE_CHANGE)
             }
-            onEvent?.invoke(
+            eventHandler.handleEvent(
                 if (expiryDateState.isValidInUi) PSCardFieldInputEvent.VALID
                 else PSCardFieldInputEvent.INVALID
             )

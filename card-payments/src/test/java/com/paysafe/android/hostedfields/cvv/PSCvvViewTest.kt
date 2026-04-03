@@ -7,6 +7,8 @@ package com.paysafe.android.hostedfields.cvv
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import com.paysafe.android.hostedfields.util.PS_CVV_TEST_TAG
+import io.mockk.spyk
+import io.mockk.verify
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -122,4 +124,16 @@ class PSCvvViewTest {
         assertEquals(thirdLabelText, output.labelText)
     }
 
+    @Test
+    fun `WHEN clearsFocusOnReset is false THEN reset should NOT call clearFocus`() {
+        // Arrange
+        val output = spyk(sut())
+        output.clearsFocusOnReset = false
+
+        // Act
+        output.reset()
+
+        // Assert
+        verify(exactly = 0) { output.clearFocus() }
+    }
 }

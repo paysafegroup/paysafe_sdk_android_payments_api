@@ -48,15 +48,19 @@ class PSCardNumberFieldTest {
                     modifier = Modifier,
                     cardBrandModifier = Modifier
                 ),
-                labelText = "Card Number",
-                placeholderText = "XXXX XXXX XXXX XXXX",
-                animateTopLabelText = animateTopLabelText,
+                textOptions = PSCardNumberFieldTextOptions(
+                    labelText = "Card Number",
+                    placeholderText = "XXXX XXXX XXXX XXXX",
+                    animateTopLabelText = animateTopLabelText
+                ),
                 cardNumberLiveData = PSCardNumberLiveData(
                     cardTypeLiveData = MutableLiveData(PSCreditCardType.UNKNOWN),
                     isValidLiveData = MutableLiveData(false)
                 ),
                 psTheme = provideDefaultPSTheme(),
-                separator = numbersSeparator,
+                fieldOptions = PSCardNumberFieldOptions(
+                    separator = numbersSeparator
+                ),
                 eventHandler = eventHandler
             )
         }

@@ -50,7 +50,9 @@ fun PSCvvField(
     psTheme: PSTheme,
     isMasked: Boolean,
     isValidLiveData: MutableLiveData<Boolean>,
-    eventHandler: PSCardFieldEventHandler
+    eventHandler: PSCardFieldEventHandler,
+    clearsErrorOnInput: Boolean = false,
+    validatesEmptyFieldOnBlur: Boolean = true
 ) {
     CompositionLocalProvider(
         LocalTextToolbar provides WrapperToAvoidPaste,
@@ -68,7 +70,9 @@ fun PSCvvField(
                 isValidLiveData = isValidLiveData,
                 psTheme = psTheme,
                 isMasked = isMasked,
-                eventHandler = eventHandler // Proporcionar el eventHandler
+                eventHandler = eventHandler, // Proporcionar el eventHandler
+                clearsErrorOnInput = clearsErrorOnInput,
+                validatesEmptyFieldOnBlur = validatesEmptyFieldOnBlur
             )
             if (cvvState.showLabelWithoutAnimation(animateTopLabelText, labelText)) {
                 TextLabelReplacement(

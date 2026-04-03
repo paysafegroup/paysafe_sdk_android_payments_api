@@ -136,7 +136,7 @@ class PSCvvTest {
         // Arrange
         var unwantedEventsCalled = false
         val eventHandler = PSCardFieldEventHandler { event ->
-            if (event != PSCardFieldInputEvent.FOCUS) {
+            if (event != PSCardFieldInputEvent.FOCUS && event != PSCardFieldInputEvent.BLUR) {
                 unwantedEventsCalled = true
             }
         }
@@ -297,5 +297,94 @@ class PSCvvTest {
         // Assert
         assertEquals(eventInvoked, onFieldValueChangeCalled)
         assertEquals(eventInvoked, onValidCalled)
+    }
+
+    @Test
+    fun `WHEN clearsErrorOnInput is true THEN isValidInUi should be true on input`() {
+        // Arrange
+        val cvvState = PSCvvStateImpl().apply {
+            isValidInUi = false
+        }
+
+        composeTestRule.setContent {
+            PSCvv(
+                state = cvvState,
+                labelText = "CVV Number",
+                animateTopLabelText = true,
+                isValidLiveData = MutableLiveData(false),
+                psTheme = provideDefaultPSTheme(),
+                eventHandler = DefaultPSCardFieldEventHandler(MutableLiveData(false)),
+                isMasked = false,
+                clearsErrorOnInput = true
+            )
+        }
+
+        // Act
+        cvvField().performTextInput("1")
+
+        // Assert
+        assertTrue("Expected isValidInUi to be true when clearsErrorOnInput is true", cvvState.isValidInUi)
+    }
+
+    @Test
+    fun `WHEN validatesEmptyFieldOnBlur is false AND value is empty THEN isValidInUi should be true on blur`() {
+        // Arrange
+        val cvvState = PSCvvStateImpl().apply {
+            value = ""
+            alreadyShown = true
+        }
+
+        composeTestRule.setContent {
+            PSCvv(
+                state = cvvState,
+                labelText = "CVV Number",
+                animateTopLabelText = true,
+                isValidLiveData = MutableLiveData(false),
+                psTheme = provideDefaultPSTheme(),
+                eventHandler = DefaultPSCardFieldEventHandler(MutableLiveData(false)),
+                isMasked = false,
+                validatesEmptyFieldOnBlur = false
+            )
+        }
+
+        // Act
+        cvvField().performClick()
+        composeTestRule.waitForIdle()
+        cvvField().performImeAction()
+
+        // Assert
+        assertTrue("Expected isValidInUi to be true when validatesEmptyFieldOnBlur is false and value is empty", cvvState.isValidInUi)
+    }
+
+    @Test
+    fun `WHEN focus changes from focused to unfocused AND alreadyShown is true THEN validation logic is applied`() {
+        // Arrange
+        val cvvState = PSCvvStateImpl().apply {
+            value = ""
+            alreadyShown = true
+        }
+
+        composeTestRule.setContent {
+            PSCvv(
+                state = cvvState,
+                labelText = "CVV Number",
+                animateTopLabelText = true,
+                isValidLiveData = MutableLiveData(false),
+                psTheme = provideDefaultPSTheme(),
+                eventHandler = DefaultPSCardFieldEventHandler(MutableLiveData(false)),
+                isMasked = false,
+                validatesEmptyFieldOnBlur = false
+            )
+        }
+
+        // Act
+        cvvField().performClick()
+        composeTestRule.waitForIdle()
+        cvvField().performImeAction()
+        composeTestRule.waitForIdle()
+
+        // Assert
+        assertTrue("Expected isValidInUi to be true when validatesEmptyFieldOnBlur is false and value is empty", cvvState.isValidInUi)
+        assertTrue("Expected alreadyShown to remain true", cvvState.alreadyShown)
     }
 }

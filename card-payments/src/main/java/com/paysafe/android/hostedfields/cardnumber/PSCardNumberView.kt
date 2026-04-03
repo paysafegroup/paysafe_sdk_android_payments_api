@@ -66,7 +66,7 @@ class PSCardNumberView @JvmOverloads constructor(
 
     override fun reset() {
         creditCardNumberState.value = PSCardNumberStateImpl()
-        clearFocus()
+        if (clearsFocusOnReset) clearFocus()
     }
 
     @Composable
@@ -76,15 +76,23 @@ class PSCardNumberView @JvmOverloads constructor(
             modifier = Modifier.fillMaxWidth(),
             cardBrandModifier = Modifier.padding(end = 16.dp)
         ),
-        labelText = placeholderString,
-        placeholderText = hintString,
-        animateTopLabelText = animateTopPlaceholderLabel,
+        textOptions = PSCardNumberFieldTextOptions(
+            labelText = placeholderString,
+            placeholderText = hintString,
+            animateTopLabelText = animateTopPlaceholderLabel
+        ),
         cardNumberLiveData = PSCardNumberLiveData(
             cardTypeLiveData = _cardTypeLiveData,
             isValidLiveData = _isValidLiveData
         ),
         psTheme = psTheme,
-        separator = separator,
+        fieldOptions = PSCardNumberFieldOptions(
+            separator = separator,
+            clearsErrorOnInput = clearsErrorOnInput,
+            validatesEmptyFieldOnBlur = validatesEmptyFieldOnBlur,
+            showBrandIcon = showBrandIcon,
+            compactFieldHeight = compactFieldHeight
+        ),
         eventHandler = eventHandler ?: DefaultPSCardFieldEventHandler(_isValidLiveData)
     )
 

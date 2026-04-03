@@ -6,6 +6,10 @@ package com.paysafe.android.hostedfields.cardnumber
 
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
+import com.paysafe.android.hostedfields.domain.model.PSCardFieldInputEvent
+import com.paysafe.android.hostedfields.model.PSCardFieldEventHandler
 import com.paysafe.android.hostedfields.util.PS_CARD_NUMBER_TEST_TAG
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -134,5 +138,63 @@ class PSCardNumberViewTest {
 
         // Assert
         assertEquals(customLabelText, output.placeholderString)
+    }
+
+    @Test
+    fun `WHEN eventHandler is provided THEN custom eventHandler is used`() {
+        // Arrange
+        var customEventHandlerCalled = false
+        var capturedEvent: PSCardFieldInputEvent? = null
+
+        val customEventHandler = PSCardFieldEventHandler { event ->
+            customEventHandlerCalled = true
+            capturedEvent = event
+        }
+
+        val output = sut()
+        output.eventHandler = customEventHandler
+
+        composeTestRule.setContent {
+            output.Content()
+        }
+
+        // Act
+        composeTestRule.onNodeWithTag(PS_CARD_NUMBER_TEST_TAG).performClick()
+
+        // Assert
+        assertTrue("Custom event handler should have been called", customEventHandlerCalled)
+        assertEquals(
+            "Expected FOCUS event to be captured",
+            PSCardFieldInputEvent.FOCUS,
+            capturedEvent
+        )
+    }
+
+    @Test
+    fun `WHEN eventHandler is provided and input occurs THEN custom eventHandler receives FIELD_VALUE_CHANGE event`() {
+        // Arrange
+        var fieldValueChangeEventCalled = false
+
+        val customEventHandler = PSCardFieldEventHandler { event ->
+            if (event == PSCardFieldInputEvent.FIELD_VALUE_CHANGE) {
+                fieldValueChangeEventCalled = true
+            }
+        }
+
+        val output = sut()
+        output.eventHandler = customEventHandler
+
+        composeTestRule.setContent {
+            output.Content()
+        }
+
+        // Act
+        composeTestRule.onNodeWithTag(PS_CARD_NUMBER_TEST_TAG).performTextInput("4111")
+
+        // Assert
+        assertTrue(
+            "Custom event handler should receive FIELD_VALUE_CHANGE event on input",
+            fieldValueChangeEventCalled
+        )
     }
 }

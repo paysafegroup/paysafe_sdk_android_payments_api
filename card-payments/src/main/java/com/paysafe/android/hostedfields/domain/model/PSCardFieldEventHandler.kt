@@ -24,6 +24,9 @@ class DefaultPSCardFieldEventHandler(
             PSCardFieldInputEvent.FOCUS -> {
                 // Action for FOCUS
             }
+            PSCardFieldInputEvent.BLUR -> {
+                // Action for BLUR
+            }
             PSCardFieldInputEvent.INVALID_CHARACTER -> {
                 // Action for INVALID_CHARACTER if is needed
             }

@@ -54,7 +54,7 @@ class PSCardholderNameView @JvmOverloads constructor(
 
     override fun reset() {
         cardHolderNameState.value = PSCardholderNameStateImpl()
-        clearFocus()
+        if (clearsFocusOnReset) clearFocus()
     }
 
     @Composable
@@ -66,7 +66,9 @@ class PSCardholderNameView @JvmOverloads constructor(
         animateTopLabelText = animateTopPlaceholderLabel,
         isValidLiveData = _isValidLiveData,
         psTheme = psTheme,
-        eventHandler = DefaultPSCardFieldEventHandler(_isValidLiveData)
+        eventHandler = eventHandler ?: DefaultPSCardFieldEventHandler(_isValidLiveData),
+        clearsErrorOnInput = clearsErrorOnInput,
+        validatesEmptyFieldOnBlur = validatesEmptyFieldOnBlur
     )
 
     private fun provideLabelText(attrs: AttributeSet?): String {

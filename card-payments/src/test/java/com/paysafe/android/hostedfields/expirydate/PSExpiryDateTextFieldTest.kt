@@ -14,6 +14,7 @@ import androidx.lifecycle.MutableLiveData
 import com.paysafe.android.hostedfields.domain.model.PSCardFieldInputEvent
 import com.paysafe.android.hostedfields.domain.model.PSExpiryDateState
 import com.paysafe.android.hostedfields.domain.model.PSExpiryDateStateImpl
+import com.paysafe.android.hostedfields.model.PSCardFieldEventHandler
 import com.paysafe.android.hostedfields.provideDefaultPSTheme
 import com.paysafe.android.hostedfields.util.PS_EXPIRY_DATE_TEXT_NO_ANIM_LABEL_TEST_TAG
 import org.junit.Rule
@@ -34,7 +35,9 @@ class PSExpiryDateTextFieldTest {
     private fun sut(
         state: PSExpiryDateState = PSExpiryDateStateImpl(),
         animateTopLabelText: Boolean,
-        onEvent: ((PSCardFieldInputEvent) -> Unit)? = null
+        eventHandler: PSCardFieldEventHandler = PSCardFieldEventHandler {
+            // no-op for tests
+        }
     ) {
         composeTestRule.setContent {
             PSExpiryDateTextField(
@@ -45,7 +48,7 @@ class PSExpiryDateTextFieldTest {
                 placeholderText = "MM   YY",
                 isValidLiveData = MutableLiveData(false),
                 psTheme = provideDefaultPSTheme(),
-                onEvent = onEvent
+                eventHandler = eventHandler
             )
         }
     }

@@ -54,19 +54,23 @@ class PSCardNumberTest {
     ) {
         composeTestRule.setContent {
             PSCardNumber(
-                state = state,
-                labelText = "Card number",
-                cardNumberModifier = PSCardNumberModifier(
-                    modifier = Modifier,
-                    cardBrandModifier = Modifier
+                fieldConfig = PSCardNumberFieldConfig(
+                    state = state,
+                    modifier = PSCardNumberModifier(
+                        modifier = Modifier,
+                        cardBrandModifier = Modifier
+                    )
                 ),
-                animateTopLabelText = true,
+                textConfig = PSCardNumberTextConfig(
+                    labelText = "Card number",
+                    animateTopLabelText = true
+                ),
                 cardNumberLiveData = PSCardNumberLiveData(
                     cardTypeLiveData = MutableLiveData(PSCreditCardType.UNKNOWN),
                     isValidLiveData = MutableLiveData(false)
                 ),
                 psTheme = provideDefaultPSTheme(),
-                separator = numbersSeparator,
+                uiConfig = PSCardNumberUIConfig(separator = numbersSeparator),
                 eventHandler = eventHandler
             )
         }
@@ -152,7 +156,9 @@ class PSCardNumberTest {
         // Arrange
         var unwantedEventsCalled = false
         val nonFocus: ((PSCardFieldInputEvent) -> Unit) = {
-            if (it != PSCardFieldInputEvent.FOCUS) unwantedEventsCalled = true
+            if (it != PSCardFieldInputEvent.FOCUS && it != PSCardFieldInputEvent.BLUR) {
+                unwantedEventsCalled = true
+            }
         }
         sut(eventHandler = nonFocus)
 

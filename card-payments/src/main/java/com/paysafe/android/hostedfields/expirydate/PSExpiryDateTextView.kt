@@ -15,6 +15,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.paysafe.android.hostedfields.R
 import com.paysafe.android.hostedfields.domain.model.PSExpiryDateStateImpl
+import com.paysafe.android.hostedfields.model.DefaultPSCardFieldEventHandler
+import com.paysafe.android.hostedfields.model.PSCardFieldEventHandler
 import com.paysafe.android.hostedfields.valid.ExpiryDateChecks
 import com.paysafe.android.hostedfields.valid.ExpiryDateChecks.Companion.HALF_DATE_INDEX
 import com.paysafe.android.hostedfields.valid.ExpiryDateChecks.Companion.TWO_DIGIT_THOUSAND_BASE
@@ -63,20 +65,28 @@ class PSExpiryDateTextView @JvmOverloads constructor(
 
     override fun reset() {
         expiryDateState.value = PSExpiryDateStateImpl()
-        clearFocus()
+        if (clearsFocusOnReset) clearFocus()
     }
 
     @Composable
-    override fun Content() = PSExpiryDateTextField(
-        expiryDateState = expiryDateState.value,
-        modifier = Modifier.fillMaxWidth(),
-        labelText = placeholderString,
-        placeholderText = hintString,
-        animateTopLabelText = animateTopPlaceholderLabel,
-        isValidLiveData = _isValidLiveData,
-        psTheme = psTheme,
-        onEvent = onEvent
-    )
+    override fun Content() {
+        val handler = eventHandler ?: onEvent?.let { callback ->
+            PSCardFieldEventHandler { event -> callback(event) }
+        } ?: DefaultPSCardFieldEventHandler(_isValidLiveData)
+
+        PSExpiryDateTextField(
+            expiryDateState = expiryDateState.value,
+            modifier = Modifier.fillMaxWidth(),
+            labelText = placeholderString,
+            placeholderText = hintString,
+            animateTopLabelText = animateTopPlaceholderLabel,
+            isValidLiveData = _isValidLiveData,
+            psTheme = psTheme,
+            eventHandler = handler,
+            clearsErrorOnInput = clearsErrorOnInput,
+            validatesEmptyFieldOnBlur = validatesEmptyFieldOnBlur
+        )
+    }
 
     private fun provideLabelText(attrs: AttributeSet?): String {
         val styledAttributes = context.theme.obtainStyledAttributes(

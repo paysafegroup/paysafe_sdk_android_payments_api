@@ -63,7 +63,7 @@ class PSCvvView @JvmOverloads constructor(
     override fun reset() {
         val previousCardType = cvvState.value.cardType
         cvvState.value = PSCvvStateImpl(type = previousCardType)
-        clearFocus()
+        if (clearsFocusOnReset) clearFocus()
     }
 
     @Composable
@@ -76,7 +76,9 @@ class PSCvvView @JvmOverloads constructor(
         psTheme = psTheme,
         isMasked = isMasked,
         isValidLiveData = _isValidLiveData,
-        eventHandler = eventHandler ?: DefaultPSCardFieldEventHandler(_isValidLiveData)
+        eventHandler = eventHandler ?: DefaultPSCardFieldEventHandler(_isValidLiveData),
+        clearsErrorOnInput = clearsErrorOnInput,
+        validatesEmptyFieldOnBlur = validatesEmptyFieldOnBlur
     )
 
     private fun provideIsMasked(attrs: AttributeSet?): Boolean {
@@ -101,7 +103,8 @@ class PSCvvView @JvmOverloads constructor(
             /* defStyleRes = */ 0
         )
         try {
-            return styledAttributes.getString(R.styleable.PSCvvView_label_text) ?: "CVV Number"
+            return styledAttributes.getString(R.styleable.PSCvvView_label_text)
+                ?: resources.getString(R.string.card_cvv_placeholder)
         } finally {
             styledAttributes.recycle()
         }

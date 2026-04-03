@@ -2874,4 +2874,47 @@ class PSCardFormControllerTest {
             assertEquals("Activity must extend FragmentActivity for 3DS challenges", e.message)
         }
     }
+
+    @Test
+    fun `tokenize with resetOnTokenize false does NOT call resetFields`() = runTest {
+        // Arrange
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        val mockCardCvvView = mockk<PSCvvView>()
+        every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+        every { mockCardCvvView.placeholderString } returns ""
+        every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.data } returns "123"
+        justRun { mockCardCvvView.reset() }
+
+        val psCardFormController = PSCardFormController(
+            cardCvvView = mockCardCvvView,
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient
+        )
+
+        psCardFormController.resetOnTokenize = false
+
+        PSCardFormController.supportedCardTypes = listOf(PSCreditCardType.VISA)
+        val paymentHandle = PaymentHandle(
+            id = "id",
+            paymentHandleToken = "token",
+            merchantRefNum = "refNum",
+            status = PaymentHandleTokenStatus.PAYABLE.status,
+            action = PaymentHandleAction.NONE.toString()
+        )
+        coEvery {
+            mockPSTokenizationService.tokenize(any(), any())
+        } returns PSResult.Success(paymentHandle)
+
+        // Act
+        val result = psCardFormController.tokenize(psCardTokenizeOptions)
+
+        // Assert
+        assertTrue(result is PSResult.Success)
+        verify(exactly = 0) { mockCardCvvView.reset() }
+    }
 }

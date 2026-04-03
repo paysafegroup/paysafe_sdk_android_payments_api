@@ -11,12 +11,11 @@ import androidx.compose.foundation.text.KeyboardActionScope
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusState
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.platform.SoftwareKeyboardController
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -40,6 +39,7 @@ import com.paysafe.android.hostedfields.util.PS_CARD_NUMBER_TEST_TAG
 import com.paysafe.android.hostedfields.util.TextLabelWithPSTheme
 import com.paysafe.android.hostedfields.util.TextPlaceholderWithPSTheme
 import com.paysafe.android.hostedfields.util.cardNumberVisualTransformation
+import com.paysafe.android.hostedfields.util.CompactFieldWrapper
 import com.paysafe.android.hostedfields.util.keyboardActionFromIme
 import com.paysafe.android.hostedfields.util.roundedCornerShapeWithPSTheme
 import com.paysafe.android.hostedfields.util.textFieldColorsWithPSTheme
@@ -74,7 +74,8 @@ private fun onCardNumberChange(
     cardNumberState: PSCardNumberState,
     cardTypeLiveData: MutableLiveData<PSCreditCardType>,
     isValidLiveData: MutableLiveData<Boolean>,
-    eventHandler: PSCardFieldEventHandler
+    eventHandler: PSCardFieldEventHandler,
+    clearsErrorOnInput: Boolean = false
 ): (String) -> Unit = { input ->
     val inputData = CardNumberChecks.inputProtection(input, cardNumberState.type, eventHandler::handleEvent)
 
@@ -87,6 +88,10 @@ private fun onCardNumberChange(
         if (noInvalidCharacters) eventHandler.handleEvent(PSCardFieldInputEvent.FIELD_VALUE_CHANGE)
         eventHandler.handleEvent(if (isValid) PSCardFieldInputEvent.VALID else PSCardFieldInputEvent.INVALID)
 
+        if (clearsErrorOnInput) {
+            cardNumberState.isValidInUi = true
+        }
+
         isValidLiveData.postValue(isValid)
     }
     cardNumberState.value = inputData.first
@@ -96,89 +101,113 @@ private fun onCardNumberChange(
     cardTypeLiveData.postValue(cardNumberState.type)
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 private fun onDonePressed(
     cardNumberState: PSCardNumberState,
-    keyboardController: SoftwareKeyboardController?
+    focusManager: FocusManager,
+    validatesEmptyFieldOnBlur: Boolean = true
 ): (KeyboardActionScope.() -> Unit) = {
-    keyboardController?.hide()
-    cardNumberState.isValidInUi = CardNumberChecks.validations(cardNumberState.value)
+    focusManager.clearFocus()
+    cardNumberState.isValidInUi = if (!validatesEmptyFieldOnBlur && cardNumberState.value.isEmpty()) {
+        true
+    } else {
+        CardNumberChecks.validations(cardNumberState.value)
+    }
 }
 
 private fun onCardNumberFocusChange(
     focusState: FocusState,
     cardNumberState: PSCardNumberState,
-    eventHandler: PSCardFieldEventHandler
+    eventHandler: PSCardFieldEventHandler,
+    validatesEmptyFieldOnBlur: Boolean = true
 ) {
-    if (focusState.isFocused) eventHandler.handleEvent(PSCardFieldInputEvent.FOCUS)
+    if (focusState.isFocused) {
+        eventHandler.handleEvent(PSCardFieldInputEvent.FOCUS)
+    } else {
+        eventHandler.handleEvent(PSCardFieldInputEvent.BLUR)
+    }
     val isInactive = !focusState.isFocused
     cardNumberState.isFocused = focusState.isFocused
     if (isInactive && cardNumberState.alreadyShown) {
-        cardNumberState.isValidInUi = CardNumberChecks.validations(cardNumberState.value)
+        cardNumberState.isValidInUi = if (!validatesEmptyFieldOnBlur && cardNumberState.value.isEmpty()) {
+            true
+        } else {
+            CardNumberChecks.validations(cardNumberState.value)
+        }
     }
     cardNumberState.alreadyShown = true
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun PSCardNumber(
-    state: PSCardNumberState,
-    cardNumberModifier: PSCardNumberModifier,
-    labelText: String,
-    placeholderText: String? = null,
-    animateTopLabelText: Boolean,
+    fieldConfig: PSCardNumberFieldConfig,
+    textConfig: PSCardNumberTextConfig,
     cardNumberLiveData: PSCardNumberLiveData,
     psTheme: PSTheme,
-    separator: CardNumberSeparator,
-    eventHandler: PSCardFieldEventHandler,
+    uiConfig: PSCardNumberUIConfig = PSCardNumberUIConfig(),
+    validationConfig: PSCardNumberValidationConfig = PSCardNumberValidationConfig(),
+    eventHandler: PSCardFieldEventHandler
 ) {
     val onValueChange: (String) -> Unit = onCardNumberChange(
-        state,
+        fieldConfig.state,
         cardNumberLiveData.cardTypeLiveData,
         cardNumberLiveData.isValidLiveData,
-        eventHandler::handleEvent
+        eventHandler,
+        validationConfig.clearsErrorOnInput
     )
-    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
     val keyboardImeAction: ImeAction = ImeAction.Done
     val onKeyboardAction: (KeyboardActionScope.() -> Unit) =
-        onDonePressed(state, keyboardController)
-    OutlinedTextField(
-        value = state.value,
-        onValueChange = onValueChange,
-        // Texts //
-        label = {
-            if (animateTopLabelText) {
-                TextLabelWithPSTheme(
-                    labelText = labelText,
+        onDonePressed(fieldConfig.state, focusManager, validationConfig.validatesEmptyFieldOnBlur)
+    val shape = roundedCornerShapeWithPSTheme(psTheme)
+
+    CompactFieldWrapper(
+        compactFieldHeight = uiConfig.compactFieldHeight,
+        modifier = fieldConfig.modifier.modifier
+            .testTag(PS_CARD_NUMBER_TEST_TAG)
+            .onFocusChanged { onCardNumberFocusChange(it, fieldConfig.state, eventHandler, validationConfig.validatesEmptyFieldOnBlur) },
+        isFocused = fieldConfig.state.isFocused,
+        isError = !fieldConfig.state.isValidInUi,
+        psTheme = psTheme,
+        shape = shape
+    ) { innerModifier ->
+        OutlinedTextField(
+            value = fieldConfig.state.value,
+            onValueChange = onValueChange,
+            // Texts //
+            label = if (textConfig.animateTopLabelText) {
+                {
+                    TextLabelWithPSTheme(
+                        labelText = textConfig.labelText,
+                        psTheme = psTheme
+                    )
+                }
+            } else null,
+            placeholder = {
+                TextPlaceholderWithPSTheme(
+                    placeholderText = textConfig.placeholderText
+                        ?: stringResource(id = R.string.card_number_hint),
                     psTheme = psTheme
                 )
-            }
-        },
-        placeholder = {
-            TextPlaceholderWithPSTheme(
-                placeholderText = placeholderText
-                    ?: stringResource(id = R.string.card_number_hint),
-                psTheme = psTheme
-            )
-        },
-        // Keyboard Settings //
-        keyboardOptions = KeyboardOptions(
-            imeAction = keyboardImeAction, keyboardType = KeyboardType.Number
-        ),
-        keyboardActions = keyboardActionFromIme(keyboardImeAction, onKeyboardAction),
-        // Optical //
-        visualTransformation = cardNumberVisualTransformation(state.type, separator),
-        trailingIcon = { CardNumberBrandIcon(state.type, cardNumberModifier.cardBrandModifier) },
-        // Extra //
-        singleLine = true,
-        isError = !state.isValidInUi,
-        modifier = cardNumberModifier.modifier
-            .testTag(PS_CARD_NUMBER_TEST_TAG)
-            .onFocusChanged { onCardNumberFocusChange(it, state, eventHandler) },
-        colors = textFieldColorsWithPSTheme(psTheme),
-        shape = roundedCornerShapeWithPSTheme(psTheme),
-        textStyle = textStyleWithPSTheme(psTheme)
-    )
+            },
+            // Keyboard Settings //
+            keyboardOptions = KeyboardOptions(
+                imeAction = keyboardImeAction, keyboardType = KeyboardType.Number
+            ),
+            keyboardActions = keyboardActionFromIme(keyboardImeAction, onKeyboardAction),
+            // Optical //
+            visualTransformation = cardNumberVisualTransformation(fieldConfig.state.type, uiConfig.separator),
+            trailingIcon = if (uiConfig.showBrandIcon) {
+                { CardNumberBrandIcon(fieldConfig.state.type, fieldConfig.modifier.cardBrandModifier) }
+            } else null,
+            // Extra //
+            singleLine = true,
+            isError = !fieldConfig.state.isValidInUi,
+            modifier = innerModifier,
+            colors = textFieldColorsWithPSTheme(psTheme),
+            shape = shape,
+            textStyle = textStyleWithPSTheme(psTheme)
+        )
+    }
 }
 //endregion
 
@@ -253,21 +282,25 @@ internal fun PreviewPSCardNumber(
 ) {
     val eventHandler = DefaultPSCardFieldEventHandler(MutableLiveData(false))
     PSCardNumber(
-        state = cardNumber,
-        cardNumberModifier = PSCardNumberModifier(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 16.dp),
-            cardBrandModifier = Modifier.padding(end = 16.dp)
+        fieldConfig = PSCardNumberFieldConfig(
+            state = cardNumber,
+            modifier = PSCardNumberModifier(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                cardBrandModifier = Modifier.padding(end = 16.dp)
+            )
         ),
-        labelText = "Card number",
-        animateTopLabelText = true,
+        textConfig = PSCardNumberTextConfig(
+            labelText = "Card number",
+            animateTopLabelText = true
+        ),
         cardNumberLiveData = PSCardNumberLiveData(
             cardTypeLiveData = MutableLiveData(PSCreditCardType.UNKNOWN),
             isValidLiveData = MutableLiveData(false)
         ),
         psTheme = provideDefaultPSTheme(),
-        separator = separator,
+        uiConfig = PSCardNumberUIConfig(separator = separator),
         eventHandler = eventHandler
     )
 }

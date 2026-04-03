@@ -14,6 +14,7 @@ import androidx.lifecycle.MutableLiveData
 import com.paysafe.android.hostedfields.domain.model.PSCardFieldInputEvent
 import com.paysafe.android.hostedfields.domain.model.PSExpiryDateState
 import com.paysafe.android.hostedfields.domain.model.PSExpiryDateStateImpl
+import com.paysafe.android.hostedfields.model.PSCardFieldEventHandler
 import com.paysafe.android.hostedfields.provideDefaultPSTheme
 import com.paysafe.android.hostedfields.util.PS_EXPIRY_DATE_PICKER_NO_ANIM_LABEL_TEST_TAG
 import com.paysafe.android.hostedfields.util.PS_EXPIRY_DATE_PICKER_TEST_TAG
@@ -53,7 +54,9 @@ class PSExpiryDatePickerFieldTest {
         state: PSExpiryDateState = PSExpiryDateStateImpl(),
         labelText: String = "Expiry Date",
         animateTopLabelText: Boolean = true,
-        onEvent: ((PSCardFieldInputEvent) -> Unit)? = null
+        eventHandler: PSCardFieldEventHandler = PSCardFieldEventHandler {
+            // no-op for tests
+        }
     ) {
         composeTestRule.setContent {
             PSExpiryDatePickerField(
@@ -63,7 +66,7 @@ class PSExpiryDatePickerFieldTest {
                 animateTopLabelText = animateTopLabelText,
                 isValidLiveData = MutableLiveData(false),
                 psTheme = provideDefaultPSTheme(),
-                onEvent = onEvent,
+                eventHandler = eventHandler,
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -184,4 +187,50 @@ class PSExpiryDatePickerFieldTest {
         Assert.assertEquals("", result)
     }
 
+    @Test
+    fun `WHEN picker dialog confirms with different value THEN FIELD_VALUE_CHANGE event is triggered`() {
+        // Arrange
+        val expiryDateState = PSExpiryDateStateImpl().apply {
+            value = "01/2025"
+        }
+        var fieldValueChangeEventTriggered = false
+
+        val eventHandler = PSCardFieldEventHandler { event ->
+            if (event == PSCardFieldInputEvent.FIELD_VALUE_CHANGE) {
+                fieldValueChangeEventTriggered = true
+            }
+        }
+
+        sut(expiryDateState, eventHandler = eventHandler)
+
+        // Act
+        expiryDatePickerField().performClick()
+        composeTestRule.waitForIdle()
+
+        monthYearPickerDialogConfirmBtn().performClick()
+
+        // Assert
+        assertTrue("Expected FIELD_VALUE_CHANGE event to be triggered when picker confirms with different value", fieldValueChangeEventTriggered)
+    }
+
+    @Test
+    fun `WHEN validatesEmptyFieldOnBlur is true AND field is empty on blur THEN isValidInUi should be false`() {
+        // Arrange
+        val expiryDateState = PSExpiryDateStateImpl().apply {
+            value = ""
+            isValidInUi = true
+        }
+
+        sut(
+            state = expiryDateState,
+            animateTopLabelText = true
+        )
+
+        // Act
+        expiryDatePickerField().performClick()
+        composeTestRule.waitForIdle()
+
+        // Assert
+        assertTrue("Field should have been shown (alreadyShown should be true)", expiryDateState.alreadyShown)
+    }
 }

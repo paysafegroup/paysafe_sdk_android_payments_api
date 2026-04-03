@@ -6,7 +6,12 @@ package com.paysafe.android.hostedfields.util
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActionScope
 import androidx.compose.foundation.text.KeyboardActions
@@ -17,8 +22,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
@@ -146,6 +154,9 @@ internal fun textFieldColorsWithPSTheme(
     psTheme: PSTheme,
     isValidInUI: Boolean = true
 ): TextFieldColors = with(psTheme) {
+    // Use transparent borders if custom widths are specified (uniformFieldBorder will handle the border)
+    val useTransparentBorder = borderWidth != null || focusedBorderWidth != null
+
     OutlinedTextFieldDefaults.colors(
         // container
         disabledContainerColor = Color(backgroundColor),
@@ -153,10 +164,10 @@ internal fun textFieldColorsWithPSTheme(
         focusedContainerColor = Color(backgroundColor),
         errorContainerColor = Color(backgroundColor),
         // border <- default, focused & error borders
-        disabledBorderColor = Color(if (isValidInUI) borderColor else errorColor),
-        unfocusedBorderColor = Color(borderColor),
-        focusedBorderColor = Color(focusedBorderColor),
-        errorBorderColor = Color(errorColor),
+        disabledBorderColor = if (useTransparentBorder) Color.Transparent else Color(if (isValidInUI) borderColor else errorColor),
+        unfocusedBorderColor = if (useTransparentBorder) Color.Transparent else Color(borderColor),
+        focusedBorderColor = if (useTransparentBorder) Color.Transparent else Color(focusedBorderColor),
+        errorBorderColor = if (useTransparentBorder) Color.Transparent else Color(errorColor),
         // text <- textInput
         disabledTextColor = Color(textInputColor),
         unfocusedTextColor = Color(textInputColor),
@@ -191,6 +202,89 @@ internal fun textStyleWithPSTheme(psTheme: PSTheme): TextStyle = with(psTheme) {
 @Composable
 internal fun roundedCornerShapeWithPSTheme(psTheme: PSTheme) =
     RoundedCornerShape(psTheme.borderCornerRadius)
+
+/**
+ * Creates a modifier that applies a custom border with configurable width.
+ * Used when PSTheme specifies custom borderWidth or focusedBorderWidth to override
+ * Material 3's default 1dp unfocused / 2dp focused borders.
+ *
+ * @param isFocused Whether the field is focused
+ * @param isError Whether the field is in error state
+ * @param psTheme Theme containing border colors and widths
+ * @param shape Border shape (corner radius)
+ * @return Modifier with custom border applied
+ */
+@Composable
+internal fun Modifier.uniformFieldBorder(
+    isFocused: Boolean,
+    isError: Boolean,
+    psTheme: PSTheme,
+    shape: Shape
+): Modifier {
+    val borderWidth = psTheme.borderWidth
+    val focusedBorderWidth = psTheme.focusedBorderWidth
+
+    // Only apply custom border if width is specified
+    if (borderWidth == null && focusedBorderWidth == null) {
+        return this
+    }
+
+    val width = with(LocalDensity.current) {
+        when {
+            isFocused -> (focusedBorderWidth ?: borderWidth ?: 2f).toDp()
+            else -> (borderWidth ?: 1f).toDp()
+        }
+    }
+
+    val color = when {
+        isError -> Color(psTheme.errorColor)
+        isFocused -> Color(psTheme.focusedBorderColor)
+        else -> Color(psTheme.borderColor)
+    }
+
+    return this.border(width, color, shape)
+}
+
+/**
+ * Wraps content with height constraint when compactFieldHeight is specified.
+ * Used to override Material 3's 56dp minimum height for OutlinedTextField.
+ *
+ * @param compactFieldHeight Target height in dp, or null for default behavior
+ * @param modifier Base modifier to apply
+ * @param isFocused Whether the field is focused
+ * @param isError Whether the field is in error state
+ * @param psTheme Theme containing border settings
+ * @param shape Border shape
+ * @param content The OutlinedTextField content to wrap
+ */
+@Composable
+internal fun CompactFieldWrapper(
+    compactFieldHeight: Float?,
+    modifier: Modifier,
+    isFocused: Boolean,
+    isError: Boolean,
+    psTheme: PSTheme,
+    shape: Shape,
+    content: @Composable (Modifier) -> Unit
+) {
+    val useCompact = compactFieldHeight != null
+
+    if (useCompact) {
+        // Compact mode: constrain height and clip overflow
+        Box(
+            modifier = modifier
+                .height(compactFieldHeight!!.dp)
+                .uniformFieldBorder(isFocused, isError, psTheme, shape)
+                .clip(shape),
+            contentAlignment = Alignment.Center
+        ) {
+            content(Modifier.fillMaxWidth().wrapContentHeight(unbounded = true))
+        }
+    } else {
+        // Normal mode: no height constraint
+        content(modifier.uniformFieldBorder(isFocused, isError, psTheme, shape))
+    }
+}
 
 @Composable
 internal fun pickerButtonColorsWithPSTheme(
