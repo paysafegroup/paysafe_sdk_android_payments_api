@@ -1,21 +1,474 @@
-MIT License
+Paysafe Holding UK Limited
+Copyright 2025-2026 Paysafe Holding UK Limited
 
-Copyright (c) 2024 Paysafe Group
+                                   SDK LICENSE
+                               TERMS AND CONDITIONS
+   These SDK License Terms and Conditions (this “Agreement”) is between Paysafe Holding UK Limited,
+   company number 03202517, whose registered office is at 2 Gresham Street, 1st Floor, London, England,
+   EC2V 7AD, United Kingdom(“Paysafe”) and the person or entity accessing, installing, or using the SDK(“You” and “Your”).
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+   1. INTRODUCTION.
+   1.1 Paysafe provides certain financial services including online payment
+       processing, digital wallets, and ecommerce and cryptocurrency solutions(collectively, the “Services”).
+       Paysafe has defined certain programming interfaces for use by You in developing applications that interact with
+       the Services (as further described at <https://developer.paysafe.com/>,
+       the “API”). This Agreement establishes the terms under which Paysafe
+       will provide You with a limited license to access the API and certain
+       related documentation, libraries, tools, tests, files, code, and other
+       supporting materials made available by Paysafe in connection with the
+       API (collectively, the “SDK”).
+   1.2 BY DOWNLOADING, INSTALLING, ACCESSING, OR OTHERWISE USING THE SERVICES,
+       API, OR SDK (COLLECTIVELY, THE “PLATFORM”) YOU ACCEPT THE TERMS OF THIS
+       AGREEMENT. IF YOU DO NOT AGREE TO THE TERMS OF THIS LICENSE AGREEMENT,
+       DO NOT DOWNLOAD, INSTALL, ACCESS, OR OTHERWISE USE THE PLATFORM.
+   1.3 This Agreement applies to any SDK that includes, displays, or links to
+       this Agreement, and to any updates, supplements, or support services for
+       the SDK.
+   1.4 Paysafe may change this Agreement by giving You reasonable advance
+       notice before the change is in force. If You do not agree to any such
+       change, then You must stop using the Platform before any such change
+       take effect. If You do not stop using the Platform prior to any such
+       change taking effect, then Your use of the Platform will continue under
+       the changed Agreement.
+   1.5 This Agreement supersedes and takes precedence over any prior agreement
+       or proposal, oral or written, and any other communications between You
+       and Paysafe relating to the Platform.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+   2. TERM.
+   This Agreement is effective until terminated.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+   3. LIMITED LICENSE.
+   During the term of this Agreement, and provided that You remain in
+   compliance with this Agreement, Paysafe hereby grants You a limited,
+   non-exclusive, non-transferrable, non-sublicensable, revocable right to
+   access and use the SDK solely to: (1) develop software applications solely
+   limited to the field of use of video games on personal computers and mobile
+   applications, where the software applications are developed by You, are
+   owned and controlled by You, and are intended for operation with the
+   Services (the “Applications”); (2) enable the Applications to interface
+   directly with the Services through the APIs as intended by Paysafe; (3)
+   distribute the Applications to end-user customers residing solely within the
+   country in which You reside (“End Users”); and (4) allow End Users of the
+   Applications to access the Services through the Applications as made
+   available to You by Paysafe through the SDK. Unless otherwise agreed in
+   writing by the parties, the Applications that You may develop using the
+   license hereunder are strictly limited to consumer-facing End User
+   interactions with the Services, and under no circumstances may any
+   Applications be for Your own server-side or back-office use. Notwithstanding
+   anything to the contrary in this Agreement, You shall not develop or
+   otherwise use any Applications for the purpose of dealing in spyware, adware
+   or other malicious programs or code, counterfeit goods, items subject to
+   United States embargo, unsolicited mass distribution of email, multi-level
+   marketing proposals, emergency or life-saving services, or any libelous,
+   defamatory, obscene, pornographic, abusive, or hateful speech or content.
+   Except as expressly stated in this Section, Paysafe grants You no rights or
+   licenses in or to the Platform, whether by implication, estoppel, or
+   otherwise.
+
+   4. RESTRICTIONS.
+   All access to and use of the Platform by You must be solely as expressly
+   permitted herein. You acknowledges that the Platform and the software,
+   hardware, data, databases, and other technology comprising the Platform
+   (collectively, the “Technology”), constitute the valuable IPR (as defined
+   below) of Paysafe. As an express condition to the rights granted to You
+   under this Agreement, You will not and will not permit any End User or third
+   party to: (1) use or access the Technology or any portion thereof for any
+   purpose except as expressly provided in this Agreement; (2) modify, adapt,
+   alter, translate, or create derivative works from the Technology; (3)
+   distribute, resell, lend, loan, lease, license, sublicense, transfer, or
+   make available the Technology, or any rights in or to the Technology to any third party,
+   including any of Your affiliates. Redistribution by third parties, including forking, wrapping,
+   or bundling the SDK in other packages, is not permitted.; (4) access or use the
+   Technology in any unlawful, illegal, or unauthorized manner; (5) in the sole
+   opinion of Paysafe, access or use the SDK (or any other part of the
+   Technology) in any manner that could damage, disable, overburden, or impair
+   the Services or the servers, networks, or services of any third party,
+   including, without limitation, any such damages, disabling, overburdening,
+   or impairment caused by excessive messaging, denial of services attacks,
+   spoofing, traffic redirection, or unauthorized computer or network
+   monitoring; (6) except as permitted by applicable law or any open source
+   license governing any component of the SDK, reverse engineer, decompile,
+   disassemble, or otherwise attempt to derive the source code, structure,
+   design, or method of operation for the Technology, including any reverse
+   engineering of any binary code contained in the SDK; (7) circumvent or
+   overcome (or attempt to circumvent or overcome) any technological protection
+   measures intended to restrict access to the Technology; (8) interfere in any
+   manner with the operation of the Technology or attempt to gain unauthorized
+   access to the Technology; (9) use the SDK (or any other part of the
+   Technology) to access or interface with any products, systems, applications,
+   software, or hardware other than the Services; (10) develop any software or
+   other technology for accessing or using the Services in a way other than
+   through the SDK; (11) use automated scripts or processes to collect
+   information from or otherwise interact with the Technology; (12) use any
+   part of the Technology to develop, or facilitate a third party to develop, a
+   product or service that is competitive to the Services or the Technology; or
+   (13) alter, obscure, or remove any copyright notice, copyright management
+   information, or proprietary legend contained in or on any Technology. All
+   use of the Technology will be in accordance with any applicable
+   documentation provided by Paysafe. Additionally, You shall (a) not permit
+   any API calls or any tokens used to make API calls, each of which interact
+   with the Platform, to be generated from, stored in, or used in connection
+   with any network or system that is not fully under Your control; and (b)
+   ensure that any tokens or other technologies used to make API calls to the
+   Platform are not incorporated or made part of any Application in any way.
+
+   5. ADDITIONAL AGREEMENTS.
+   In addition to this Agreement, you may be required to enter into certain
+   additional agreements with either Paysafe or other third parties before
+   being given access to elements of the SDK (each, an “Additional Agreement”).
+   In the event of a conflict between any Additional Agreement and this
+   Agreement, the Additional Agreement will control with respect to your access
+   to and use of those elements of the SDK to which the Additional Agreement
+   applies, and this Agreement will control in all other respects.
+
+   6. EULA.
+   Prior to allowing any End User to use any Application, or to access the
+   Services through any Application, You will ensure that each End User has
+   entered into an end user license agreement applicable to the Application (a
+   “EULA”). Each EULA will contain terms at least as protective of Paysafe and
+   the Technology as the terms of this Agreement. Notwithstanding the
+   foregoing, Paysafe reserves the right to review and approve each EULA prior
+   to distribution of any Application. You will provide Paysafe with such
+   information and assistance as may be required to verify that each End User
+   has agreed to be legally bound by and remains in compliance with the EULA.
+   You will remain solely responsible for all use of the Services by each End
+   User and for each End User’s compliance or failure to comply with the EULA.
+   You will immediately notify Paysafe upon becoming aware of any breach of any
+   EULA by an End User and will fully enforce the terms of each applicable EULA
+   against each End User in the case of any breach thereof. You will ensure
+   that all information about each End User provided to Paysafe is and remains
+   accurate and complete and that the provision thereof complies with all
+   applicable laws, including data privacy laws. You will prevent unauthorized
+   access to or use of the Services through any Application. You will notify
+   Paysafe immediately of any such unauthorized access or use of the Services.
+
+   7. TESTING.
+   You will develop each Application strictly in compliance with the terms of
+   this Agreement, the SDK (including any documentation), and any additional
+   instructions provided by Paysafe and will remain solely responsible for
+   ensuring that You, Your employees’ and Your agents’, and any End Users’
+   operation of each Application remains in compliance with the terms of this
+   Agreement, the SDK (including any documentation), and any such additional
+   instructions. Prior to distributing or making any Application available for
+   release to End Users (whether commercially or for evaluation purposes), You
+   will self-test the Application to ensure that it operates properly with the
+   Services through the SDK and complies with all applicable test suites for
+   the Platform established by Paysafe (“Tests”). Following successful
+   completion of such self-testing, You will submit a copy of each Application
+   to Paysafe for review and testing by Paysafe. You hereby grant Paysafe all
+   rights necessary for Paysafe to review and test each Application for
+   compliance with the terms and conditions of this Agreement and all
+   applicable Tests. You will not provide access to or use of an Application to
+   any End User prior to confirmation by Paysafe that such Application has
+   successfully completed such Tests. Notwithstanding successful completion of
+   any Tests, Paysafe may, in its sole discretion, require You to cease
+   distribution and operation of any Application if Paysafe, in its sole
+   discretion, reasonably believes that the Application fails to comply with
+   the terms and conditions of this Agreement or any applicable Tests.
+
+   8. DATA.
+   8.1 Your Data.
+       You are solely responsible for all data, information, and other content
+       (“Data”) provided to Paysafe through the SDK by or on behalf of You or
+       any End User, whether via the Application or the Services (“Your Data”).
+       As between You and Paysafe, You retain all of Your rights in and to Your
+       Data. You hereby grant to Paysafe all rights and licenses in and to Your
+       Data necessary for Paysafe to provide access to the Platform under this
+       Agreement and to otherwise perform its obligations and exercise its
+       rights under this Agreement. You represent and warrant to Paysafe that
+       You have all right, title, and interest in, and have obtained all
+       consents and permissions to, all Your Data necessary to grant Paysafe
+       the foregoing rights and licenses (including as required by all
+       applicable data privacy laws), and You agree to maintain such rights
+       throughout this Agreement. Paysafe will not be responsible or liable
+       for any deletion, correction, destruction, damage, loss, or failure with
+       respect to any of Your Data. Paysafe may take remedial action if any of
+       Your Data violates this Agreement, provided that Paysafe is under no
+       obligation to review any of Your Data for potential liability.
+
+   8.2 Platform Data.
+       Any Data provided or made available to You or any End User through the
+       Platform (“Platform Data”), excluding only Your Data, is owned by
+       Paysafe and Paysafe’s data providers. You are solely responsible for
+       obtaining consents from Paysafe’s data providers, in a form provided by
+       or acceptable to Paysafe, allowing You and Your End Users to use the
+       Platform Data (“Consents”). You covenant and agree to use any Platform
+       Data solely within the scope of such Consents. Paysafe reserves the
+       right to limit or suspend access by You to any portion of any Platform
+       Data if Paysafe cannot reasonably verify that You have obtained all such
+       Consents. All Platform Data is provided to You solely for informational
+       purposes. You are solely responsible for verifying the accuracy,
+       completeness, and applicability of all Platform Data before using or
+       relying rely upon any Platform Data. Notwithstanding any Consent, You
+       will not, and will not permit any third party to: (a) alter, modify,
+       reproduce, or create derivative works of any Platform Data; (b)
+       distribute, sell, resell, lend, loan, lease, license, sublicense, or
+       transfer any Platform Data; or (c) alter, obscure, or remove any
+       copyright, trademark, or any other notices that are provided on or in
+       connection with any Platform Data. Except as set forth in this
+       Agreement, You are granted no licenses or rights in or to any Platform
+       Data.
+
+   9. MODIFICATIONS.
+   Paysafe reserves the right to modify or release new versions of the SDK at
+   any time by providing notice of the modifications or new versions to You.
+   Upon such notice, You will obtain and use the most current version of the
+   SDK within the time period stated by Paysafe. IF YOU ARE DISSATISFIED WITH
+   ANY ASPECT OF THE MODIFICATIONS OR NEW RELEASE VERSIONS OF THE SDK AT ANY
+   TIME, YOUR SOLE AND EXCLUSIVE REMEDY IS TO CEASE YOUR ACCESS TO AND USE OF
+   THE PLATFORM.
+
+   10. SUPPORT.
+   You are solely responsible for all support and maintenance relating to each
+   Application, whether requested or required by You or any End Users. Unless
+   Paysafe and You have entered into a separate support agreement, Paysafe is
+   under no obligation to provide You or any End User with any support relating
+   to the Platform, provided that Paysafe may provide support to You or
+   directly to any End User if deemed necessary or appropriate by Paysafe.
+
+   11. COMPENSATION.
+   Access to or use of certain elements of the SDK may require payment of fees,
+   as specified in an Additional Agreement. Any such fees will be subject to
+   the terms of this Agreement and any such other Additional Agreements. You
+   are responsible for all payment of any applicable taxes, fees, value-added
+   surcharges, import and export duties, and other assessments or duties levied
+   or assessed against You or Paysafe by any governmental entity in connection
+   with Your use of or access to the Platform, including any use of the
+   Applications.
+
+   12. OWNERSHIP.
+   Paysafe retains all right, title, and interest in and to the Technology; any
+   updates, upgrades, enhancements, modifications, new versions, and
+   improvements thereto, created by either party, either alone or with the
+   other party or any third party (“Improvements”); and all intellectual
+   property and proprietary rights therein or relating thereto throughout the
+   world, including all copyrights, trademarks, trade secrets, patents (and
+   patent applications), moral rights, rights in data and databases, and other
+   intellectual property and proprietary rights, whether created before, on, or
+   after the start of the term of this Agreement (“IPR”). As between You and
+   Paysafe, You will maintain ownership of Your Applications, provided that You
+   receive no ownership interest in or to any of the Technology, and no rights
+   or licenses are granted to You to access or use any of the Technology,
+   except for the rights expressly granted to You under this Agreement,
+   regardless of whether any portions of the SDK or other portions of the
+   Platform are used in or in connection with any Application. You agree to,
+   and hereby do, assign to Paysafe any and all right, title, or interest in or
+   to any Improvements, and all IPR therein or relating thereto, that may be
+   acquired by You at any time. The Technology may include third-party
+   software offered under an open source license or third-party content subject
+   to a separate third-party agreement. To the extent any of such third-party
+   terms conflict with this Agreement, such third-party terms will control
+   solely with respect to such third-party software or content. If You provide
+   comments, suggestions, recommendations, ideas, know-how, or other feedback
+   about the Technology, Paysafe may use such information for any purposes
+   without obligation to You, and all IPR in any such feedback are deemed (and
+   hereby) licensed to Paysafe (with the right to sublicense through multiple
+   tiers) for any purpose on a perpetual, irrevocable, worldwide, fully
+   paid-up, sublicensable, transferrable, non-exclusive, and royalty-free basis
+   and may be used or disclosed for any purpose. The names and logos of
+   Paysafe and those of its affiliates, providers, and licensors are trademarks
+   of Paysafe or such affiliates, providers, or licensors, as applicable, and
+   no right or license is granted to You to use them.
+
+   13. TERMINATION AND SUSPENSION.
+   Paysafe has the right to terminate this Agreement immediately if You fail to
+   comply with any term of this Agreement. Additionally, Paysafe may, in its
+   sole discretion, terminate or suspend access to the SDK at any time. Upon
+   any termination or expiration of this Agreement: (1) all rights granted to
+   You hereunder will immediately terminate; (2) Paysafe may cease providing
+   access to the Platform to You; and (3) You will cease all use of the
+   Platform and all Applications making use of the Platform and destroy all
+   copies of the SDK and any Confidential Information in Your possession or
+   control. Upon the request of Paysafe, You will certify in writing to Your
+   compliance with the terms of this Section. Any provision which by its
+   inherent meaning is to survive termination or expiration of this Agreement
+   will so survive.
+
+   14. REPRESENTATIONS AND WARRANTIES.
+   You represent, warrant, and covenant to Paysafe that: (1) You will maintain
+   all rights, power, and authority necessary to enter into this Agreement and
+   perform all of Your obligations under this Agreement; (2) Your use of the
+   Platform will not violate, and will not cause Paysafe to violate, any
+   federal, state, or local laws, rules, or regulations or the rights of any
+   third party; and (3) except as set forth herein, You will obtain all rights,
+   licenses, permits, and other approvals required for Your use of the Platform
+   and Your performance under this Agreement.
+
+   15. DISCLAIMER.
+   THE TECHNOLOGY IS PROVIDED BY PAYSAFE AND ITS LICENSORS AND PROVIDERS ON AN
+   “AS IS” AND “AS AVAILABLE” BASIS, WITHOUT ANY REPRESENTATIONS, WARRANTIES,
+   OR COVENANTS OF ANY KIND. PAYSAFE EXPRESSLY DISCLAIMS, AND YOU DISCLAIM ANY
+   RELIANCE ON, ALL REPRESENTATIONS, WARRANTIES, AND COVENANTS, WHETHER
+   EXPRESSED OR IMPLIED, REGARDING THIS AGREEMENT AND THE TECHNOLOGY, INCLUDING
+   ANY AND ALL IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+   PURPOSE, TITLE, AND NON-INFRINGEMENT. NO ORAL OR WRITTEN INFORMATION OR
+   ADVICE GIVEN BY PAYSAFE OR ITS AGENTS OR REPRESENTATIVES WILL CREATE ANY
+   REPRESENTATIONS, WARRANTIES, OR COVENANTS UNLESS CONFIRMED IN WRITING BY
+   PAYSAFE AS AN AMENDMENT TO THIS AGREEMENT.
+
+   16. INDEMNITY.
+   You will indemnify, hold harmless, and defend Paysafe (and its officers,
+   directors, shareholders, employees, contractors, agents, successors, and
+   assigns) from and against any claims, suits, demands, and actions and all
+   resulting damages, liabilities, losses, judgments, settlements, penalties,
+   fines, costs, and expenses (including reasonable attorneys’ fees) (each, a
+   “Claim”) incurred in connection with or as a result of: (1) Your use of or
+   access to the Technology, including any data, information, content, or
+   results generated through the Platform; (2) any of Your Data, Applications,
+   or any access thereto or use thereof; (3) Your breach of any provision of
+   this Agreement; or (4) damage to property or injury to or death of any
+   person directly or indirectly caused by You or any of Your employees or
+   agents. Paysafe may participate in the defense of any Claim, and You will
+   not settle any Claim without the prior written consent of Paysafe.
+
+   17. LIMITATION OF LIABILITY.
+   IN NO EVENT WILL PAYSAFE BE LIABLE TO YOU OR TO ANY THIRD PARTY FOR ANY
+   SPECIAL, INDIRECT, INCIDENTAL, EXEMPLARY, PUNITIVE, OR CONSEQUENTIAL LOSSES
+   OR DAMAGES OF ANY KIND ARISING OUT OF THE TECHNOLOGY OR THIS AGREEMENT,
+   INCLUDING ANY LOST, CORRUPTED, OR ALTERED DATA OR INFORMATION; LOSS OF USE
+   OF DATA OR INFORMATION; RECOVERY OF DATA OR INFORMATION; OR LOSS OR
+   INTERRUPTION OF BUSINESS OR REVENUE, EVEN IF PAYSAFE HAS BEEN ADVISED OF THE
+   POSSIBILITY OF SUCH LOSSES OR DAMAGES AND WHETHER OR NOT SUCH LOSSES OR
+   DAMAGES ARE FORESEEABLE AND EVEN IF ONE OR MORE OTHER REMEDIES FAIL OF THEIR
+   ESSENTIAL PURPOSE. THE MAXIMUM CUMULATIVE LIABILITY OF PAYSAFE RELATING TO
+   THE TECHNOLOGY OR THIS AGREEMENT WILL UNDER NO CIRCUMSTANCES EXCEED THE
+   GREATER OF THE AMOUNTS PAID OR PAYABLE TO PAYSAFE BY YOU UNDER THIS
+   AGREEMENT OR $10.00 USD. IN JURISDICTIONS WHERE LIMITATION OF LIABILITY FOR
+   CONSEQUENTIAL OR INCIDENTAL DAMAGES IS NOT PERMITTED, PAYSAFE’S LIABILITY IS
+   LIMITED TO THE MAXIMUM EXTENT PERMITTED BY LAW.
+
+   18. CONFIDENTIALITY.
+   For purposes of this Agreement, “Confidential Information” means the
+   Technology, Platform Data, and all other documentation, information, data,
+   and materials provided by or obtained from Paysafe, regardless of the form
+   thereof, including all copies thereof. You will use the Confidential
+   Information only if expressly permitted to do so by Paysafe herein and, if
+   not permitted to do so, will not use such Confidential Information. You may
+   disclose the Confidential Information only to those of Your employees who
+   have a need to know the Confidential Information for purposes of the use
+   thereof and who are bound by a written legal obligation of confidentiality
+   at least as protective of the Confidential Information as the terms of this
+   Agreement. You will not otherwise disclose the Confidential Information
+   without Paysafe’s prior written consent. You will treat all Confidential
+   Information with the same degree of care as You treat Your own confidential
+   information which, in no event, will be less than reasonable care.
+
+   19. DATA PRIVACY.
+   Paysafe may collect, use, and share Data in connection with the operation
+   and use of the Technology in accordance with the terms of the Paysafe
+   Privacy Policy available at
+   <https://www.paysafe.com/us-en/paysafegroup/comprehensive-privacy-notice/>
+   (the “Privacy Policy”). Paysafe may update the Privacy Policy from time to
+   time, and Your continued exercise of the license rights granted to You under
+   this Agreement shall be deemed Your acceptance of any such updates.
+
+   20. DISPUTES.
+   The parties will attempt to resolve any disputes, controversies, or claims
+   arising under, out of, or relating to this Agreement (“Disputes”) via good
+   faith negotiations between each party, involving such levels of management
+   as are required to resolve such Dispute. Any Dispute that cannot be
+   resolved through good faith negotiations between the parties will be settled
+   exclusively through binding arbitration as follows. If within 10 business
+   days, or 5 business days in the event of a Dispute related to IPR, the
+   parties are unable to resolve any Dispute, either party may submit the
+   Dispute for final settlement through binding arbitration by the
+   International Chamber of Commerce (“ICC”) under its arbitration rules then
+   in effect (the “Rules”). Either party may commence the arbitration by
+   delivering a request for arbitration as specified in the Rules. The
+   arbitration will be conducted before a sole neutral arbitrator selected by
+   agreement of the parties. If the parties cannot agree on the appointment of
+   a single arbitrator within 30 days (the “Initial Period”) after either party
+   to this Agreement delivers a request for arbitration, a neutral arbitrator
+   will be selected as provided in the Rules. The seat of the arbitration
+   shall be the United States of America, and the arbitration will be conducted
+   in the English language in Duval County, Florida (USA) or such other
+   location as may be designated by Paysafe. The award of the arbitrator(s)
+   will be the exclusive remedy of the parties for all claims, counterclaims,
+   issues, or accountings presented or plead to the arbitrator. The award of
+   the arbitrator will require payment of the costs, fees, and expenses
+   incurred by the prevailing party in any such arbitration by the
+   non-prevailing party. Judgment upon the award may be entered in any court
+   or governmental body having jurisdiction thereof. Any additional costs,
+   fees, or expenses incurred in enforcing the award may be charged against the
+   party that resists its enforcement. Notwithstanding the terms of this
+   Section, nothing in this Agreement will limit either party’s right to seek
+   immediate injunctive or other equitable relief in any court of competent
+   jurisdiction in the event of any actual, suspected, or anticipated breach of
+   this Agreement or any IPR of either party.
+
+   21. NOTICES.
+   Paysafe may give notices to You, at Paysafe’s option, by posting on any
+   portion of the Paysafe Developer Website <https://developer.paysafe.com/>,
+   or by electronic mail to any email address provided by You to Paysafe. You
+   may give notices to Paysafe at 5335 Gate Parkway, Fourth Floor,
+   Jacksonville, Florida 32256, USA, Attn: Legal Department. Notices given by
+   You under this Agreement will be via reputable personal delivery or
+   overnight courier service. Notices by Paysafe will be effective upon
+   delivery, and notices by You will be effective upon receipt by Paysafe.
+   Either party may change its address for notice by giving notice of the new
+   address to the other party.
+
+   22. GOVERNING LAW AND VENUE.
+   This Agreement will be governed by the Laws of the State of Florida (USA),
+   without regard to conflicts of law principles thereof. Subject to the
+   arbitration provisions of this Agreement, the parties acknowledge and agree
+   that the federal and state courts located in Duval County, Florida (USA)
+   will have sole and exclusive jurisdiction over any disputes arising
+   hereunder. The parties irrevocably submit to the personal jurisdiction of
+   such courts.
+
+   23. ASSIGNMENT.
+   You may not assign, transfer or delegate, in whole or in part, whether by
+   assignment, sale, merger, reorganization, operation of law, or otherwise,
+   this Agreement or any of Your rights or obligations under this Agreement, to
+   any third party without the prior written consent of Paysafe. For the
+   purposes of this Agreement, any change of control of You will be deemed an
+   assignment. Paysafe may assign this Agreement with or without notice to
+   You. Any assignment in violation of any of the foregoing in this Section 23
+   will be null and void and will be considered a breach of this Agreement.
+
+   24. NON-ENDORSEMENT.
+   It is expressly agreed and understood by the parties that this Agreement
+   does not constitute an endorsement by Paysafe of You, nor the products,
+   actions, behavior, or conduct of You, and any misrepresentation by You to
+   the contrary, in any context and in any forum, will constitute a material
+   breach of this Agreement, and the same will be grounds for immediate
+   termination of this Agreement by Paysafe, notwithstanding any provision to
+   the contrary in Section 13 above. In the event of any such
+   misrepresentation, Paysafe may require You to publicly acknowledge the
+   misrepresentation in a like forum in which the misrepresentation was made
+
+   25. GENERAL.
+   This Agreement supersedes all oral or written agreements or understandings
+   between the parties as to the subject matter of the Agreement other than any Additional Agreement
+   You may enter into regarding the Platform. This Agreement is in the English language, which language
+   will be controlling in all respects. The waiver of a breach of any provision of this Agreement
+   will not operate or be interpreted as a waiver of any other or subsequent
+   breach. In no event will Paysafe be liable for any responsibilities or
+   obligations of You hereunder (or any failure by You to fulfill such
+   obligations). If any provision of this Agreement is held by an arbitrator
+   or a court of competent jurisdiction to be unenforceable, such provision
+   will be changed and interpreted to accomplish the objectives of such
+   provision to the greatest extent possible under applicable law, and the
+   remaining provisions of this Agreement will continue in full force and
+   effect. Paysafe will not be held responsible for failure or delay in the
+   performance of any obligation under this Agreement if such failure or delay
+   is beyond its reasonable control. The parties are independent contractors,
+   and nothing in this Agreement will be construed as creating an
+   employer-employee relationship, a partnership, or a joint venture between
+   the parties. Neither party is an agent of the other, and neither party is
+   authorized to make any representation, contract, or commitment on behalf of
+   the other party. Except for any permitted indemnitees, no term of this
+   Agreement will be construed to confer any third-party beneficiary rights on
+   any non-party. Each and every right and remedy hereunder is cumulative with
+   each and every other right and remedy herein or in any other agreement
+   between the parties or under applicable law. The Technology is subject to
+   U.S. export control laws and may be subject to export or import regulations
+   in other countries. You agree to strictly comply with all such laws and
+   acknowledge that You have the responsibility to obtain such licenses to
+   export, re-export, or import as may be required. The words “include,”
+   “includes,” and “including” mean “include,” “includes,” or “including,” in
+   each case, “without limitation.”  The parties expressly waive any
+   applications of the U.N. Convention on Contracts for the International Sale
+   of Goods with respect to the performance or interpretations of this
+   Agreement.
