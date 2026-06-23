@@ -4,10 +4,14 @@
 
 package com.paysafe.android.hostedfields.valid
 
+import com.paysafe.android.hostedfields.domain.model.PSCardFieldInputEvent
 import com.paysafe.android.hostedfields.valid.CardNumberChecks.Companion.CC_PLACEHOLDER_FOR_15
 import com.paysafe.android.hostedfields.valid.CardNumberChecks.Companion.CC_PLACEHOLDER_FOR_16
+import com.paysafe.android.hostedfields.valid.CardNumberChecks.Companion.MAX_CHARS_FOR_CARD_NUMBERS
 import com.paysafe.android.paymentmethods.domain.model.PSCreditCardType
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class CardNumberChecksTest {
@@ -15,291 +19,222 @@ class CardNumberChecksTest {
     @Suppress("unused")
     private val useConstructor = CardNumberChecks()
 
-    private val isValid = true
-    private val isNotValid = false
-    private val notRelevantCardTypeInput = PSCreditCardType.UNKNOWN
+    private val unknownCardType = PSCreditCardType.UNKNOWN
 
     @Test
-    fun `IF card number^type are empty^unknown THEN input protection RETURNS same input and 4 groups(16x) placeholder`() {
-        // Arrange
-        val charsTypedOneByOne = ""
-        val cardTypeInput = PSCreditCardType.UNKNOWN
-        // Act
-        val output = CardNumberChecks.inputProtection(charsTypedOneByOne, cardTypeInput)
-        // Assert
-        assertEquals(charsTypedOneByOne, output.first)
-        assertEquals(PSCreditCardType.UNKNOWN, output.second)
-        assertEquals(CC_PLACEHOLDER_FOR_16, output.third)
-    }
+    fun `WHEN input is empty THEN inputProtection returns unknown type and 16-digit placeholder`() {
+        val output = CardNumberChecks.inputProtection("", unknownCardType)
 
-    @Test
-    fun `IF card numbers are letters THEN input protection RETURNS empty and 4 groups(16x) placeholder`() {
-        // Arrange
-        val inputCharsTypedOneByOne = "NotNumbers"
-        // Act
-        val output = CardNumberChecks.inputProtection(
-            inputCharsTypedOneByOne, notRelevantCardTypeInput
-        )
-        // Assert
         assertEquals("", output.first)
         assertEquals(PSCreditCardType.UNKNOWN, output.second)
         assertEquals(CC_PLACEHOLDER_FOR_16, output.third)
     }
 
     @Test
-    fun `IF card numbers aren't digits THEN input protection RETURNS empty and 4 groups(16x) placeholder`() {
-        // Arrange
-        val inputCharsTypedOneByOne = "S%e[!@|_Ch*r$"
-        // Act
-        val output = CardNumberChecks.inputProtection(
-            inputCharsTypedOneByOne, notRelevantCardTypeInput
-        )
-        // Assert
+    fun `WHEN input contains non-digits THEN inputProtection strips invalid chars and returns unknown type`() {
+        val output = CardNumberChecks.inputProtection("NotNumbers", unknownCardType)
+
         assertEquals("", output.first)
         assertEquals(PSCreditCardType.UNKNOWN, output.second)
         assertEquals(CC_PLACEHOLDER_FOR_16, output.third)
     }
 
     @Test
-    fun `IF single number of unknown type THEN input protection RETURNS same number and 4 groups(16x) placeholder`() {
-        // Arrange
-        val singleNumberAsText = "7"
-        // Act
-        val output = CardNumberChecks.inputProtection(
-            singleNumberAsText, notRelevantCardTypeInput
-        )
-        // Assert
-        assertEquals(singleNumberAsText, output.first)
+    fun `WHEN input contains symbols THEN inputProtection strips invalid chars and returns unknown type`() {
+        val output = CardNumberChecks.inputProtection("S%e[!@|_Ch*r$", unknownCardType)
+
+        assertEquals("", output.first)
         assertEquals(PSCreditCardType.UNKNOWN, output.second)
         assertEquals(CC_PLACEHOLDER_FOR_16, output.third)
     }
 
     @Test
-    fun `IF start number is for VISA THEN input protection RETURNS same number with VISA type and 4 groups(16x) placeholder`() {
-        // Arrange
-        val startNumberForVisa = "4"
-        // Act
-        val output = CardNumberChecks.inputProtection(
-            startNumberForVisa, notRelevantCardTypeInput
-        )
-        // Assert
-        assertEquals(startNumberForVisa, output.first)
+    fun `WHEN input contains invalid characters THEN inputProtection invokes invalid character event`() {
+        val events = mutableListOf<PSCardFieldInputEvent>()
+        CardNumberChecks.inputProtection("4a5", unknownCardType) { events.add(it) }
+
+        assertEquals(listOf(PSCardFieldInputEvent.INVALID_CHARACTER), events)
+    }
+
+    @Test
+    fun `WHEN input does not match any brand THEN inputProtection returns unknown type`() {
+        val output = CardNumberChecks.inputProtection("7", unknownCardType)
+
+        assertEquals("7", output.first)
+        assertEquals(PSCreditCardType.UNKNOWN, output.second)
+        assertEquals(CC_PLACEHOLDER_FOR_16, output.third)
+    }
+
+    @Test
+    fun `WHEN input matches visa prefix THEN inputProtection returns visa type and 16-digit placeholder`() {
+        val output = CardNumberChecks.inputProtection("4", unknownCardType)
+
+        assertEquals("4", output.first)
         assertEquals(PSCreditCardType.VISA, output.second)
         assertEquals(CC_PLACEHOLDER_FOR_16, output.third)
     }
 
     @Test
-    fun `IF start number is for MASTERCARD THEN input protection RETURNS same number with MASTERCARD type and 4 groups(16x) placeholder`() {
-        // Arrange
-        val startNumberForMastercard = "5"
-        // Act
-        val output = CardNumberChecks.inputProtection(
-            startNumberForMastercard, notRelevantCardTypeInput
-        )
-        // Assert
-        assertEquals(startNumberForMastercard, output.first)
+    fun `WHEN input is single five THEN inputProtection returns unknown type`() {
+        val output = CardNumberChecks.inputProtection("5", unknownCardType)
+
+        assertEquals("5", output.first)
+        assertEquals(PSCreditCardType.UNKNOWN, output.second)
+        assertEquals(CC_PLACEHOLDER_FOR_16, output.third)
+    }
+
+    @Test
+    fun `WHEN input matches mastercard 51-55 prefix THEN inputProtection returns mastercard type`() {
+        val output = CardNumberChecks.inputProtection("51", unknownCardType)
+
+        assertEquals("51", output.first)
         assertEquals(PSCreditCardType.MASTERCARD, output.second)
         assertEquals(CC_PLACEHOLDER_FOR_16, output.third)
     }
 
     @Test
-    fun `IF start number is for DISCOVER THEN input protection RETURNS same number with DISCOVER type and 4 groups(16x) placeholder`() {
-        // Arrange
-        val startNumberForDiscover = "6"
-        // Act
-        val output = CardNumberChecks.inputProtection(
-            startNumberForDiscover, notRelevantCardTypeInput
-        )
-        // Assert
-        assertEquals(startNumberForDiscover, output.first)
-        assertEquals(PSCreditCardType.DISCOVER, output.second)
-        assertEquals(CC_PLACEHOLDER_FOR_16, output.third)
+    fun `WHEN input matches mastercard 2-series prefix THEN inputProtection returns mastercard type`() {
+        val output24 = CardNumberChecks.inputProtection("24", unknownCardType)
+        val output2222 = CardNumberChecks.inputProtection("2222", unknownCardType)
+
+        assertEquals(PSCreditCardType.MASTERCARD, output24.second)
+        assertEquals(PSCreditCardType.MASTERCARD, output2222.second)
     }
 
     @Test
-    fun `IF start number is for AMEX THEN input protection RETURNS same number with UNKNOWN type and 4 groups(16x) placeholder`() {
-        // Arrange
-        val startNumberForAmex = "3"
-        // Act
-        val output = CardNumberChecks.inputProtection(
-            startNumberForAmex, notRelevantCardTypeInput
-        )
-        // Assert
-        assertEquals(startNumberForAmex, output.first)
+    fun `WHEN input is single six THEN inputProtection returns unknown type`() {
+        val output = CardNumberChecks.inputProtection("6", unknownCardType)
+
+        assertEquals("6", output.first)
         assertEquals(PSCreditCardType.UNKNOWN, output.second)
         assertEquals(CC_PLACEHOLDER_FOR_16, output.third)
     }
 
     @Test
-    fun `IF first two numbers(1st case) are for AMEX THEN input protection RETURNS same numbers with AMEX type and 3 groups(15x) placeholder`() {
-        // Arrange
-        val startNumbersForAmex1stCase = "34"
-        // Act
-        val output = CardNumberChecks.inputProtection(
-            startNumbersForAmex1stCase, notRelevantCardTypeInput
-        )
-        // Assert
-        assertEquals(startNumbersForAmex1stCase, output.first)
-        assertEquals(PSCreditCardType.AMEX, output.second)
-        assertEquals(CC_PLACEHOLDER_FOR_15, output.third)
+    fun `WHEN input matches discover prefix THEN inputProtection returns discover type`() {
+        val output644 = CardNumberChecks.inputProtection("644", unknownCardType)
+        val output60112 = CardNumberChecks.inputProtection("60112", unknownCardType)
+
+        assertEquals(PSCreditCardType.DISCOVER, output644.second)
+        assertEquals(PSCreditCardType.DISCOVER, output60112.second)
     }
 
     @Test
-    fun `IF first two numbers(2nd case) are for AMEX THEN input protection RETURNS same numbers with AMEX type and 3 groups(15x) placeholder`() {
-        // Arrange
-        val startNumbersForAmex2ndCase = "37"
-        // Act
-        val output = CardNumberChecks.inputProtection(
-            startNumbersForAmex2ndCase, notRelevantCardTypeInput
-        )
-        // Assert
-        assertEquals(startNumbersForAmex2ndCase, output.first)
-        assertEquals(PSCreditCardType.AMEX, output.second)
-        assertEquals(CC_PLACEHOLDER_FOR_15, output.third)
-    }
+    fun `WHEN input starts with three THEN inputProtection returns unknown type until amex prefix is complete`() {
+        val output = CardNumberChecks.inputProtection("3", unknownCardType)
 
-    @Test
-    fun `IF 1st number is for AMEX and 2nd no THEN input protection RETURNS same numbers with UNKNOWN type and 4 groups(16x) placeholder`() {
-        // Arrange
-        val firstNumberForAmex2ndOneNo = "35"
-        // Act
-        val output = CardNumberChecks.inputProtection(
-            firstNumberForAmex2ndOneNo, notRelevantCardTypeInput
-        )
-        // Assert
-        assertEquals(firstNumberForAmex2ndOneNo, output.first)
+        assertEquals("3", output.first)
         assertEquals(PSCreditCardType.UNKNOWN, output.second)
         assertEquals(CC_PLACEHOLDER_FOR_16, output.third)
     }
 
     @Test
-    fun `IF card number is empty THEN validations RETURNS false`() {
-        // Arrange
-        val emptyCardNumber = ""
-        // Act
-        val output = CardNumberChecks.validations(emptyCardNumber)
-        // Assert
-        assertEquals(isNotValid, output)
+    fun `WHEN input matches amex prefix THEN inputProtection returns amex type and 15-digit placeholder`() {
+        val output34 = CardNumberChecks.inputProtection("34", unknownCardType)
+        val output37 = CardNumberChecks.inputProtection("37", unknownCardType)
+
+        assertEquals(PSCreditCardType.AMEX, output34.second)
+        assertEquals(CC_PLACEHOLDER_FOR_15, output34.third)
+        assertEquals(PSCreditCardType.AMEX, output37.second)
+        assertEquals(CC_PLACEHOLDER_FOR_15, output37.third)
     }
 
     @Test
-    fun `IF card number is with whitespaces THEN validations RETURNS false`() {
-        // Arrange
-        val spacesCardNumber = "      "
-        // Act
-        val output = CardNumberChecks.validations(spacesCardNumber)
-        // Assert
-        assertEquals(isNotValid, output)
+    fun `WHEN input starts with three but second digit is invalid THEN inputProtection returns unknown type`() {
+        val output = CardNumberChecks.inputProtection("35", unknownCardType)
+
+        assertEquals("35", output.first)
+        assertEquals(PSCreditCardType.UNKNOWN, output.second)
+        assertEquals(CC_PLACEHOLDER_FOR_16, output.third)
     }
 
     @Test
-    fun `IF card number has less than 15 chars THEN validations RETURNS false`() {
-        // Arrange
-        val below15CardNumber = "12345678901234"
-        // Act
-        val output = CardNumberChecks.validations(below15CardNumber)
-        // Assert
-        assertEquals(isNotValid, output)
+    fun `WHEN current card type is amex THEN inputProtection truncates input to amex max length`() {
+        val output = CardNumberChecks.inputProtection(
+            newCardNumber = "3411111111111119999",
+            newCardType = PSCreditCardType.AMEX
+        )
+
+        assertEquals("341111111111111", output.first)
+        assertEquals(PSCreditCardType.AMEX, output.second)
     }
 
     @Test
-    fun `IF card number has 15 chars THEN validations RETURNS true`() {
-        // Arrange
-        val fifteenCharsCardNumber = "378282246310005"
-        // Act
-        val output = CardNumberChecks.validations(fifteenCharsCardNumber)
-        // Assert
-        assertEquals(isValid, output)
+    fun `WHEN current card type is unknown THEN inputProtection truncates input to default max length`() {
+        val output = CardNumberChecks.inputProtection(
+            newCardNumber = "41111111111111119999",
+            newCardType = unknownCardType
+        )
+
+        assertEquals("4111111111111111", output.first)
+        assertEquals(MAX_CHARS_FOR_CARD_NUMBERS, output.first.length)
     }
 
     @Test
-    fun `IF card number has more than 16 chars THEN validations RETURNS false`() {
-        // Arrange
-        val over16CardNumber = "12345678901234567"
-        // Act
-        val output = CardNumberChecks.validations(over16CardNumber)
-        // Assert
-        assertEquals(isNotValid, output)
+    fun `WHEN card number is empty THEN validations returns false`() {
+        assertFalse(CardNumberChecks.validations(""))
     }
 
     @Test
-    fun `IF card number is a valid AMEX THEN validations RETURNS true`() {
-        // Arrange
-        val amexCardNumber = "341111111111111"
-        // Act
-        val output = CardNumberChecks.validations(amexCardNumber)
-        // Assert
-        assertEquals(isValid, output)
+    fun `WHEN card number is whitespace THEN validations returns false`() {
+        assertFalse(CardNumberChecks.validations("      "))
     }
 
     @Test
-    fun `IF card number begins with AMEX digits but is not valid THEN validations RETURNS false`() {
-        // Arrange
-        val almostAnAmexCard = "341111111111112"
-        // Act
-        val output = CardNumberChecks.validations(almostAnAmexCard)
-        // Assert
-        assertEquals(isNotValid, output)
+    fun `WHEN card number has two digits or fewer THEN validations returns false`() {
+        assertFalse(CardNumberChecks.validations("4"))
+        assertFalse(CardNumberChecks.validations("51"))
     }
 
     @Test
-    fun `IF card number is a valid VISA THEN validations RETURNS true`() {
-        // Arrange
-        val visaCardNumber = "4111111111111111"
-        // Act
-        val output = CardNumberChecks.validations(visaCardNumber)
-        // Assert
-        assertEquals(isValid, output)
+    fun `WHEN card number has less than required length THEN validations returns false`() {
+        assertFalse(CardNumberChecks.validations("12345678901234"))
     }
 
     @Test
-    fun `IF card number begins with VISA digits but is not valid THEN validations RETURNS false`() {
-        // Arrange
-        val almostVisaCard = "4111111111111119"
-        // Act
-        val output = CardNumberChecks.validations(almostVisaCard)
-        // Assert
-        assertEquals(isNotValid, output)
+    fun `WHEN card number has more than max length THEN validations returns false`() {
+        assertFalse(CardNumberChecks.validations("12345678901234567"))
     }
 
     @Test
-    fun `IF card number is a valid MASTERCARD THEN validations RETURNS true`() {
-        // Arrange
-        val masterCardNumber = "5105105105105100"
-        // Act
-        val output = CardNumberChecks.validations(masterCardNumber)
-        // Assert
-        assertEquals(isValid, output)
+    fun `WHEN card number is valid amex THEN validations returns true`() {
+        assertTrue(CardNumberChecks.validations("341111111111111"))
+        assertTrue(CardNumberChecks.validations("378282246310005"))
     }
 
     @Test
-    fun `IF card number begins with MASTERCARD digits but is not valid THEN validations RETURNS false`() {
-        // Arrange
-        val almostMasterCard = "5105105105105108"
-        // Act
-        val output = CardNumberChecks.validations(almostMasterCard)
-        // Assert
-        assertEquals(isNotValid, output)
+    fun `WHEN card number looks like amex but fails luhn THEN validations returns false`() {
+        assertFalse(CardNumberChecks.validations("341111111111112"))
     }
 
     @Test
-    fun `IF card number is a valid DISCOVER THEN validations RETURNS true`() {
-        // Arrange
-        val discoverCardNumber = "6011000990139424"
-        // Act
-        val output = CardNumberChecks.validations(discoverCardNumber)
-        // Assert
-        assertEquals(isValid, output)
+    fun `WHEN card number is valid visa THEN validations returns true`() {
+        assertTrue(CardNumberChecks.validations("4111111111111111"))
     }
 
     @Test
-    fun `IF card number begins with DISCOVER digits but is not valid THEN validations RETURNS false`() {
-        // Arrange
-        val almostDiscoverCard = "6011000990139425"
-        // Act
-        val output = CardNumberChecks.validations(almostDiscoverCard)
-        // Assert
-        assertEquals(isNotValid, output)
+    fun `WHEN card number looks like visa but fails luhn THEN validations returns false`() {
+        assertFalse(CardNumberChecks.validations("4111111111111119"))
     }
 
+    @Test
+    fun `WHEN card number is valid mastercard THEN validations returns true`() {
+        assertTrue(CardNumberChecks.validations("5105105105105100"))
+        assertTrue(CardNumberChecks.validations("2223000048400011"))
+    }
+
+    @Test
+    fun `WHEN card number looks like mastercard but fails luhn THEN validations returns false`() {
+        assertFalse(CardNumberChecks.validations("5105105105105108"))
+    }
+
+    @Test
+    fun `WHEN card number is valid discover THEN validations returns true`() {
+        assertTrue(CardNumberChecks.validations("6011000990139424"))
+    }
+
+    @Test
+    fun `WHEN card number looks like discover but fails luhn THEN validations returns false`() {
+        assertFalse(CardNumberChecks.validations("6011000990139425"))
+    }
 }

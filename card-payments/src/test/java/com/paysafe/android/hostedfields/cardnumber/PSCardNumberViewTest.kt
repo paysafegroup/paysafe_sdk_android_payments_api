@@ -11,6 +11,7 @@ import androidx.compose.ui.test.performTextInput
 import com.paysafe.android.hostedfields.domain.model.PSCardFieldInputEvent
 import com.paysafe.android.hostedfields.model.PSCardFieldEventHandler
 import com.paysafe.android.hostedfields.util.PS_CARD_NUMBER_TEST_TAG
+import com.paysafe.android.paymentmethods.domain.model.PSCreditCardType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -196,5 +197,37 @@ class PSCardNumberViewTest {
             "Custom event handler should receive FIELD_VALUE_CHANGE event on input",
             fieldValueChangeEventCalled
         )
+    }
+
+    @Test
+    fun `WHEN a card number is typed THEN cardTypeLiveData value reflects the brand synchronously`() {
+        // Arrange
+        val output = sut()
+        composeTestRule.setContent {
+            output.Content()
+        }
+
+        // Act
+        composeTestRule.onNodeWithTag(PS_CARD_NUMBER_TEST_TAG).performTextInput("4111")
+
+        // Assert - value is current without any active LiveData observer (plain LiveData, setValue)
+        assertEquals(PSCreditCardType.VISA, output.cardTypeLiveData.value)
+    }
+
+    @Test
+    fun `WHEN reset is performed after typing a brand THEN cardTypeLiveData value is UNKNOWN`() {
+        // Arrange
+        val output = sut()
+        composeTestRule.setContent {
+            output.Content()
+        }
+        composeTestRule.onNodeWithTag(PS_CARD_NUMBER_TEST_TAG).performTextInput("4111")
+        assertEquals(PSCreditCardType.VISA, output.cardTypeLiveData.value)
+
+        // Act
+        output.reset()
+
+        // Assert
+        assertEquals(PSCreditCardType.UNKNOWN, output.cardTypeLiveData.value)
     }
 }

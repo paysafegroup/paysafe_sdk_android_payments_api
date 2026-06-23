@@ -15,7 +15,6 @@ import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.distinctUntilChanged
 import com.paysafe.android.hostedfields.R
 import com.paysafe.android.hostedfields.domain.model.CardNumberSeparator
 import com.paysafe.android.hostedfields.domain.model.PSCardNumberStateImpl
@@ -46,8 +45,15 @@ class PSCardNumberView @JvmOverloads constructor(
     internal val data: String
         get() = creditCardNumberState.value.value
 
-    internal val cardTypeLiveData: LiveData<PSCreditCardType> =
-        _cardTypeLiveData.distinctUntilChanged()
+    /**
+     * Emits the currently detected card brand. Backed by a plain [MutableLiveData] whose value is
+     * updated (via setValue) only when the brand actually changes (see [PSCardNumber]), so:
+     *  - observers (onCardBrandRecognition, CVV length) still fire once per distinct brand change,
+     *    exactly like the previous distinctUntilChanged wrapper, and
+     *  - [LiveData.getValue] is always current and observer-independent, which lets
+     *    PSCardFormController.getCardBrand() read it synchronously with no stale UNKNOWN.
+     */
+    internal val cardTypeLiveData: LiveData<PSCreditCardType> get() = _cardTypeLiveData
 
     val isValidLiveData: LiveData<Boolean> get() = _isValidLiveData
 
@@ -66,6 +72,7 @@ class PSCardNumberView @JvmOverloads constructor(
 
     override fun reset() {
         creditCardNumberState.value = PSCardNumberStateImpl()
+        _cardTypeLiveData.value = PSCreditCardType.UNKNOWN
         if (clearsFocusOnReset) clearFocus()
     }
 

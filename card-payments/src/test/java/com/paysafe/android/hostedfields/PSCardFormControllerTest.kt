@@ -2425,6 +2425,57 @@ class PSCardFormControllerTest {
     }
 
     @Test
+    fun `getCardBrand returns the synchronous brand from the card number view`() = runTest {
+        // Arrange
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        val mockActivity = Robolectric.buildActivity(FragmentActivity::class.java).setup().get()
+
+        val mockCardNumberView = mockk<PSCardNumberView>(relaxed = true) {
+            every { cardTypeLiveData } returns MutableLiveData(PSCreditCardType.VISA)
+            every { context } returns mockActivity
+        }
+
+        val psCardFormController = PSCardFormController(
+            cardNumberView = mockCardNumberView,
+            cardHolderNameView = mockk(relaxed = true),
+            cardExpiryDateView = mockk(relaxed = true),
+            cardCvvView = mockk(relaxed = true),
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient
+        )
+
+        // Act & Assert
+        assertEquals(PSCreditCardType.VISA, psCardFormController.getCardBrand())
+    }
+
+    @Test
+    fun `getCardBrand falls back to the CVV card type when there is no card number view`() = runTest {
+        // Arrange
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        val mockActivity = Robolectric.buildActivity(FragmentActivity::class.java).setup().get()
+
+        val mockCardCvvView = mockk<PSCvvView>(relaxed = true) {
+            every { cardType } returns PSCreditCardType.AMEX
+            every { context } returns mockActivity
+        }
+
+        val psCardFormController = PSCardFormController(
+            cardCvvView = mockCardCvvView,
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient
+        )
+
+        // Act & Assert - no card number view, so the brand comes from the CVV field's card type
+        assertEquals(PSCreditCardType.AMEX, psCardFormController.getCardBrand())
+    }
+
+    @Test
     fun `refreshTokenFailureHandler returns PSResult Failure with PaysafeException`() {
         // Arrange
         mockkObject(LocalLog)

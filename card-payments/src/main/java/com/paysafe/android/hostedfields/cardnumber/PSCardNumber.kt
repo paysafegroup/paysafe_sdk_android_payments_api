@@ -79,7 +79,16 @@ private fun onCardNumberChange(
 ): (String) -> Unit = { input ->
     val inputData = CardNumberChecks.inputProtection(input, cardNumberState.type, eventHandler::handleEvent)
 
-    if (cardNumberState.value != inputData.first) { // is new value distinct?
+    val isNewValue = cardNumberState.value != inputData.first
+
+    cardNumberState.value = inputData.first
+    cardNumberState.type = inputData.second
+    cardNumberState.placeholder = inputData.third
+    if (cardTypeLiveData.value != inputData.second) {
+        cardTypeLiveData.value = inputData.second
+    }
+
+    if (isNewValue) {
         val isValid = CardNumberChecks.validations(inputData.first)
         val noInvalidCharacters = inputData.first == input
 
@@ -94,11 +103,6 @@ private fun onCardNumberChange(
 
         isValidLiveData.postValue(isValid)
     }
-    cardNumberState.value = inputData.first
-    cardNumberState.type = inputData.second
-    cardNumberState.placeholder = inputData.third
-
-    cardTypeLiveData.postValue(cardNumberState.type)
 }
 
 private fun onDonePressed(

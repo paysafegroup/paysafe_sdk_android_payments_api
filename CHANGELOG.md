@@ -1,5 +1,13 @@
 # Change Log
 
+## [2.2.3] - 2026-06-23
+
+### Fixed
+
+- **Real-time card brand detection**: `PSCardFormController.getCardBrand()` now reflects the typed brand synchronously, eliminating stale `UNKNOWN` results while the user is still typing .
+- **Brand recognition & CVV length timing**: `onCardBrandRecognition` and the CVV field's expected length now update the moment the brand changes (emitted once per distinct brand).
+- **Brand accuracy**: Card brand is now detected via BIN/prefix regex matching for Visa, Mastercard, Amex and Discover instead of first-digit heuristics.
+
 ## [2.2.2] - 2026-06-23
 
 ### Fixed

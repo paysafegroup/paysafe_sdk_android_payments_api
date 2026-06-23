@@ -4,8 +4,9 @@
 
 package com.paysafe.android.hostedfields.cardnumber
 
-import com.paysafe.android.hostedfields.valid.CardNumberChecks.Companion.MAX_CHARS_FOR_AMEX_CARD
 import com.paysafe.android.hostedfields.valid.CardNumberChecks.Companion.MAX_CHARS_FOR_CARD_NUMBERS
+import com.paysafe.android.hostedfields.valid.getCardInfo
+import com.paysafe.android.paymentmethods.domain.model.PSCreditCardType
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -22,7 +23,7 @@ class CardNumberSpacesTest {
         val output = sut.amexSpacesMapping.transformedToOriginal(input)
 
         // Assert
-        assertEquals(MAX_CHARS_FOR_AMEX_CARD, output)
+        assertEquals(PSCreditCardType.AMEX.getCardInfo()?.maxLength, output)
     }
 
     @Test

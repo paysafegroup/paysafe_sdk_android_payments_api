@@ -50,7 +50,8 @@ class PSCardNumberTest {
     private fun sut(
         state: PSCardNumberState = PSCardNumberStateImpl(),
         numbersSeparator: CardNumberSeparator = CardNumberSeparator.DASH,
-        eventHandler: PSCardFieldEventHandler = DefaultPSCardFieldEventHandler(MutableLiveData(false))
+        eventHandler: PSCardFieldEventHandler = DefaultPSCardFieldEventHandler(MutableLiveData(false)),
+        cardTypeLiveData: MutableLiveData<PSCreditCardType> = MutableLiveData(PSCreditCardType.UNKNOWN)
     ) {
         composeTestRule.setContent {
             PSCardNumber(
@@ -66,7 +67,7 @@ class PSCardNumberTest {
                     animateTopLabelText = true
                 ),
                 cardNumberLiveData = PSCardNumberLiveData(
-                    cardTypeLiveData = MutableLiveData(PSCreditCardType.UNKNOWN),
+                    cardTypeLiveData = cardTypeLiveData,
                     isValidLiveData = MutableLiveData(false)
                 ),
                 psTheme = provideDefaultPSTheme(),
@@ -353,6 +354,37 @@ class PSCardNumberTest {
     fun `should return 0 for unknown or unsupported credit card types`() {
         // Assuming PSCreditCardType.UNKNOWN or any other type not explicitly handled
         assertEquals(0, getCreditCardIcon(PSCreditCardType.UNKNOWN))
+    }
+
+    @Test
+    fun `IF PSCardNumber PERFORMING visa input THEN cardTypeLiveData reflects VISA`() {
+        // Arrange
+        val cardTypeLiveData = MutableLiveData(PSCreditCardType.UNKNOWN)
+        sut(cardTypeLiveData = cardTypeLiveData)
+
+        // Act
+        cardNumberField().performTextInput("4111")
+
+        // Assert - brand is delivered synchronously via cardTypeLiveData
+        assertEquals(PSCreditCardType.VISA, cardTypeLiveData.value)
+    }
+
+    @Test
+    fun `IF PSCardNumber PERFORMING repeated same-brand keystrokes THEN cardTypeLiveData emits the brand only once`() {
+        // Arrange
+        val cardTypeLiveData = MutableLiveData(PSCreditCardType.UNKNOWN)
+        val emissions = mutableListOf<PSCreditCardType>()
+        cardTypeLiveData.observeForever { emissions.add(it) }
+        sut(cardTypeLiveData = cardTypeLiveData)
+
+        // Act - type one VISA digit at a time; the brand stays VISA after the first digit
+        cardNumberField().performTextInput("4")
+        cardNumberField().performTextInput("1")
+        cardNumberField().performTextInput("1")
+        cardNumberField().performTextInput("1")
+
+        // Assert - the distinct guard means VISA is emitted exactly once despite four keystrokes
+        assertEquals(1, emissions.count { it == PSCreditCardType.VISA })
     }
 
 }

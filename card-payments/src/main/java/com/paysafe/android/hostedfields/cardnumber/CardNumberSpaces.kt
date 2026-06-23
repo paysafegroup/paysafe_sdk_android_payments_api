@@ -8,8 +8,9 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.OffsetMapping
 import com.paysafe.android.hostedfields.domain.model.CardNumberSeparator
-import com.paysafe.android.hostedfields.valid.CardNumberChecks.Companion.MAX_CHARS_FOR_AMEX_CARD
 import com.paysafe.android.hostedfields.valid.CardNumberChecks.Companion.MAX_CHARS_FOR_CARD_NUMBERS
+import com.paysafe.android.hostedfields.valid.getCardInfo
+import com.paysafe.android.paymentmethods.domain.model.PSCreditCardType
 
 internal object CardNumberSpaces {
 
@@ -19,7 +20,7 @@ internal object CardNumberSpaces {
     private const val NUMBERS_BEFORE_THIRD_SEPARATOR_DEFAULT = 12
 
     var separator: CardNumberSeparator = CardNumberSeparator.WHITESPACE
-    private var allNumbersWithSeparatorAmex = MAX_CHARS_FOR_AMEX_CARD + separator.length() * 2
+    private var allNumbersWithSeparatorAmex = getAmexMaxLength() + separator.length() * 2
     private var allNumberWithSeparatorDefault = MAX_CHARS_FOR_CARD_NUMBERS + separator.length() * 3
 
     val amexSpacesMapping = object : OffsetMapping {
@@ -27,7 +28,7 @@ internal object CardNumberSpaces {
             if (separator.length() == 0) return offset
             if (offset <= NUMBERS_BEFORE_FIRST_SEPARATOR) return offset
             if (offset <= NUMBERS_BEFORE_SECOND_SEPARATOR_AMEX) return offset + 1
-            if (offset <= MAX_CHARS_FOR_AMEX_CARD) return offset + 2
+            if (offset <= getAmexMaxLength()) return offset + 2
             return allNumbersWithSeparatorAmex
         }
 
@@ -36,7 +37,7 @@ internal object CardNumberSpaces {
             if (offset <= NUMBERS_BEFORE_FIRST_SEPARATOR) return offset
             if (offset <= NUMBERS_BEFORE_SECOND_SEPARATOR_AMEX + 1) return offset - 1
             if (offset <= allNumbersWithSeparatorAmex) return offset - 2
-            return MAX_CHARS_FOR_AMEX_CARD
+            return getAmexMaxLength()
         }
     }
 
@@ -100,5 +101,7 @@ internal object CardNumberSpaces {
         CardNumberSeparator.DASH,
         CardNumberSeparator.SLASH -> 1
     }
+
+    private fun getAmexMaxLength(): Int = PSCreditCardType.AMEX.getCardInfo()?.maxLength ?: MAX_CHARS_FOR_CARD_NUMBERS
 
 }
