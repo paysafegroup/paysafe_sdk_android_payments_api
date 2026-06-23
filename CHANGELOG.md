@@ -1,5 +1,12 @@
 # Change Log
 
+## [2.2.2] - 2026-06-23
+
+### Fixed
+
+- **Consecutive 3DS challenges**: Fixed a regression from the 2.0.0 Cardinal integration where the Cardinal challenge observer was torn down after every tokenization, causing a second 3DS challenge on the same Activity to fail with a `CARDINAL_OBSERVER_NOT_INITIALISED` error. The observer is now retained for the Activity's lifetime and only the per-transaction state is reset between tokenizations.
+- **Cardinal observer memory leak**: The Cardinal challenge observer (and its `Activity` reference) is now cleared when the owning Activity is destroyed, preventing the Activity from being leaked for the lifetime of the process.
+
 ## [2.2.0] - 2026-04-01
 
 ### Fixed

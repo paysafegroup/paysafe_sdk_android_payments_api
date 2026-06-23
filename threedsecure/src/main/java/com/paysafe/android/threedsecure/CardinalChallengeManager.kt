@@ -37,6 +37,18 @@ class CardinalChallengeManager(
         Cardinal.getInstance().cca_continue(jwt, payload, observer)
     }
 
+    /**
+     * Clears only the per-transaction state so the same manager can be reused for the next
+     * 3DS challenge.
+     */
+    fun reset() {
+        validateReceiverCallback = null
+    }
+
+    /**
+     * Clears all the state. This should be called when the manager is no longer needed, e.g. when
+     * the corresponding activity is destroyed.
+     */
     fun cleanup() {
         validateReceiverCallback = null
         challengeObserver = null

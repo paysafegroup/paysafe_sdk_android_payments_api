@@ -73,6 +73,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.*
@@ -1250,7 +1251,7 @@ class PSCardFormControllerTest {
 
         // Mock CardinalChallengeManager
         val mockChallengeManager = mockk<CardinalChallengeManager>(relaxed = true)
-        justRun { mockChallengeManager.cleanup() }
+        justRun { mockChallengeManager.reset() }
         PSCardFormController.challengeManager = mockChallengeManager
 
         // Use reflection to set private field
@@ -1268,8 +1269,8 @@ class PSCardFormControllerTest {
         // Assert
         assertNotNull(result)
         assertEquals(AuthenticationStatus.COMPLETED, result?.status)
-        verify { mockChallengeManager.cleanup() }
-        assertNull(PSCardFormController.challengeManager)
+        verify { mockChallengeManager.reset() }
+        assertNotNull(PSCardFormController.challengeManager)
     }
 
     @Test
@@ -1313,7 +1314,7 @@ class PSCardFormControllerTest {
 
         // Mock CardinalChallengeManager
         val mockChallengeManager = mockk<CardinalChallengeManager>(relaxed = true)
-        justRun { mockChallengeManager.cleanup() }
+        justRun { mockChallengeManager.reset() }
         PSCardFormController.challengeManager = mockChallengeManager
 
         // Use reflection to set private field
@@ -1331,8 +1332,8 @@ class PSCardFormControllerTest {
         // Assert
         assertNotNull(result)
         assertEquals(AuthenticationStatus.COMPLETED, result?.status)
-        verify { mockChallengeManager.cleanup() }
-        assertNull(PSCardFormController.challengeManager)
+        verify { mockChallengeManager.reset() }
+        assertNotNull(PSCardFormController.challengeManager)
     }
 
     @Test
@@ -2274,7 +2275,7 @@ class PSCardFormControllerTest {
     }
 
     @Test
-    fun `tokenize cleans up challengeManager in finally block`() = runTest {
+    fun `tokenize resets challengeManager in finally block but keeps it alive`() = runTest {
         // Arrange
         val testDispatcher = UnconfinedTestDispatcher(testScheduler)
         Dispatchers.setMain(testDispatcher)
@@ -2309,7 +2310,7 @@ class PSCardFormControllerTest {
 
         // Mock CardinalChallengeManager
         val mockChallengeManager = mockk<CardinalChallengeManager>(relaxed = true)
-        justRun { mockChallengeManager.cleanup() }
+        justRun { mockChallengeManager.reset() }
         PSCardFormController.challengeManager = mockChallengeManager
 
         // Act
@@ -2319,8 +2320,8 @@ class PSCardFormControllerTest {
 
         // Assert
         assertTrue(result is PSResult.Success)
-        verify { mockChallengeManager.cleanup() }
-        assertNull(PSCardFormController.challengeManager)
+        verify { mockChallengeManager.reset() }
+        assertNotNull(PSCardFormController.challengeManager)
         assertFalse(psCardFormController.tokenizationAlreadyInProgress)
     }
 
@@ -2916,5 +2917,396 @@ class PSCardFormControllerTest {
         // Assert
         assertTrue(result is PSResult.Success)
         verify(exactly = 0) { mockCardCvvView.reset() }
+    }
+
+    @Test
+    fun `addCardinalObserver clears challengeManager when owning Activity is destroyed`() {
+        // Arrange
+        mockkConstructor(CardinalChallengeManager::class)
+        every { anyConstructed<CardinalChallengeManager>().initObserver() } just Runs
+        every { anyConstructed<CardinalChallengeManager>().cleanup() } just Runs
+        val controller = Robolectric.buildActivity(FragmentActivity::class.java).setup()
+
+        PSCardFormController.addCardinalObserver(controller.get())
+        assertNotNull(PSCardFormController.challengeManager)
+
+        // Act
+        controller.pause().stop().destroy()
+
+        // Assert
+        assertNull(PSCardFormController.challengeManager)
+        verify { anyConstructed<CardinalChallengeManager>().cleanup() }
+    }
+
+    @Test
+    fun `addCardinalObserver keeps challengeManager alive across pause and stop`() {
+        // Arrange
+        mockkConstructor(CardinalChallengeManager::class)
+        every { anyConstructed<CardinalChallengeManager>().initObserver() } just Runs
+        val controller = Robolectric.buildActivity(FragmentActivity::class.java).setup()
+
+        PSCardFormController.addCardinalObserver(controller.get())
+
+        // Act
+        controller.pause().stop()
+
+        // Assert
+        assertNotNull(PSCardFormController.challengeManager)
+    }
+
+    @Test
+    fun `continueAuthenticationFlow can run twice on same challengeManager without nulling it`() = runTest {
+        // Arrange - regression test for the 2.0.0 bug where the manager was destroyed after
+        // every transaction, breaking a second 3DS challenge on the same Activity.
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        val mockCardCvvView = mockk<PSCvvView>()
+        every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+        every { mockCardCvvView.placeholderString } returns ""
+        every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.data } returns "123"
+        justRun { mockCardCvvView.reset() }
+        val psCardFormController = PSCardFormController(
+            cardCvvView = mockCardCvvView,
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient
+        )
+        PSCardFormController.supportedCardTypes = listOf(PSCreditCardType.VISA)
+        val paymentHandle = PaymentHandle(
+            id = "id",
+            paymentHandleToken = "token",
+            merchantRefNum = "refNum",
+            status = PaymentHandleTokenStatus.INITIATED.status,
+            action = PaymentHandleAction.REDIRECT.toString(),
+            cardBin = "1234"
+        )
+        val mockPaysafe3DS = mockk<Paysafe3DS>()
+        val mockThreeDSChallengePayload = ThreeDSChallengePayload(authenticationId = "authId")
+        coEvery {
+            mockPaysafe3DS.launch3dsChallenge(any(), any(), any())
+        } returns PSResult.Success(mockThreeDSChallengePayload)
+        mockkConstructor(Paysafe3DS::class)
+        val mockCardAdapterAuthRepository = mockk<CardAdapterAuthRepository>()
+        coEvery {
+            mockCardAdapterAuthRepository.finalizeAuthentication(any(), any())
+        } returns PSResult.Success(FinalizeAuthenticationResponse(status = AuthenticationStatus.COMPLETED))
+
+        val mockChallengeManager = mockk<CardinalChallengeManager>(relaxed = true)
+        justRun { mockChallengeManager.reset() }
+        PSCardFormController.challengeManager = mockChallengeManager
+        setPrivateProperty(psCardFormController, "cardAdapterAuthRepository", mockCardAdapterAuthRepository)
+
+        // Act - run the challenge flow twice with the same manager
+        val firstResult = callPrivateContinueAuthenticationFlow(
+            psCardFormController, mockActivity, mockPaysafe3DS, "challengePayload", paymentHandle.id!!
+        )
+        assertNotNull(PSCardFormController.challengeManager)
+
+        val secondResult = callPrivateContinueAuthenticationFlow(
+            psCardFormController, mockActivity, mockPaysafe3DS, "challengePayload", paymentHandle.id!!
+        )
+
+        // Assert - manager survives both transactions and reset() is applied each time
+        assertEquals(AuthenticationStatus.COMPLETED, firstResult?.status)
+        assertEquals(AuthenticationStatus.COMPLETED, secondResult?.status)
+        assertNotNull(PSCardFormController.challengeManager)
+        verify(exactly = 2) { mockChallengeManager.reset() }
+
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `tokenize completes without error when challengeManager is null`() = runTest {
+        // Arrange - the finally block uses challengeManager?.reset(); with a null manager the
+        // safe call must short-circuit and tokenization must still complete normally.
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        val mockCardCvvView = mockk<PSCvvView>()
+        every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+        every { mockCardCvvView.placeholderString } returns ""
+        every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.data } returns "123"
+        justRun { mockCardCvvView.reset() }
+        val psCardFormController = PSCardFormController(
+            cardCvvView = mockCardCvvView,
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient
+        )
+        PSCardFormController.supportedCardTypes = listOf(PSCreditCardType.VISA)
+        val paymentHandle = PaymentHandle(
+            id = "id",
+            paymentHandleToken = "token",
+            merchantRefNum = "refNum",
+            status = PaymentHandleTokenStatus.PAYABLE.status,
+            action = PaymentHandleAction.NONE.toString()
+        )
+        coEvery {
+            mockPSTokenizationService.tokenize(any(), any())
+        } returns PSResult.Success(paymentHandle)
+        coEvery {
+            mockPSTokenizationService.refreshToken(paymentHandle)
+        } returns PSResult.Success(paymentHandle)
+
+        // No CardinalChallengeManager present
+        PSCardFormController.challengeManager = null
+
+        // Act
+        val result = psCardFormController.tokenize(
+            cardTokenizeOptions = psCardTokenizeOptions
+        )
+
+        // Assert
+        assertTrue(result is PSResult.Success)
+        assertNull(PSCardFormController.challengeManager)
+        assertFalse(psCardFormController.tokenizationAlreadyInProgress)
+
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `continueAuthenticationFlow completes when challengeManager is null`() = runTest {
+        // Arrange - challengeManager?.reset() inside continueAuthenticationFlow must safely
+        // no-op when the manager is null, and the challenge is launched with a null manager.
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        val mockCardCvvView = mockk<PSCvvView>()
+        every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+        every { mockCardCvvView.placeholderString } returns ""
+        every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.data } returns "123"
+        justRun { mockCardCvvView.reset() }
+        val psCardFormController = PSCardFormController(
+            cardCvvView = mockCardCvvView,
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient
+        )
+        PSCardFormController.supportedCardTypes = listOf(PSCreditCardType.VISA)
+        val paymentHandle = PaymentHandle(
+            id = "id",
+            paymentHandleToken = "token",
+            merchantRefNum = "refNum",
+            status = PaymentHandleTokenStatus.INITIATED.status,
+            action = PaymentHandleAction.REDIRECT.toString(),
+            cardBin = "1234"
+        )
+        val mockPaysafe3DS = mockk<Paysafe3DS>()
+        val mockThreeDSChallengePayload = ThreeDSChallengePayload(authenticationId = "authId")
+        coEvery {
+            mockPaysafe3DS.launch3dsChallenge(any(), any(), any())
+        } returns PSResult.Success(mockThreeDSChallengePayload)
+        mockkConstructor(Paysafe3DS::class)
+        val mockCardAdapterAuthRepository = mockk<CardAdapterAuthRepository>()
+        coEvery {
+            mockCardAdapterAuthRepository.finalizeAuthentication(any(), any())
+        } returns PSResult.Success(FinalizeAuthenticationResponse(status = AuthenticationStatus.COMPLETED))
+
+        // No CardinalChallengeManager present
+        PSCardFormController.challengeManager = null
+        setPrivateProperty(psCardFormController, "cardAdapterAuthRepository", mockCardAdapterAuthRepository)
+
+        // Act
+        val result = callPrivateContinueAuthenticationFlow(
+            psCardFormController,
+            mockActivity,
+            mockPaysafe3DS,
+            "challengePayload",
+            paymentHandle.id!!
+        )
+
+        // Assert
+        assertNotNull(result)
+        assertEquals(AuthenticationStatus.COMPLETED, result?.status)
+        assertNull(PSCardFormController.challengeManager)
+        coVerify { mockPaysafe3DS.launch3dsChallenge(any(), any(), challengeManager = null) }
+
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `tokenize resets challengeManager in finally block when tokenizationService returns Failure`() = runTest {
+        // Arrange
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        val mockCardCvvView = mockk<PSCvvView>()
+        every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+        every { mockCardCvvView.placeholderString } returns ""
+        every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.data } returns "123"
+        justRun { mockCardCvvView.reset() }
+        val psCardFormController = PSCardFormController(
+            cardCvvView = mockCardCvvView,
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient
+        )
+        PSCardFormController.supportedCardTypes = listOf(PSCreditCardType.VISA)
+        coEvery {
+            mockPSTokenizationService.tokenize(any(), any())
+        } returns PSResult.Failure(Exception())
+
+        val mockChallengeManager = mockk<CardinalChallengeManager>(relaxed = true)
+        justRun { mockChallengeManager.reset() }
+        PSCardFormController.challengeManager = mockChallengeManager
+
+        // Act
+        val result = psCardFormController.tokenize(
+            cardTokenizeOptions = psCardTokenizeOptions
+        )
+
+        // Assert
+        assertTrue(result is PSResult.Failure)
+        verify { mockChallengeManager.reset() }
+        assertNotNull(PSCardFormController.challengeManager)
+        assertFalse(psCardFormController.tokenizationAlreadyInProgress)
+
+        PSCardFormController.challengeManager = null
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `tokenize resets challengeManager in finally block when tokenizationService throws Exception`() = runTest {
+        // Arrange
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        val mockCardCvvView = mockk<PSCvvView>()
+        every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+        every { mockCardCvvView.placeholderString } returns ""
+        every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.data } returns "123"
+        justRun { mockCardCvvView.reset() }
+        val psCardFormController = PSCardFormController(
+            cardCvvView = mockCardCvvView,
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient
+        )
+        PSCardFormController.supportedCardTypes = listOf(PSCreditCardType.VISA)
+        coEvery {
+            mockPSTokenizationService.tokenize(any(), any())
+        } throws Exception()
+
+        val mockChallengeManager = mockk<CardinalChallengeManager>(relaxed = true)
+        justRun { mockChallengeManager.reset() }
+        PSCardFormController.challengeManager = mockChallengeManager
+
+        // Act
+        val result = psCardFormController.tokenize(
+            cardTokenizeOptions = psCardTokenizeOptions
+        )
+
+        // Assert
+        assertTrue(result is PSResult.Failure)
+        verify { mockChallengeManager.reset() }
+        assertNotNull(PSCardFormController.challengeManager)
+        assertFalse(psCardFormController.tokenizationAlreadyInProgress)
+
+        PSCardFormController.challengeManager = null
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `tokenize resets challengeManager in finally block when a PaysafeException is thrown`() = runTest {
+        // Arrange - an unsupported card brand makes validateUsesSupportedCreditCard throw a
+        // PaysafeException, which exercises the PaysafeException catch branch before the finally.
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        val mockCardCvvView = mockk<PSCvvView>()
+        every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+        every { mockCardCvvView.placeholderString } returns ""
+        every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.data } returns "123"
+        justRun { mockCardCvvView.reset() }
+        val psCardFormController = PSCardFormController(
+            cardCvvView = mockCardCvvView,
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient
+        )
+        PSCardFormController.supportedCardTypes = listOf(PSCreditCardType.MASTERCARD)
+
+        val mockChallengeManager = mockk<CardinalChallengeManager>(relaxed = true)
+        justRun { mockChallengeManager.reset() }
+        PSCardFormController.challengeManager = mockChallengeManager
+
+        // Act
+        val result = psCardFormController.tokenize(
+            cardTokenizeOptions = psCardTokenizeOptions
+        )
+
+        // Assert
+        assertTrue(result is PSResult.Failure)
+        verify { mockChallengeManager.reset() }
+        assertNotNull(PSCardFormController.challengeManager)
+        assertFalse(psCardFormController.tokenizationAlreadyInProgress)
+
+        PSCardFormController.challengeManager = null
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `tokenize resets challengeManager in finally block when tokenizationAlreadyInProgress`() = runTest {
+        // Arrange - the early in-progress return still flows through the finally block.
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        val psCardFormController = providePSCardFormController(testDispatcher)
+
+        val mockChallengeManager = mockk<CardinalChallengeManager>(relaxed = true)
+        justRun { mockChallengeManager.reset() }
+        PSCardFormController.challengeManager = mockChallengeManager
+
+        // Act
+        psCardFormController.tokenizationAlreadyInProgress = true
+        val result = psCardFormController.tokenize(
+            cardTokenizeOptions = psCardTokenizeOptions
+        )
+
+        // Assert
+        assertTrue(result is PSResult.Failure)
+        assertEquals(
+            tokenizationAlreadyInProgressException(correlationId),
+            (result as PSResult.Failure).exception
+        )
+        verify { mockChallengeManager.reset() }
+        assertNotNull(PSCardFormController.challengeManager)
+        assertFalse(psCardFormController.tokenizationAlreadyInProgress)
+
+        PSCardFormController.challengeManager = null
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `addCardinalObserver onDestroy does not fail when challengeManager is already null`() {
+        // Arrange - register the lifecycle observer, then clear the manager before the Activity is
+        // destroyed so onDestroy hits the null branch of challengeManager?.cleanup().
+        mockkConstructor(CardinalChallengeManager::class)
+        every { anyConstructed<CardinalChallengeManager>().initObserver() } just Runs
+        every { anyConstructed<CardinalChallengeManager>().cleanup() } just Runs
+        val controller = Robolectric.buildActivity(FragmentActivity::class.java).setup()
+
+        PSCardFormController.addCardinalObserver(controller.get())
+        assertNotNull(PSCardFormController.challengeManager)
+        PSCardFormController.challengeManager = null
+
+        // Act
+        controller.pause().stop().destroy()
+
+        // Assert
+        assertNull(PSCardFormController.challengeManager)
+        verify(exactly = 0) { anyConstructed<CardinalChallengeManager>().cleanup() }
     }
 }

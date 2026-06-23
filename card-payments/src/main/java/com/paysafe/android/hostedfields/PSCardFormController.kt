@@ -8,6 +8,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
@@ -232,6 +233,14 @@ class PSCardFormController internal constructor(
 
             challengeManager = CardinalChallengeManager(fragmentActivity)
             challengeManager?.initObserver()
+
+            lifecycleOwner.lifecycle.addObserver(object : DefaultLifecycleObserver {
+                override fun onDestroy(owner: LifecycleOwner) {
+                    challengeManager?.cleanup()
+                    challengeManager = null
+                    owner.lifecycle.removeObserver(this)
+                }
+            })
         }
 
         private fun provideDispatchersPair(): Pair<CoroutineDispatcher, CoroutineDispatcher> =
@@ -358,8 +367,7 @@ class PSCardFormController internal constructor(
             PSResult.Failure(exception)
         } finally {
             tokenizationAlreadyInProgress = false
-            challengeManager?.cleanup()
-            challengeManager = null
+            challengeManager?.reset()
             if (resetOnTokenize) {
                 withContext(coroutineContext + Dispatchers.Main) {
                     resetFields()
@@ -552,8 +560,7 @@ class PSCardFormController internal constructor(
             authenticationId = authenticationId
         )
 
-        challengeManager?.cleanup()
-        challengeManager = null
+        challengeManager?.reset()
 
         return (finalizeAuthenticationResult as? PSResult.Success)?.value
     }
