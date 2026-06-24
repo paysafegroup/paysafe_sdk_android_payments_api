@@ -84,7 +84,8 @@ class PSExpiryDateTextView @JvmOverloads constructor(
             psTheme = psTheme,
             eventHandler = handler,
             clearsErrorOnInput = clearsErrorOnInput,
-            validatesEmptyFieldOnBlur = validatesEmptyFieldOnBlur
+            validatesEmptyFieldOnBlur = validatesEmptyFieldOnBlur,
+            compactFieldHeight = compactFieldHeight
         )
     }
 

@@ -52,7 +52,8 @@ fun PSCardholderNameField(
     psTheme: PSTheme,
     eventHandler: PSCardFieldEventHandler = DefaultPSCardFieldEventHandler(isValidLiveData),
     clearsErrorOnInput: Boolean = false,
-    validatesEmptyFieldOnBlur: Boolean = true
+    validatesEmptyFieldOnBlur: Boolean = true,
+    compactFieldHeight: Float? = null
 ) {
     CompositionLocalProvider(
         LocalTextToolbar provides WrapperToAvoidPaste,
@@ -70,9 +71,10 @@ fun PSCardholderNameField(
                 psTheme = psTheme,
                 eventHandler = eventHandler,
                 clearsErrorOnInput = clearsErrorOnInput,
-                validatesEmptyFieldOnBlur = validatesEmptyFieldOnBlur
+                validatesEmptyFieldOnBlur = validatesEmptyFieldOnBlur,
+                compactFieldHeight = compactFieldHeight
             )
-            if (holderNameState.showLabelWithoutAnimation(animateTopLabelText, labelText)) {
+            if (compactFieldHeight == null && holderNameState.showLabelWithoutAnimation(animateTopLabelText, labelText)) {
                 TextLabelReplacement(
                     labelText = labelText,
                     isValidInUI = holderNameState.isValidInUi,

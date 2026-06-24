@@ -33,6 +33,7 @@ import com.paysafe.android.hostedfields.model.PSCardFieldEventHandler
 
 import com.paysafe.android.hostedfields.provideDefaultPSTheme
 import com.paysafe.android.hostedfields.util.CardPreview
+import com.paysafe.android.hostedfields.util.CompactFieldWrapper
 import com.paysafe.android.hostedfields.util.PS_CARD_HOLDER_NAME_TEST_TAG
 import com.paysafe.android.hostedfields.util.TextLabelWithPSTheme
 import com.paysafe.android.hostedfields.util.TextPlaceholderWithPSTheme
@@ -40,7 +41,6 @@ import com.paysafe.android.hostedfields.util.keyboardActionFromIme
 import com.paysafe.android.hostedfields.util.roundedCornerShapeWithPSTheme
 import com.paysafe.android.hostedfields.util.textFieldColorsWithPSTheme
 import com.paysafe.android.hostedfields.util.textStyleWithPSTheme
-import com.paysafe.android.hostedfields.util.uniformFieldBorder
 import com.paysafe.android.hostedfields.valid.CardholderNameChecks
 
 //region HOSTED FIELD: Cardholder Name
@@ -115,6 +115,7 @@ internal fun PSCardholderName(
     eventHandler: PSCardFieldEventHandler,
     clearsErrorOnInput: Boolean = false,
     validatesEmptyFieldOnBlur: Boolean = true,
+    compactFieldHeight: Float? = null,
     onValueChange: (String) -> Unit = onHolderNameChange(state, eventHandler, clearsErrorOnInput),
 ) {
     val focusManager = LocalFocusManager.current
@@ -122,42 +123,50 @@ internal fun PSCardholderName(
     val onKeyboardAction: (KeyboardActionScope.() -> Unit) =
         onDonePressed(state, focusManager, validatesEmptyFieldOnBlur)
     val shape = roundedCornerShapeWithPSTheme(psTheme)
-    OutlinedTextField(
-        value = state.value,
-        onValueChange = onValueChange,
-        label = if (animateTopLabelText) {
-            {
-                TextLabelWithPSTheme(
-                    labelText = labelText,
-                    psTheme = psTheme
-                )
-            }
-        } else null,
-        placeholder = {
-            TextPlaceholderWithPSTheme(
-                placeholderText = placeholderText
-                    ?: stringResource(id = R.string.card_holder_name_hint),
-                psTheme = psTheme
-            )
-        },
-        // Keyboard Settings //
-        keyboardOptions = KeyboardOptions(
-            imeAction = keyboardImeAction,
-            keyboardType = KeyboardType.Text,
-            capitalization = KeyboardCapitalization.Words
-        ),
-        keyboardActions = keyboardActionFromIme(keyboardImeAction, onKeyboardAction),
-        // Extra //
-        singleLine = true,
-        isError = !state.isValidInUi,
+    CompactFieldWrapper(
+        compactFieldHeight = compactFieldHeight,
         modifier = modifier
             .testTag(PS_CARD_HOLDER_NAME_TEST_TAG)
-            .onFocusChanged { onHolderNameFocusChange(it, state, eventHandler, validatesEmptyFieldOnBlur) }
-            .uniformFieldBorder(state.isFocused, !state.isValidInUi, psTheme, shape),
-        colors = textFieldColorsWithPSTheme(psTheme),
-        shape = shape,
-        textStyle = textStyleWithPSTheme(psTheme)
-    )
+            .onFocusChanged { onHolderNameFocusChange(it, state, eventHandler, validatesEmptyFieldOnBlur) },
+        isFocused = state.isFocused,
+        isError = !state.isValidInUi,
+        psTheme = psTheme,
+        shape = shape
+    ) { innerModifier ->
+        OutlinedTextField(
+            value = state.value,
+            onValueChange = onValueChange,
+            label = if (animateTopLabelText) {
+                {
+                    TextLabelWithPSTheme(
+                        labelText = labelText,
+                        psTheme = psTheme
+                    )
+                }
+            } else null,
+            placeholder = {
+                TextPlaceholderWithPSTheme(
+                    placeholderText = placeholderText
+                        ?: stringResource(id = R.string.card_holder_name_hint),
+                    psTheme = psTheme
+                )
+            },
+            // Keyboard Settings //
+            keyboardOptions = KeyboardOptions(
+                imeAction = keyboardImeAction,
+                keyboardType = KeyboardType.Text,
+                capitalization = KeyboardCapitalization.Words
+            ),
+            keyboardActions = keyboardActionFromIme(keyboardImeAction, onKeyboardAction),
+            // Extra //
+            singleLine = true,
+            isError = !state.isValidInUi,
+            modifier = innerModifier,
+            colors = textFieldColorsWithPSTheme(psTheme = psTheme, isCompact = compactFieldHeight != null),
+            shape = shape,
+            textStyle = textStyleWithPSTheme(psTheme)
+        )
+    }
 }
 //endregion
 

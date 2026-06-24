@@ -22,6 +22,7 @@ import com.paysafe.android.hostedfields.domain.model.PSExpiryDateState
 import com.paysafe.android.hostedfields.domain.model.PSExpiryDateStateImpl
 import com.paysafe.android.hostedfields.provideDefaultPSTheme
 import com.paysafe.android.hostedfields.util.CardPreview
+import com.paysafe.android.hostedfields.util.CompactFieldWrapper
 import com.paysafe.android.hostedfields.util.PS_EXPIRY_DATE_PICKER_TEST_TAG
 import com.paysafe.android.hostedfields.util.TextLabelWithPSTheme
 import com.paysafe.android.hostedfields.util.TextPlaceholderWithPSTheme
@@ -29,7 +30,6 @@ import com.paysafe.android.hostedfields.util.expiryDateVisualTransformation
 import com.paysafe.android.hostedfields.util.roundedCornerShapeWithPSTheme
 import com.paysafe.android.hostedfields.util.textFieldColorsWithPSTheme
 import com.paysafe.android.hostedfields.util.textStyleWithPSTheme
-import com.paysafe.android.hostedfields.util.uniformFieldBorder
 import com.paysafe.android.hostedfields.valid.ExpiryDateChecks
 
 //region HOSTED FIELD: Expiry Date
@@ -64,43 +64,52 @@ fun PSExpiryDatePicker(
     animateTopLabelText: Boolean,
     modifier: Modifier = Modifier,
     psTheme: PSTheme,
-    validatesEmptyFieldOnBlur: Boolean = true
+    validatesEmptyFieldOnBlur: Boolean = true,
+    compactFieldHeight: Float? = null
 ) {
     val shape = roundedCornerShapeWithPSTheme(psTheme)
-    OutlinedTextField(
-        value = state.value,
-        onValueChange = {},
-        // Texts //
-        label = {
-            if (animateTopLabelText) {
-                TextLabelWithPSTheme(
-                    labelText = labelText,
-                    psTheme = psTheme
-                )
-            }
-        },
-        placeholder = {
-            TextPlaceholderWithPSTheme(
-                placeholderText = placeholderText
-                    ?: stringResource(id = R.string.card_expiry_date_hint),
-                psTheme = psTheme
-            )
-        },
-        // Optical //
-        visualTransformation = expiryDateVisualTransformation(),
-        colors = textFieldColorsWithPSTheme(psTheme, state.isValidInUi),
-        shape = shape,
-        textStyle = textStyleWithPSTheme(psTheme),
-        // Extra //
-        enabled = false,
-        readOnly = true,
-        singleLine = true,
-        isError = !state.isValidInUi,
+    CompactFieldWrapper(
+        compactFieldHeight = compactFieldHeight,
         modifier = modifier
             .testTag(PS_EXPIRY_DATE_PICKER_TEST_TAG)
-            .onFocusChanged { onExpiryDateFocusChange(it, state, validatesEmptyFieldOnBlur) }
-            .uniformFieldBorder(state.isFocused, !state.isValidInUi, psTheme, shape)
-    )
+            .onFocusChanged { onExpiryDateFocusChange(it, state, validatesEmptyFieldOnBlur) },
+        isFocused = state.isFocused,
+        isError = !state.isValidInUi,
+        psTheme = psTheme,
+        shape = shape
+    ) { innerModifier ->
+        OutlinedTextField(
+            value = state.value,
+            onValueChange = {},
+            // Texts //
+            label = {
+                if (animateTopLabelText) {
+                    TextLabelWithPSTheme(
+                        labelText = labelText,
+                        psTheme = psTheme
+                    )
+                }
+            },
+            placeholder = {
+                TextPlaceholderWithPSTheme(
+                    placeholderText = placeholderText
+                        ?: stringResource(id = R.string.card_expiry_date_hint),
+                    psTheme = psTheme
+                )
+            },
+            // Optical //
+            visualTransformation = expiryDateVisualTransformation(),
+            colors = textFieldColorsWithPSTheme(psTheme, state.isValidInUi, isCompact = compactFieldHeight != null),
+            shape = shape,
+            textStyle = textStyleWithPSTheme(psTheme),
+            // Extra //
+            enabled = false,
+            readOnly = true,
+            singleLine = true,
+            isError = !state.isValidInUi,
+            modifier = innerModifier
+        )
+    }
 }
 //endregion
 

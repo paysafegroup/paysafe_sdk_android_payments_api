@@ -79,7 +79,8 @@ fun PSCardNumberField(
                 ),
                 eventHandler = eventHandler
             )
-            if (cardNumberState.showLabelWithoutAnimation(textOptions.animateTopLabelText, textOptions.labelText)) {
+            if (fieldOptions.compactFieldHeight == null &&
+                cardNumberState.showLabelWithoutAnimation(textOptions.animateTopLabelText, textOptions.labelText)) {
                 TextLabelReplacement(
                     labelText = textOptions.labelText,
                     isValidInUI = cardNumberState.isValidInUi,

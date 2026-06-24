@@ -82,7 +82,8 @@ class PSExpiryDatePickerView @JvmOverloads constructor(
             isValidLiveData = _isValidLiveData,
             psTheme = psTheme,
             eventHandler = handler,
-            validatesEmptyFieldOnBlur = validatesEmptyFieldOnBlur
+            validatesEmptyFieldOnBlur = validatesEmptyFieldOnBlur,
+            compactFieldHeight = compactFieldHeight
         )
     }
 

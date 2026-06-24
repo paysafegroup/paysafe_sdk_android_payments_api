@@ -1,5 +1,13 @@
 # Change Log
 
+## [2.2.4] - 2026-06-23
+
+### Fixed
+
+- **compactFieldHeight on all fields**: Extended `CompactFieldWrapper` to CVV, cardholder name, expiry text, and expiry picker fields (previously card number only)
+- **Doubled label and hint**: Suppress `TextLabelReplacement` when `compactFieldHeight` is set so `psAnimateTopPlaceholderLabel="false"` with `psHint` shows a single hint line
+- **Compact field borders**: Use transparent inner `OutlinedTextField` borders and draw the outline on the outer compact wrapper, including when `PSTheme.borderWidth` is not set
+
 ## [2.2.3] - 2026-06-23
 
 ### Fixed

@@ -152,10 +152,11 @@ fun rememberCvvState() = rememberSaveable(
 @Composable
 internal fun textFieldColorsWithPSTheme(
     psTheme: PSTheme,
-    isValidInUI: Boolean = true
+    isValidInUI: Boolean = true,
+    isCompact: Boolean = false
 ): TextFieldColors = with(psTheme) {
     // Use transparent borders if custom widths are specified (uniformFieldBorder will handle the border)
-    val useTransparentBorder = borderWidth != null || focusedBorderWidth != null
+    val useTransparentBorder = isCompact || borderWidth != null || focusedBorderWidth != null
 
     OutlinedTextFieldDefaults.colors(
         // container
@@ -219,13 +220,15 @@ internal fun Modifier.uniformFieldBorder(
     isFocused: Boolean,
     isError: Boolean,
     psTheme: PSTheme,
-    shape: Shape
+    shape: Shape,
+    isCompact: Boolean = false
 ): Modifier {
     val borderWidth = psTheme.borderWidth
     val focusedBorderWidth = psTheme.focusedBorderWidth
 
-    // Only apply custom border if width is specified
-    if (borderWidth == null && focusedBorderWidth == null) {
+    // Only apply a custom border if a width is specified, or in compact mode where the inner
+    // field border is transparent and this modifier must draw the outline itself
+    if (borderWidth == null && focusedBorderWidth == null && !isCompact) {
         return this
     }
 
@@ -274,7 +277,7 @@ internal fun CompactFieldWrapper(
         Box(
             modifier = modifier
                 .height(compactFieldHeight!!.dp)
-                .uniformFieldBorder(isFocused, isError, psTheme, shape)
+                .uniformFieldBorder(isFocused, isError, psTheme, shape, isCompact = true)
                 .clip(shape),
             contentAlignment = Alignment.Center
         ) {

@@ -78,7 +78,8 @@ class PSCvvView @JvmOverloads constructor(
         isValidLiveData = _isValidLiveData,
         eventHandler = eventHandler ?: DefaultPSCardFieldEventHandler(_isValidLiveData),
         clearsErrorOnInput = clearsErrorOnInput,
-        validatesEmptyFieldOnBlur = validatesEmptyFieldOnBlur
+        validatesEmptyFieldOnBlur = validatesEmptyFieldOnBlur,
+        compactFieldHeight = compactFieldHeight
     )
 
     private fun provideIsMasked(attrs: AttributeSet?): Boolean {

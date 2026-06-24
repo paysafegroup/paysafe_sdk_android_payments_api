@@ -51,7 +51,8 @@ fun PSExpiryDateTextField(
     isValidLiveData: MutableLiveData<Boolean>,
     eventHandler: PSCardFieldEventHandler,
     clearsErrorOnInput: Boolean = false,
-    validatesEmptyFieldOnBlur: Boolean = true
+    validatesEmptyFieldOnBlur: Boolean = true,
+    compactFieldHeight: Float? = null
 ) {
     CompositionLocalProvider(
         LocalTextToolbar provides WrapperToAvoidPaste,
@@ -70,9 +71,10 @@ fun PSExpiryDateTextField(
                 psTheme = psTheme,
                 eventHandler = eventHandler,
                 clearsErrorOnInput = clearsErrorOnInput,
-                validatesEmptyFieldOnBlur = validatesEmptyFieldOnBlur
+                validatesEmptyFieldOnBlur = validatesEmptyFieldOnBlur,
+                compactFieldHeight = compactFieldHeight
             )
-            if (expiryDateState.showLabelWithoutAnimation(animateTopLabelText, labelText)) {
+            if (compactFieldHeight == null && expiryDateState.showLabelWithoutAnimation(animateTopLabelText, labelText)) {
                 TextLabelReplacement(
                     labelText = labelText,
                     isValidInUI = expiryDateState.isValidInUi,

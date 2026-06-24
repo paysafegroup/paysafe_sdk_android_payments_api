@@ -65,7 +65,8 @@ fun PSExpiryDatePickerField(
     isValidLiveData: MutableLiveData<Boolean>,
     psTheme: PSTheme,
     eventHandler: PSCardFieldEventHandler,
-    validatesEmptyFieldOnBlur: Boolean = true
+    validatesEmptyFieldOnBlur: Boolean = true,
+    compactFieldHeight: Float? = null
 ) {
     val requesterToClearFocus = remember { FocusRequester() }
     var alreadyHasFocus by rememberSaveable { mutableStateOf(false) }
@@ -110,9 +111,10 @@ fun PSExpiryDatePickerField(
                     animateTopLabelText = animateTopLabelText,
                     modifier = modifier,
                     psTheme = psTheme,
-                    validatesEmptyFieldOnBlur = validatesEmptyFieldOnBlur
+                    validatesEmptyFieldOnBlur = validatesEmptyFieldOnBlur,
+                    compactFieldHeight = compactFieldHeight
                 )
-                if (expiryDateState.showLabelWithoutAnimation(animateTopLabelText, labelText)) {
+                if (compactFieldHeight == null && expiryDateState.showLabelWithoutAnimation(animateTopLabelText, labelText)) {
                     TextLabelReplacement(
                         labelText = labelText,
                         isValidInUI = expiryDateState.isValidInUi,

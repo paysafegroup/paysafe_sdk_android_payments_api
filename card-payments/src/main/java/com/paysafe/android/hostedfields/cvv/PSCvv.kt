@@ -33,6 +33,7 @@ import com.paysafe.android.hostedfields.model.PSCardFieldEventHandler
 
 import com.paysafe.android.hostedfields.provideDefaultPSTheme
 import com.paysafe.android.hostedfields.util.CardPreview
+import com.paysafe.android.hostedfields.util.CompactFieldWrapper
 import com.paysafe.android.hostedfields.util.PS_CVV_TEST_TAG
 import com.paysafe.android.hostedfields.util.TextLabelWithPSTheme
 import com.paysafe.android.hostedfields.util.TextPlaceholderWithPSTheme
@@ -40,7 +41,6 @@ import com.paysafe.android.hostedfields.util.keyboardActionFromIme
 import com.paysafe.android.hostedfields.util.roundedCornerShapeWithPSTheme
 import com.paysafe.android.hostedfields.util.textFieldColorsWithPSTheme
 import com.paysafe.android.hostedfields.util.textStyleWithPSTheme
-import com.paysafe.android.hostedfields.util.uniformFieldBorder
 import com.paysafe.android.hostedfields.valid.CvvChecks
 
 //region HOSTED FIELD: Cvv
@@ -121,7 +121,8 @@ internal fun PSCvv(
     isMasked: Boolean,
     eventHandler: PSCardFieldEventHandler,
     clearsErrorOnInput: Boolean = false,
-    validatesEmptyFieldOnBlur: Boolean = true
+    validatesEmptyFieldOnBlur: Boolean = true,
+    compactFieldHeight: Float? = null
 ) {
     val onValueChange: (String) -> Unit = onCvvChange(state, isValidLiveData, eventHandler, clearsErrorOnInput)
     val focusManager = LocalFocusManager.current
@@ -129,41 +130,49 @@ internal fun PSCvv(
     val onKeyboardAction: (KeyboardActionScope.() -> Unit) =
         onDonePressed(state, focusManager, validatesEmptyFieldOnBlur)
     val shape = roundedCornerShapeWithPSTheme(psTheme)
-    OutlinedTextField(
-        value = state.value,
-        onValueChange = onValueChange,
-        label = if (animateTopLabelText) {
-            {
-                TextLabelWithPSTheme(
-                    labelText = labelText,
-                    psTheme = psTheme
-                )
-            }
-        } else null,
-        placeholder = {
-            TextPlaceholderWithPSTheme(
-                placeholderText = placeholderText
-                    ?: stringResource(id = R.string.card_cvv_hint),
-                psTheme = psTheme
-            )
-        },
-        visualTransformation = provideVisualTransformation(isMasked),
-        // Keyboard Settings //
-        keyboardOptions = KeyboardOptions(
-            imeAction = keyboardImeAction, keyboardType = KeyboardType.Number
-        ),
-        keyboardActions = keyboardActionFromIme(keyboardImeAction, onKeyboardAction),
-        // Extra //
-        singleLine = true,
-        isError = !state.isValidInUi,
+    CompactFieldWrapper(
+        compactFieldHeight = compactFieldHeight,
         modifier = modifier
             .testTag(PS_CVV_TEST_TAG)
-            .onFocusChanged { onCvvFocusChange(it, state, eventHandler, validatesEmptyFieldOnBlur) }
-            .uniformFieldBorder(state.isFocused, !state.isValidInUi, psTheme, shape),
-        colors = textFieldColorsWithPSTheme(psTheme),
-        shape = shape,
-        textStyle = textStyleWithPSTheme(psTheme)
-    )
+            .onFocusChanged { onCvvFocusChange(it, state, eventHandler, validatesEmptyFieldOnBlur) },
+        isFocused = state.isFocused,
+        isError = !state.isValidInUi,
+        psTheme = psTheme,
+        shape = shape
+    ) { innerModifier ->
+        OutlinedTextField(
+            value = state.value,
+            onValueChange = onValueChange,
+            label = if (animateTopLabelText) {
+                {
+                    TextLabelWithPSTheme(
+                        labelText = labelText,
+                        psTheme = psTheme
+                    )
+                }
+            } else null,
+            placeholder = {
+                TextPlaceholderWithPSTheme(
+                    placeholderText = placeholderText
+                        ?: stringResource(id = R.string.card_cvv_hint),
+                    psTheme = psTheme
+                )
+            },
+            visualTransformation = provideVisualTransformation(isMasked),
+            // Keyboard Settings //
+            keyboardOptions = KeyboardOptions(
+                imeAction = keyboardImeAction, keyboardType = KeyboardType.Number
+            ),
+            keyboardActions = keyboardActionFromIme(keyboardImeAction, onKeyboardAction),
+            // Extra //
+            singleLine = true,
+            isError = !state.isValidInUi,
+            modifier = innerModifier,
+            colors = textFieldColorsWithPSTheme(psTheme, isCompact = compactFieldHeight != null),
+            shape = shape,
+            textStyle = textStyleWithPSTheme(psTheme)
+        )
+    }
 }
 //endregion
 

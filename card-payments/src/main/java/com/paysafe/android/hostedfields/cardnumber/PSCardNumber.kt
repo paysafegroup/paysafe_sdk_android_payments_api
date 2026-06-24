@@ -207,7 +207,7 @@ internal fun PSCardNumber(
             singleLine = true,
             isError = !fieldConfig.state.isValidInUi,
             modifier = innerModifier,
-            colors = textFieldColorsWithPSTheme(psTheme),
+            colors = textFieldColorsWithPSTheme(psTheme = psTheme, isCompact = uiConfig.compactFieldHeight != null),
             shape = shape,
             textStyle = textStyleWithPSTheme(psTheme)
         )

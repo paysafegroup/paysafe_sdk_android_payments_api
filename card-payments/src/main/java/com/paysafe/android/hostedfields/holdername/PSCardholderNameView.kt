@@ -68,7 +68,8 @@ class PSCardholderNameView @JvmOverloads constructor(
         psTheme = psTheme,
         eventHandler = eventHandler ?: DefaultPSCardFieldEventHandler(_isValidLiveData),
         clearsErrorOnInput = clearsErrorOnInput,
-        validatesEmptyFieldOnBlur = validatesEmptyFieldOnBlur
+        validatesEmptyFieldOnBlur = validatesEmptyFieldOnBlur,
+        compactFieldHeight = compactFieldHeight
     )
 
     private fun provideLabelText(attrs: AttributeSet?): String {
