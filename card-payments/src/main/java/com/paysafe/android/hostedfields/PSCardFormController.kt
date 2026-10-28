@@ -32,12 +32,14 @@ import com.paysafe.android.hostedfields.data.api.CardAdapterAuthApi
 import com.paysafe.android.hostedfields.data.repository.CardAdapterAuthRepositoryImpl
 import com.paysafe.android.hostedfields.domain.mapper.toPaymentHandleRequest
 import com.paysafe.android.hostedfields.domain.mapper.toPaymentHandleRequestWithRenderType
+import com.paysafe.android.hostedfields.domain.model.PSCardFieldInputEvent
 import com.paysafe.android.hostedfields.domain.model.PSCardTokenizeOptions
 import com.paysafe.android.hostedfields.domain.model.PaymentHandleRequestWithRenderType
 import com.paysafe.android.hostedfields.domain.model.cardadapter.AuthenticationRequest
 import com.paysafe.android.hostedfields.domain.model.cardadapter.FinalizeAuthenticationResponse
 import com.paysafe.android.hostedfields.domain.model.toThreeDSRenderType
 import com.paysafe.android.hostedfields.domain.repository.CardAdapterAuthRepository
+import com.paysafe.android.hostedfields.model.PSCardFieldEventHandler
 import com.paysafe.android.hostedfields.exception.currencyCodeInvalidIsoException
 import com.paysafe.android.hostedfields.exception.errorName
 import com.paysafe.android.hostedfields.exception.genericApiErrorException
@@ -101,6 +103,7 @@ class PSCardFormController internal constructor(
     private val mainDispatcher: CoroutineDispatcher,
     private val ioDispatcher: CoroutineDispatcher,
     private val psApiClient: PSApiClient,
+    private val requireCvv: Boolean = true,
 ) {
 
     var onCardBrandRecognition: ((PSCreditCardType) -> Unit)? = null
@@ -126,22 +129,38 @@ class PSCardFormController internal constructor(
     private val _isSubmitEnabledLiveData = MediatorLiveData<Boolean>()
 
     init {
-        if (areFieldsNotNull()) {
-            cardNumberView!!.cardTypeLiveData.observe(
-                cardNumberView!!.context as LifecycleOwner
-            ) { cardType ->
-                onCardBrandRecognition?.invoke(cardType)
-                cardCvvView!!.cardType = cardType
-            }
+        cardNumberView?.cardTypeLiveData?.observe(
+            cardNumberView?.context as LifecycleOwner
+        ) { cardType ->
+            onCardBrandRecognition?.invoke(cardType)
+            cardCvvView?.cardType = cardType
+        }
 
-            listOf(
-                cardNumberView!!.isValidLiveData,
-                cardHolderNameView!!.isValidLiveData,
-                cardExpiryDateView!!.isValidLiveData,
-                cardCvvView!!.isValidLiveData
-            ).forEach {
-                _isSubmitEnabledLiveData.addSource(it) {
+        val validitySources = buildList {
+            cardNumberView?.let { add(it.isValidLiveData) }
+            cardHolderNameView?.let { add(it.isValidLiveData) }
+            cardExpiryDateView?.let { add(it.isValidLiveData) }
+            cardCvvView?.let { add(it.isValidLiveData) }
+        }
+        if (validitySources.isNotEmpty()) {
+            validitySources.forEach { source ->
+                _isSubmitEnabledLiveData.addSource(source) {
                     _isSubmitEnabledLiveData.value = areAllFieldsValid()
+                }
+            }
+            _isSubmitEnabledLiveData.value = areAllFieldsValid()
+        }
+
+        cardCvvView?.let { cvvView ->
+            val previousHandler = cvvView.eventHandler
+            cvvView.eventHandler = PSCardFieldEventHandler { event ->
+                previousHandler?.handleEvent(event)
+                when (event) {
+                    PSCardFieldInputEvent.FIELD_VALUE_CHANGE,
+                    PSCardFieldInputEvent.VALID,
+                    PSCardFieldInputEvent.INVALID,
+                    -> _isSubmitEnabledLiveData.value = areAllFieldsValid()
+                    else -> Unit
                 }
             }
         }
@@ -217,7 +236,8 @@ class PSCardFormController internal constructor(
                             tokenizationService = PSTokenization(psApiClient),
                             mainDispatcher = mainDispatcher,
                             ioDispatcher = ioDispatcher,
-                            psApiClient = psApiClient
+                            psApiClient = psApiClient,
+                            requireCvv = cardFormConfig.requireCvv
                         )
                         callback.onSuccess(cardFormController)
                     }
@@ -321,13 +341,17 @@ class PSCardFormController internal constructor(
         ?: cardCvvView?.cardType
         ?: PSCreditCardType.UNKNOWN
 
-    fun areAllFieldsValid() = if (areFieldsNotNull()) {
-        cardNumberView!!.isValidLiveData.value == true
-                && cardHolderNameView!!.isValidLiveData.value == true
-                && cardExpiryDateView!!.isValidLiveData.value == true
-                && cardCvvView!!.isValidLiveData.value == true
-    } else
-        false
+    fun areAllFieldsValid(): Boolean {
+        val isCardNumberValid = cardNumberView?.let { it.isValidLiveData.value == true } ?: true
+        val isCardholderNameValid =
+            cardHolderNameView?.let { it.isValidLiveData.value == true } ?: true
+        val isCardExpiryValid =
+            cardExpiryDateView?.let { it.isValidLiveData.value == true } ?: true
+        return isCardNumberValid &&
+                isCardholderNameValid &&
+                isCardExpiryValid &&
+                isCardCvvValid(isCvvMandatoryOnForm())
+    }
 
     private fun handleGenericError(): PSResult.Failure {
         val paysafeException = genericApiErrorException(psApiClient.getCorrelationId())
@@ -357,7 +381,7 @@ class PSCardFormController internal constructor(
 
             val tokenizeResult = tokenizationService.tokenize(
                 paymentHandleRequest = paymentHandleRequest,
-                cardRequest = getCardRequestData()
+                cardRequest = getCardRequestData(cardTokenizeOptions)
             )
 
             processTokenizeResult(tokenizeResult, paymentHandleRequest, paymentHandleRequestWithRenderType, activity)
@@ -664,7 +688,7 @@ class PSCardFormController internal constructor(
     private fun getContext() = cardCvvView?.context
         ?: cardHolderNameView?.context
         ?: cardExpiryDateView?.viewContext
-        ?: cardCvvView?.context
+        ?: cardNumberView?.context
         ?: throw noViewsInCardFormControllerException(
             PaysafeSDK.getPSApiClient().getCorrelationId()
         )
@@ -672,12 +696,7 @@ class PSCardFormController internal constructor(
     private tailrec fun Context.getActivity(): Activity? = this as? Activity
         ?: (this as? ContextWrapper)?.baseContext?.getActivity()
 
-    private fun areFieldsNotNull() = cardNumberView != null
-            && cardHolderNameView != null
-            && cardExpiryDateView != null
-            && cardCvvView != null
-
-    private fun getCardRequestData(): CardRequest {
+    private fun getCardRequestData(options: PSCardTokenizeOptions): CardRequest {
         var cardExpiration: CardExpiryRequest? = null
         if (cardExpiryDateView != null) {
             cardExpiration = CardExpiryRequest(
@@ -686,7 +705,7 @@ class PSCardFormController internal constructor(
             )
         }
 
-        val hostedFieldsErrors = hostedFieldsErrorsList()
+        val hostedFieldsErrors = hostedFieldsErrorsList(options)
         if (hostedFieldsErrors.isNotEmpty()) {
             val paysafeException = specifiedHostedFieldWithInvalidValueException(
                 *hostedFieldsErrors.toTypedArray(), correlationId = correlationId
@@ -696,15 +715,17 @@ class PSCardFormController internal constructor(
             throw paysafeException
         }
 
+        val cvvValue = cardCvvView?.data?.takeIf { it.isNotEmpty() }
+
         return CardRequest(
             cardNum = cardNumberView?.data,
             cardExpiry = cardExpiration,
             holderName = cardHolderNameView?.data,
-            cvv = cardCvvView?.data
+            cvv = cvvValue
         )
     }
 
-    private fun hostedFieldsErrorsList(): ArrayList<String> {
+    private fun hostedFieldsErrorsList(options: PSCardTokenizeOptions): ArrayList<String> {
         val fieldsErrors = arrayListOf<String>()
         if (cardNumberView != null && !cardNumberView!!.isValid()) {
             fieldsErrors.add("card number")
@@ -718,7 +739,7 @@ class PSCardFormController internal constructor(
                 fieldsErrors.add("expiry date")
             }
         }
-        if (cardCvvView != null && !cardCvvView!!.isValid()) {
+        if (!isCardCvvValid(isCvvMandatoryForTokenize(options))) {
             fieldsErrors.add("cvv")
         }
         return fieldsErrors
@@ -753,6 +774,35 @@ class PSCardFormController internal constructor(
             value
         else
             default
+
+    /**
+     * Whether CVV is mandatory for live form validation.
+     * Always mandatory when a card number field is present (new card); otherwise uses [requireCvv] config.
+     */
+    private fun isCvvMandatoryOnForm(): Boolean = requireCvv || cardNumberView != null
+
+    /**
+     * Whether CVV is mandatory for tokenize.
+     * Uses [isCvvMandatoryOnForm]; if the form allows omitting CVV, saved-card tokens must still be present.
+     */
+    private fun isCvvMandatoryForTokenize(options: PSCardTokenizeOptions): Boolean {
+        if (isCvvMandatoryOnForm()) return true
+        return options.singleUseCustomerToken.isNullOrBlank() ||
+                options.paymentHandleTokenFrom.isNullOrBlank()
+    }
+
+    /**
+     * Empty CVV is valid only when not mandatory; otherwise the field must pass validation.
+     * Missing CVV view is valid only when CVV is not mandatory.
+     */
+    private fun isCardCvvValid(cvvMandatory: Boolean): Boolean {
+        val cvvView = cardCvvView
+        return when {
+            cvvView == null -> !cvvMandatory
+            !cvvMandatory && cvvView.isEmpty() -> true
+            else -> cvvView.isValid()
+        }
+    }
 }
 
 

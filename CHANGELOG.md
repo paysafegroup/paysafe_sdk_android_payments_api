@@ -1,5 +1,15 @@
 # Change Log
 
+## [2.3.0] - 2026-10-21
+
+### Added
+
+- **Optional CVV for saved cards**: Empty CVV can be accepted for saved-card payments.
+  - Set once via `PSCardFormConfig.requireCvv = false` (default `true`)
+  - Applies to live form validation and tokenize when both `singleUseCustomerToken` and `paymentHandleTokenFrom` are present
+  - Empty CVV is valid when not required; partial CVV is still rejected; a filled valid CVV is sent in the request
+  - New card forms (card number field present) always require CVV
+
 ## [2.2.4] - 2026-06-23
 
 ### Fixed

@@ -34,7 +34,7 @@ fun SavedCardCvvScreen(
     onPlaceOrderClick: () -> Unit,
     onCancelClick: () -> Unit,
     isPlaceOrderEnabled: Boolean,
-    cvvView: PSCvvView,
+    cvvView: PSCvvView?,
 ) {
 
     val cardType = args.savedCardChosen.cardBrandType
@@ -74,19 +74,21 @@ fun SavedCardCvvScreen(
         Text(text = "Cardholder: $holderName", style = MaterialTheme.typography.bodyMedium)
         Text(text = "Expiry Date: $expiryDate", style = MaterialTheme.typography.bodyMedium)
 
-        Spacer(modifier = Modifier.height(24.dp))
+        if (cvvView != null) {
+            Spacer(modifier = Modifier.height(24.dp))
 
-        AndroidView(
-            factory = {
-                cvvView.apply {
-                    this.cardType = cardType
-                    id = View.generateViewId()
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 28.dp)
-        )
+            AndroidView(
+                factory = {
+                    cvvView.apply {
+                        this.cardType = cardType
+                        id = View.generateViewId()
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 28.dp)
+            )
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 

@@ -67,12 +67,16 @@ class FragmentSavedCardCvv : Fragment() {
         PSCardFormController.initialize(
             cardFormConfig = PSCardFormConfig(
                 currencyCode = "USD",
-                accountId = Consts.CARDS_ACCOUNT_ID
+                accountId = Consts.CARDS_ACCOUNT_ID,
+                requireCvv = false
             ),
             cardCvvView = binding.savedCardCvvField,
             callback = object : PSCallback<PSCardFormController> {
                 override fun onSuccess(value: PSCardFormController) {
                     cardController = value
+                    value.isSubmitEnabledLiveData.observe(viewLifecycleOwner) { isSubmitEnabled ->
+                        binding.savedCardCvvPlaceOrderButton.isEnabled = isSubmitEnabled
+                    }
                 }
 
                 override fun onFailure(exception: Exception) {
@@ -112,9 +116,6 @@ class FragmentSavedCardCvv : Fragment() {
         }
         binding.savedCardCvvCancelButton.setOnClickListener {
             navController.navigateUp()
-        }
-        binding.savedCardCvvField.isValidLiveData.observe(viewLifecycleOwner) { isSubmitEnabled ->
-            binding.savedCardCvvPlaceOrderButton.isEnabled = isSubmitEnabled
         }
     }
 

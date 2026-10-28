@@ -71,12 +71,15 @@ class FragmentSavedCardCvvCompose : Fragment() {
         savedInstanceState: Bundle?,
     ): View {
         val context = requireContext()
-        val cvvView = PSCvvView(context)
+        val cvvView = PSCvvView(context).apply {
+            cardType = args.savedCardChosen.cardBrandType
+        }
 
         PSCardFormController.initialize(
             cardFormConfig = PSCardFormConfig(
                 currencyCode = "USD",
-                accountId = Consts.CARDS_ACCOUNT_ID
+                accountId = Consts.CARDS_ACCOUNT_ID,
+                requireCvv = false
             ),
             cardCvvView = cvvView,
             callback = object : PSCallback<PSCardFormController> {
@@ -84,7 +87,7 @@ class FragmentSavedCardCvvCompose : Fragment() {
                     cardController = value
                     lifecycleScope.launch {
                         repeatOnLifecycle(Lifecycle.State.STARTED) {
-                            cvvView.isValidLiveData.observe(viewLifecycleOwner) { isEnabled ->
+                            value.isSubmitEnabledLiveData.observe(viewLifecycleOwner) { isEnabled ->
                                 isPlaceOrderEnabled.value = isEnabled
                             }
                         }

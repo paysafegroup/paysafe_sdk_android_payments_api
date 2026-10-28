@@ -109,6 +109,10 @@ class PSCardFormControllerTest {
         merchantRefNum = PaysafeSDK.getMerchantReferenceNumber(),
         accountId = accountId
     )
+    private val savedCardTokenizeOptions = psCardTokenizeOptions.copy(
+        singleUseCustomerToken = "customerToken",
+        paymentHandleTokenFrom = "paymentToken"
+    )
 
     @get:Rule
     var instantExecutorRule = InstantTaskExecutorRule()
@@ -613,7 +617,11 @@ class PSCardFormControllerTest {
             every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
             every { mockCardCvvView.placeholderString } returns ""
             every { mockCardCvvView.context } returns mockActivity
+            every { mockCardCvvView.isEmpty() } returns false
             every { mockCardCvvView.isValid() } returns true
+            every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+            every { mockCardCvvView.eventHandler } returns null
+            every { mockCardCvvView.eventHandler = any() } returns Unit
             every { mockCardCvvView.data } returns "123"
             justRun { mockCardCvvView.reset() }
             val psCardFormController = PSCardFormController(
@@ -650,7 +658,11 @@ class PSCardFormControllerTest {
             every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
             every { mockCardCvvView.placeholderString } returns ""
             every { mockCardCvvView.context } returns mockActivity
+            every { mockCardCvvView.isEmpty() } returns false
             every { mockCardCvvView.isValid() } returns true
+            every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+            every { mockCardCvvView.eventHandler } returns null
+            every { mockCardCvvView.eventHandler = any() } returns Unit
             every { mockCardCvvView.data } returns "123"
             justRun { mockCardCvvView.reset() }
             val psCardFormController = PSCardFormController(
@@ -710,7 +722,11 @@ class PSCardFormControllerTest {
             every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
             every { mockCardCvvView.placeholderString } returns ""
             every { mockCardCvvView.context } returns mockActivity
+            every { mockCardCvvView.isEmpty() } returns false
             every { mockCardCvvView.isValid() } returns true
+            every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+            every { mockCardCvvView.eventHandler } returns null
+            every { mockCardCvvView.eventHandler = any() } returns Unit
             every { mockCardCvvView.data } returns "123"
             justRun { mockCardCvvView.reset() }
             val psCardFormController = PSCardFormController(
@@ -785,6 +801,23 @@ class PSCardFormControllerTest {
     }
 
     @Test
+    fun `getContext returns context of cardNumberView when other views are null`() = runTest {
+        // Arrange
+        val testDispatcher = UnconfinedTestDispatcher()
+        Dispatchers.setMain(testDispatcher)
+        val psCardFormController = providePSCardFormController(testDispatcher)
+        psCardFormController.cardCvvView = null
+        psCardFormController.cardHolderNameView = null
+        psCardFormController.cardExpiryDateView = null
+
+        // Act
+        val context = callPrivateGetContext(psCardFormController)
+
+        // Assert
+        assertEquals(mockActivity, context)
+    }
+
+    @Test
     fun `getContext throws exception when all views are null`() = runTest {
         // Arrange
         val testDispatcher = UnconfinedTestDispatcher()
@@ -793,6 +826,7 @@ class PSCardFormControllerTest {
         psCardFormController.cardCvvView = null
         psCardFormController.cardHolderNameView = null
         psCardFormController.cardExpiryDateView = null
+        psCardFormController.cardNumberView = null
 
         // Act & Assert
         try {
@@ -824,8 +858,8 @@ class PSCardFormControllerTest {
     }
 
     @Test
-    fun `areAllFieldsValid returns false when views are null`() = runTest {
-        // Arrange
+    fun `areAllFieldsValid returns false when views are null and cvv is required`() = runTest {
+        // Arrange — missing CVV view is invalid when CVV is required
         val testDispatcher = UnconfinedTestDispatcher()
         Dispatchers.setMain(testDispatcher)
         val psCardFormController = providePSCardFormController(testDispatcher)
@@ -842,6 +876,528 @@ class PSCardFormControllerTest {
     }
 
     @Test
+    fun `areAllFieldsValid returns true when views are null and cvv is not required`() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher()
+        Dispatchers.setMain(testDispatcher)
+        val psCardFormController = PSCardFormController(
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient,
+            requireCvv = false
+        )
+
+        assertTrue(psCardFormController.areAllFieldsValid())
+    }
+
+    @Test
+    fun `areAllFieldsValid returns false for new card when requireCvv is false but cvv view is missing`() =
+        runTest {
+            // Arrange — new card form always requires CVV when card number is present
+            val testDispatcher = UnconfinedTestDispatcher()
+            Dispatchers.setMain(testDispatcher)
+            val mockCardNumberView = mockk<PSCardNumberView>()
+            val mockCardHolderNameView = mockk<PSCardholderNameView>()
+            val mockCardExpiryDateView = mockk<PSExpiryDateView>()
+
+            every { mockCardNumberView.isValidLiveData } returns MutableLiveData(true)
+            every { mockCardNumberView.cardTypeLiveData } returns MutableLiveData(PSCreditCardType.VISA)
+            every { mockCardNumberView.placeholderString } returns ""
+            every { mockCardNumberView.context } returns mockActivity
+
+            every { mockCardHolderNameView.isValidLiveData } returns MutableLiveData(true)
+            every { mockCardHolderNameView.placeholderString } returns ""
+            every { mockCardHolderNameView.context } returns mockActivity
+
+            every { mockCardExpiryDateView.isValidLiveData } returns MutableLiveData(true)
+            every { mockCardExpiryDateView.placeholderString } returns ""
+            every { mockCardExpiryDateView.viewContext } returns mockActivity
+
+            val psCardFormController = PSCardFormController(
+                cardNumberView = mockCardNumberView,
+                cardHolderNameView = mockCardHolderNameView,
+                cardExpiryDateView = mockCardExpiryDateView,
+                cardCvvView = null,
+                tokenizationService = mockPSTokenizationService,
+                mainDispatcher = testDispatcher,
+                ioDispatcher = testDispatcher,
+                psApiClient = mockPSApiClient,
+                requireCvv = false
+            )
+
+            assertFalse(psCardFormController.areAllFieldsValid())
+        }
+
+    @Test
+    fun `areAllFieldsValid treats empty cvv as valid when requireCvv is false`() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher()
+        Dispatchers.setMain(testDispatcher)
+        val mockCardCvvView = mockk<PSCvvView>()
+
+        every { mockCardCvvView.isEmpty() } returns true
+        every { mockCardCvvView.isValid() } returns false
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(false)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
+        every { mockCardCvvView.placeholderString } returns ""
+        every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+
+        val psCardFormController = PSCardFormController(
+            cardNumberView = null,
+            cardHolderNameView = null,
+            cardExpiryDateView = null,
+            cardCvvView = mockCardCvvView,
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient,
+            requireCvv = false
+        )
+
+        assertTrue(psCardFormController.areAllFieldsValid())
+    }
+
+    @Test
+    fun `areAllFieldsValid rejects partial cvv when requireCvv is false`() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher()
+        Dispatchers.setMain(testDispatcher)
+        val mockCardCvvView = mockk<PSCvvView>()
+
+        every { mockCardCvvView.isEmpty() } returns false
+        every { mockCardCvvView.isValid() } returns false
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(false)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
+        every { mockCardCvvView.placeholderString } returns ""
+        every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+
+        val psCardFormController = PSCardFormController(
+            cardNumberView = null,
+            cardHolderNameView = null,
+            cardExpiryDateView = null,
+            cardCvvView = mockCardCvvView,
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient,
+            requireCvv = false
+        )
+
+        assertFalse(psCardFormController.areAllFieldsValid())
+    }
+
+    @Test
+    fun `getCardRequestData returns null cvv for empty cvv when requireCvv is false`() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        val mockCardCvvView = mockk<PSCvvView>()
+
+        every { mockCardCvvView.isEmpty() } returns true
+        every { mockCardCvvView.isValid() } returns false
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(false)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
+        every { mockCardCvvView.data } returns ""
+        every { mockCardCvvView.placeholderString } returns ""
+        every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+
+        val psCardFormController = PSCardFormController(
+            cardNumberView = null,
+            cardHolderNameView = null,
+            cardExpiryDateView = null,
+            cardCvvView = mockCardCvvView,
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient,
+            requireCvv = false
+        )
+
+        val cardRequest = callPrivateGetCardRequestData(psCardFormController, savedCardTokenizeOptions)
+        val hostedFieldsErrors = callPrivateHostedFieldsErrorsList(psCardFormController, savedCardTokenizeOptions)
+
+        assertNull(cardRequest.cvv)
+        assertTrue(hostedFieldsErrors.isEmpty())
+    }
+
+    @Test
+    fun `getCardRequestData rejects partial cvv when requireCvv is false`() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        val mockCardCvvView = mockk<PSCvvView>()
+
+        every { mockCardCvvView.isEmpty() } returns false
+        every { mockCardCvvView.isValid() } returns false
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(false)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
+        every { mockCardCvvView.data } returns "12"
+        every { mockCardCvvView.placeholderString } returns ""
+        every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+
+        val psCardFormController = PSCardFormController(
+            cardNumberView = null,
+            cardHolderNameView = null,
+            cardExpiryDateView = null,
+            cardCvvView = mockCardCvvView,
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient,
+            requireCvv = false
+        )
+
+        val hostedFieldsErrors =
+            callPrivateHostedFieldsErrorsList(psCardFormController, savedCardTokenizeOptions)
+
+        assertTrue(hostedFieldsErrors.contains("cvv"))
+    }
+
+    @Test
+    fun `getCardRequestData sends filled cvv when requireCvv is false`() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        val mockCardCvvView = mockk<PSCvvView>()
+
+        every { mockCardCvvView.isEmpty() } returns false
+        every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
+        every { mockCardCvvView.data } returns "123"
+        every { mockCardCvvView.placeholderString } returns ""
+        every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+
+        val psCardFormController = PSCardFormController(
+            cardNumberView = null,
+            cardHolderNameView = null,
+            cardExpiryDateView = null,
+            cardCvvView = mockCardCvvView,
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient,
+            requireCvv = false
+        )
+
+        val cardRequest = callPrivateGetCardRequestData(psCardFormController, savedCardTokenizeOptions)
+
+        assertEquals("123", cardRequest.cvv)
+    }
+
+    @Test
+    fun `getCardRequestData still uses cvv for new card when requireCvv is false`() = runTest {
+        // Arrange — new card form ignores requireCvv=false and still sends CVV
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        val mockCardNumberView = mockk<PSCardNumberView>()
+        val mockCardHolderNameView = mockk<PSCardholderNameView>()
+        val mockCardExpiryDateView = mockk<PSExpiryDateView>()
+        val mockCardCvvView = mockk<PSCvvView>()
+
+        every { mockCardNumberView.isValid() } returns true
+        every { mockCardNumberView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardNumberView.data } returns "4111111111111111"
+        every { mockCardNumberView.cardTypeLiveData } returns MutableLiveData(PSCreditCardType.UNKNOWN)
+        every { mockCardNumberView.placeholderString } returns ""
+        every { mockCardNumberView.context } returns mockActivity
+
+        every { mockCardHolderNameView.isValid() } returns true
+        every { mockCardHolderNameView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardHolderNameView.data } returns "John Doe"
+        every { mockCardHolderNameView.placeholderString } returns ""
+        every { mockCardHolderNameView.context } returns mockActivity
+
+        every { mockCardExpiryDateView.monthData } returns "12"
+        every { mockCardExpiryDateView.yearData } returns "2030"
+        every { mockCardExpiryDateView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardExpiryDateView.placeholderString } returns ""
+        every { mockCardExpiryDateView.viewContext } returns mockActivity
+
+        every { mockCardCvvView.isEmpty() } returns false
+        every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
+        every { mockCardCvvView.data } returns "123"
+        every { mockCardCvvView.placeholderString } returns ""
+        every { mockCardCvvView.context } returns mockActivity
+
+        mockkObject(ExpiryDateChecks)
+        every { ExpiryDateChecks.validations(any()) } returns false
+
+        val psCardFormController = PSCardFormController(
+            cardNumberView = mockCardNumberView,
+            cardHolderNameView = mockCardHolderNameView,
+            cardExpiryDateView = mockCardExpiryDateView,
+            cardCvvView = mockCardCvvView,
+            tokenizationService = mockPSTokenizationService,
+            mainDispatcher = testDispatcher,
+            ioDispatcher = testDispatcher,
+            psApiClient = mockPSApiClient,
+            requireCvv = false
+        )
+
+        val cardRequest = callPrivateGetCardRequestData(psCardFormController)
+
+        assertEquals("123", cardRequest.cvv)
+    }
+
+    @Test
+    fun `tokenize allows empty cvv when requireCvv is false and saved card tokens are present`() =
+        runTest {
+            val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+            Dispatchers.setMain(testDispatcher)
+            val mockCardCvvView = mockk<PSCvvView>()
+            every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+            every { mockCardCvvView.placeholderString } returns ""
+            every { mockCardCvvView.context } returns mockActivity
+            every { mockCardCvvView.isEmpty() } returns true
+            every { mockCardCvvView.isValid() } returns false
+            every { mockCardCvvView.isValidLiveData } returns MutableLiveData(false)
+            every { mockCardCvvView.eventHandler } returns null
+            every { mockCardCvvView.eventHandler = any() } returns Unit
+            every { mockCardCvvView.data } returns ""
+            justRun { mockCardCvvView.reset() }
+
+            val psCardFormController = PSCardFormController(
+                cardCvvView = mockCardCvvView,
+                tokenizationService = mockPSTokenizationService,
+                mainDispatcher = testDispatcher,
+                ioDispatcher = testDispatcher,
+                psApiClient = mockPSApiClient,
+                requireCvv = false
+            )
+            PSCardFormController.supportedCardTypes = listOf(PSCreditCardType.VISA)
+
+            val paymentHandle = PaymentHandle(
+                id = "id",
+                paymentHandleToken = "token",
+                merchantRefNum = "refNum",
+                status = PaymentHandleTokenStatus.PAYABLE.status,
+                action = PaymentHandleAction.NONE.toString()
+            )
+            var capturedCardRequest: CardRequest? = null
+            coEvery {
+                mockPSTokenizationService.tokenize(any(), any())
+            } coAnswers {
+                capturedCardRequest = secondArg()
+                PSResult.Success(paymentHandle)
+            }
+            coEvery {
+                mockPSTokenizationService.refreshToken(paymentHandle)
+            } returns PSResult.Success(paymentHandle)
+
+            val result = psCardFormController.tokenize(
+                cardTokenizeOptions = PSCardTokenizeOptions(
+                    amount = 100,
+                    currencyCode = currencyCode,
+                    transactionType = TransactionType.PAYMENT,
+                    merchantRefNum = "refNum",
+                    accountId = accountId,
+                    singleUseCustomerToken = "customerToken",
+                    paymentHandleTokenFrom = "paymentToken"
+                )
+            )
+
+            assertTrue(result is PSResult.Success)
+            assertNull(capturedCardRequest?.cvv)
+        }
+
+    @Test
+    fun `tokenize sends filled cvv when requireCvv is false and saved card tokens are present`() =
+        runTest {
+            val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+            Dispatchers.setMain(testDispatcher)
+            val mockCardCvvView = mockk<PSCvvView>()
+            every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+            every { mockCardCvvView.placeholderString } returns ""
+            every { mockCardCvvView.context } returns mockActivity
+            every { mockCardCvvView.isEmpty() } returns false
+            every { mockCardCvvView.isValid() } returns true
+            every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+            every { mockCardCvvView.eventHandler } returns null
+            every { mockCardCvvView.eventHandler = any() } returns Unit
+            every { mockCardCvvView.data } returns "123"
+            justRun { mockCardCvvView.reset() }
+
+            val psCardFormController = PSCardFormController(
+                cardCvvView = mockCardCvvView,
+                tokenizationService = mockPSTokenizationService,
+                mainDispatcher = testDispatcher,
+                ioDispatcher = testDispatcher,
+                psApiClient = mockPSApiClient,
+                requireCvv = false
+            )
+            PSCardFormController.supportedCardTypes = listOf(PSCreditCardType.VISA)
+
+            val paymentHandle = PaymentHandle(
+                id = "id",
+                paymentHandleToken = "token",
+                merchantRefNum = "refNum",
+                status = PaymentHandleTokenStatus.PAYABLE.status,
+                action = PaymentHandleAction.NONE.toString()
+            )
+            var capturedCardRequest: CardRequest? = null
+            coEvery {
+                mockPSTokenizationService.tokenize(any(), any())
+            } coAnswers {
+                capturedCardRequest = secondArg()
+                PSResult.Success(paymentHandle)
+            }
+            coEvery {
+                mockPSTokenizationService.refreshToken(paymentHandle)
+            } returns PSResult.Success(paymentHandle)
+
+            val result = psCardFormController.tokenize(
+                cardTokenizeOptions = PSCardTokenizeOptions(
+                    amount = 100,
+                    currencyCode = currencyCode,
+                    transactionType = TransactionType.PAYMENT,
+                    merchantRefNum = "refNum",
+                    accountId = accountId,
+                    singleUseCustomerToken = "customerToken",
+                    paymentHandleTokenFrom = "paymentToken"
+                )
+            )
+
+            assertTrue(result is PSResult.Success)
+            assertEquals("123", capturedCardRequest?.cvv)
+        }
+
+    @Test
+    fun `tokenize rejects empty cvv when requireCvv is false but saved card tokens are missing`() =
+        runTest {
+            val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+            Dispatchers.setMain(testDispatcher)
+            val mockCardCvvView = mockk<PSCvvView>()
+            every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+            every { mockCardCvvView.placeholderString } returns ""
+            every { mockCardCvvView.context } returns mockActivity
+            every { mockCardCvvView.isEmpty() } returns true
+            every { mockCardCvvView.isValid() } returns false
+            every { mockCardCvvView.isValidLiveData } returns MutableLiveData(false)
+            every { mockCardCvvView.eventHandler } returns null
+            every { mockCardCvvView.eventHandler = any() } returns Unit
+            every { mockCardCvvView.data } returns ""
+            justRun { mockCardCvvView.reset() }
+
+            val psCardFormController = PSCardFormController(
+                cardCvvView = mockCardCvvView,
+                tokenizationService = mockPSTokenizationService,
+                mainDispatcher = testDispatcher,
+                ioDispatcher = testDispatcher,
+                psApiClient = mockPSApiClient,
+                requireCvv = false
+            )
+            PSCardFormController.supportedCardTypes = listOf(PSCreditCardType.VISA)
+
+            val result = psCardFormController.tokenize(
+                cardTokenizeOptions = psCardTokenizeOptions
+            )
+
+            assertTrue(result is PSResult.Failure)
+            val exception = (result as PSResult.Failure).exception as PaysafeException
+            assertEquals(9003, exception.code)
+            coVerify(exactly = 0) { mockPSTokenizationService.tokenize(any(), any()) }
+        }
+
+    @Test
+    fun `tokenize rejects empty cvv when requireCvv is false but saved card tokens are blank`() =
+        runTest {
+            val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+            Dispatchers.setMain(testDispatcher)
+            val mockCardCvvView = mockk<PSCvvView>()
+            every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+            every { mockCardCvvView.placeholderString } returns ""
+            every { mockCardCvvView.context } returns mockActivity
+            every { mockCardCvvView.isEmpty() } returns true
+            every { mockCardCvvView.isValid() } returns false
+            every { mockCardCvvView.isValidLiveData } returns MutableLiveData(false)
+            every { mockCardCvvView.eventHandler } returns null
+            every { mockCardCvvView.eventHandler = any() } returns Unit
+            every { mockCardCvvView.data } returns ""
+            justRun { mockCardCvvView.reset() }
+
+            val psCardFormController = PSCardFormController(
+                cardCvvView = mockCardCvvView,
+                tokenizationService = mockPSTokenizationService,
+                mainDispatcher = testDispatcher,
+                ioDispatcher = testDispatcher,
+                psApiClient = mockPSApiClient,
+                requireCvv = false
+            )
+            PSCardFormController.supportedCardTypes = listOf(PSCreditCardType.VISA)
+
+            val result = psCardFormController.tokenize(
+                cardTokenizeOptions = PSCardTokenizeOptions(
+                    amount = 100,
+                    currencyCode = currencyCode,
+                    transactionType = TransactionType.PAYMENT,
+                    merchantRefNum = "refNum",
+                    accountId = accountId,
+                    singleUseCustomerToken = "  ",
+                    paymentHandleTokenFrom = ""
+                )
+            )
+
+            assertTrue(result is PSResult.Failure)
+            val exception = (result as PSResult.Failure).exception as PaysafeException
+            assertEquals(9003, exception.code)
+            coVerify(exactly = 0) { mockPSTokenizationService.tokenize(any(), any()) }
+        }
+
+    @Test
+    fun `tokenize rejects partial cvv when requireCvv is false and saved card tokens are present`() =
+        runTest {
+            val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+            Dispatchers.setMain(testDispatcher)
+            val mockCardCvvView = mockk<PSCvvView>()
+            every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
+            every { mockCardCvvView.placeholderString } returns ""
+            every { mockCardCvvView.context } returns mockActivity
+            every { mockCardCvvView.isEmpty() } returns false
+            every { mockCardCvvView.isValid() } returns false
+            every { mockCardCvvView.isValidLiveData } returns MutableLiveData(false)
+            every { mockCardCvvView.eventHandler } returns null
+            every { mockCardCvvView.eventHandler = any() } returns Unit
+            every { mockCardCvvView.data } returns "12"
+            justRun { mockCardCvvView.reset() }
+
+            val psCardFormController = PSCardFormController(
+                cardCvvView = mockCardCvvView,
+                tokenizationService = mockPSTokenizationService,
+                mainDispatcher = testDispatcher,
+                ioDispatcher = testDispatcher,
+                psApiClient = mockPSApiClient,
+                requireCvv = false
+            )
+            PSCardFormController.supportedCardTypes = listOf(PSCreditCardType.VISA)
+
+            val result = psCardFormController.tokenize(
+                cardTokenizeOptions = PSCardTokenizeOptions(
+                    amount = 100,
+                    currencyCode = currencyCode,
+                    transactionType = TransactionType.PAYMENT,
+                    merchantRefNum = "refNum",
+                    accountId = accountId,
+                    singleUseCustomerToken = "customerToken",
+                    paymentHandleTokenFrom = "paymentToken"
+                )
+            )
+
+            assertTrue(result is PSResult.Failure)
+            val exception = (result as PSResult.Failure).exception as PaysafeException
+            assertEquals(9003, exception.code)
+            coVerify(exactly = 0) { mockPSTokenizationService.tokenize(any(), any()) }
+        }
+
+    @Test
     fun `tokenize returns Success when tokenizeResult is Success`() = runTest {
         // Arrange
         val testDispatcher = UnconfinedTestDispatcher(testScheduler)
@@ -850,7 +1406,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
         val psCardFormController = PSCardFormController(
@@ -895,7 +1455,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
         val psCardFormController = PSCardFormController(
@@ -940,7 +1504,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
         val psCardFormController = PSCardFormController(
@@ -985,7 +1553,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
         val psCardFormController = PSCardFormController(
@@ -1025,7 +1597,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
         val psCardFormController = PSCardFormController(
@@ -1066,7 +1642,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
         val psCardFormController = PSCardFormController(
@@ -1101,7 +1681,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
         val psCardFormController = PSCardFormController(
@@ -1148,7 +1732,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
         val psCardFormController = PSCardFormController(
@@ -1219,7 +1807,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
         val psCardFormController = PSCardFormController(
@@ -1282,7 +1874,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
         val psCardFormController = PSCardFormController(
@@ -1345,7 +1941,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
 
@@ -1416,7 +2016,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
 
@@ -1505,7 +2109,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
 
@@ -1577,7 +2185,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
 
@@ -1649,7 +2261,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
 
@@ -1729,7 +2345,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
         val psCardFormController = PSCardFormController(
@@ -1775,7 +2395,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
         val psCardFormController = PSCardFormController(
@@ -1827,7 +2451,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
         val psCardFormController = PSCardFormController(
@@ -1879,7 +2507,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
         val psCardFormController = PSCardFormController(
@@ -1925,7 +2557,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
         val psCardFormController = PSCardFormController(
@@ -1971,7 +2607,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
         val psCardFormController = PSCardFormController(
@@ -2023,7 +2663,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
         val psCardFormController = PSCardFormController(
@@ -2075,7 +2719,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
         val psCardFormController = PSCardFormController(
@@ -2127,7 +2775,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
         val psCardFormController = PSCardFormController(
@@ -2179,7 +2831,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
         val psCardFormController = PSCardFormController(
@@ -2231,7 +2887,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
         val psCardFormController = PSCardFormController(
@@ -2283,7 +2943,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
         val psCardFormController = PSCardFormController(
@@ -2356,6 +3020,8 @@ class PSCardFormControllerTest {
 
         every { mockCardCvvView.isValid() } returns true
         every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
@@ -2667,20 +3333,34 @@ class PSCardFormControllerTest {
         return method.callSuspend(controller, paymentHandle, paymentHandleRequest, activity, paysafe3DS, deviceFingerprint) as PSResult<String>
     }
 
-    private suspend fun callPrivateGetCardRequestData(controller: PSCardFormController): CardRequest {
+    private suspend fun callPrivateGetCardRequestData(
+        controller: PSCardFormController,
+        options: PSCardTokenizeOptions = psCardTokenizeOptions,
+    ): CardRequest {
         val method = PSCardFormController::class.declaredFunctions
-            .first { it.name == "getCardRequestData" }
+            .first {
+                it.name == "getCardRequestData" &&
+                        it.parameters.size == 2 &&
+                        it.parameters[1].type.classifier == PSCardTokenizeOptions::class
+            }
         method.isAccessible = true
 
-        return method.callSuspend(controller) as CardRequest
+        return method.callSuspend(controller, options) as CardRequest
     }
 
-    private suspend fun callPrivateHostedFieldsErrorsList(controller: PSCardFormController): List<String> {
+    private suspend fun callPrivateHostedFieldsErrorsList(
+        controller: PSCardFormController,
+        options: PSCardTokenizeOptions = psCardTokenizeOptions,
+    ): List<String> {
         val method = PSCardFormController::class.declaredFunctions
-            .first { it.name == "hostedFieldsErrorsList" }
+            .first {
+                it.name == "hostedFieldsErrorsList" &&
+                        it.parameters.size == 2 &&
+                        it.parameters[1].type.classifier == PSCardTokenizeOptions::class
+            }
         method.isAccessible = true
 
-        return method.callSuspend(controller) as List<String>
+        return method.callSuspend(controller, options) as List<String>
     }
     private fun callPrivateRefreshTokenFailureHandler(
         controller: PSCardFormController,
@@ -2936,7 +3616,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
 
@@ -3015,7 +3699,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
         val psCardFormController = PSCardFormController(
@@ -3079,7 +3767,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
         val psCardFormController = PSCardFormController(
@@ -3130,7 +3822,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
         val psCardFormController = PSCardFormController(
@@ -3191,7 +3887,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
         val psCardFormController = PSCardFormController(
@@ -3234,7 +3934,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
         val psCardFormController = PSCardFormController(
@@ -3278,7 +3982,11 @@ class PSCardFormControllerTest {
         every { mockCardCvvView.cardType } returns PSCreditCardType.VISA
         every { mockCardCvvView.placeholderString } returns ""
         every { mockCardCvvView.context } returns mockActivity
+        every { mockCardCvvView.isEmpty() } returns false
         every { mockCardCvvView.isValid() } returns true
+        every { mockCardCvvView.isValidLiveData } returns MutableLiveData(true)
+        every { mockCardCvvView.eventHandler } returns null
+        every { mockCardCvvView.eventHandler = any() } returns Unit
         every { mockCardCvvView.data } returns "123"
         justRun { mockCardCvvView.reset() }
         val psCardFormController = PSCardFormController(
