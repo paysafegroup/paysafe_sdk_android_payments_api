@@ -37,7 +37,7 @@ android {
     buildToolsVersion = ConfigData.buildToolsVersion
 
     defaultConfig {
-        buildConfigField("String", "APP_VERSION", "\"${ConfigData.versionName}\"")
+        buildConfigField("String", "APP_VERSION", "\"${getVersionFromProperties()}\"")
         minSdk = ConfigData.minSdkVersion
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")

@@ -6,10 +6,10 @@ import org.gradle.api.JavaVersion
 import java.io.File
 
 object ConfigData {
-    const val compileSdkVersion = 34 // Android 14
+    const val compileSdkVersion = 36 // Android 16
     const val minSdkVersion = 23 // Android 6
-    const val targetSdkVersion = 34 // Android 14
-    const val buildToolsVersion = "34.0.0"
+    const val targetSdkVersion = 36 // Android 16
+    const val buildToolsVersion = "36.0.0"
     const val minifyEnabled = false
     const val versionName = "1.0.0"
     const val versionCode = 15
@@ -58,7 +58,7 @@ object LintConfig {
 object Versions {
     // Top Level Gradle
     const val safeArgs = "2.6.0"
-    const val androidPlugins = "8.2.2"
+    const val androidPlugins = "8.9.1"
     const val jetbrainsKotlinPlugin = "1.8.22"
     const val jetbrainsSerializationPlugin = "1.6.10"
     const val dokka = "1.9.0"
@@ -106,7 +106,7 @@ object Versions {
     const val retrofit = "2.9.0"
 
     //Venmo
-    const val venmoDependency = "4.45.0"
+    const val venmoDependency = "5.33.0"
 
     // Testing
     const val jUnit = "4.13.2"
@@ -182,6 +182,7 @@ object Retrofit {
 
 object Venmo {
     val venmoPayments by lazy { "com.braintreepayments.api:venmo:${Versions.venmoDependency}" }
+    val dataCollector by lazy { "com.braintreepayments.api:data-collector:${Versions.venmoDependency}" }
 }
 
 object Testing {

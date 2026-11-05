@@ -8,7 +8,6 @@ import com.paysafe.android.core.data.entity.PSApiRequestType
 import com.paysafe.android.core.domain.service.PSHttpClient
 import kotlinx.serialization.encodeToString
 
-
 internal class BraintreeDetailsApi(httpClient: PSHttpClient) : PaysafeApi(httpClient) {
     suspend fun getBrainTreeDetails(request: BraintreeDetailsRequest) = makeRequest<BrainTreeDetailsResponse>(
         PSApiRequest(

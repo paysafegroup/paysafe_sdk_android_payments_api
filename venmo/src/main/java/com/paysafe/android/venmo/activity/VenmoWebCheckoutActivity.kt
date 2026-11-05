@@ -2,29 +2,36 @@ package com.paysafe.android.venmo.activity
 
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.contract.ActivityResultContract
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.IntentCompat
+import androidx.core.net.toUri
+import androidx.core.os.BundleCompat
+import androidx.core.os.bundleOf
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import com.braintreepayments.api.BraintreeClient
-import com.braintreepayments.api.VenmoAccountNonce
-import com.braintreepayments.api.VenmoClient
-import com.braintreepayments.api.VenmoListener
-import com.braintreepayments.api.VenmoPaymentMethodUsage
-import com.braintreepayments.api.VenmoRequest
+import com.braintreepayments.api.venmo.VenmoAccountNonce
+import com.braintreepayments.api.venmo.VenmoClient
+import com.braintreepayments.api.venmo.VenmoLauncher
+import com.braintreepayments.api.venmo.VenmoPaymentAuthRequest
+import com.braintreepayments.api.venmo.VenmoPaymentAuthResult
+import com.braintreepayments.api.venmo.VenmoPaymentMethodUsage
+import com.braintreepayments.api.venmo.VenmoPendingRequest
+import com.braintreepayments.api.venmo.VenmoRequest
+import com.braintreepayments.api.venmo.VenmoResult
 import com.paysafe.android.venmo.R
+import com.paysafe.android.venmo.VenmoRequestStorageManage
+import com.paysafe.android.venmo.domain.model.BraintreeDetailsConfiguration
+import com.paysafe.android.venmo.domain.model.VenmoWebCheckoutConfiguration
 
-internal class VenmoWebCheckoutActivity : AppCompatActivity(), VenmoListener {
+internal class VenmoWebCheckoutActivity : AppCompatActivity() {
 
     lateinit var venmoClient: VenmoClient
-    lateinit var braintreeClient: BraintreeClient
-    lateinit var sessionToken: String
-    lateinit var clientToken: String
-    lateinit var displayAmount: String
-    var profileId: String? = null
-    lateinit var customUrlScheme: String
+    lateinit var venmoLauncher: VenmoLauncher
+    lateinit var configuration: VenmoWebCheckoutConfiguration
+    private val venmoStorageManger: VenmoRequestStorageManage = VenmoRequestStorageManage()
 
     private val observer = object : DefaultLifecycleObserver {
         override fun onResume(owner: LifecycleOwner) {
@@ -36,110 +43,189 @@ internal class VenmoWebCheckoutActivity : AppCompatActivity(), VenmoListener {
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_venmo_web_checkout)
-        handleOnCreate()
-        launchVenmo()
+        handleOnCreate(savedInstanceState)
+
+        if (!::venmoLauncher.isInitialized) {
+            venmoLauncher = VenmoLauncher(this)
+        }
+        venmoClient = VenmoClient(
+            context = this,
+            authorization = configuration.clientToken,
+            appLinkReturnUrl = configuration.appLinkReturnUrl.toUri(),
+            deepLinkFallbackUrlScheme = configuration.customUrlScheme
+        )
+
+        restorePendingRequest()
     }
 
-    fun handleOnCreate() {
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+
+        outState.putParcelable(VenmoConstants.VENMO_CHECKOUT_CONFIGURATION_EXTRA, configuration)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        handleOnResume()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleOnNewIntent(intent)
+    }
+
+    internal fun handleOnResume() {
+        launchVenmo(intent)
+    }
+
+    internal fun handleOnNewIntent(intent: Intent) {
+        setIntent(intent)
+        launchVenmo(intent)
+    }
+
+    fun handleOnCreate(savedInstanceState: Bundle?) {
         onBackPressedDispatcher.addCallback(this, provideOnBackPressedCallback())
 
-        val sessionTokenIntent = intent?.getStringExtra(VenmoConstants.INTENT_EXTRA_SESSION_TOKEN)
-        val clientTokenIntent = intent?.getStringExtra(VenmoConstants.INTENT_EXTRA_CLIENT_TOKEN)
-        val customUrlSchemeIntent =
-            intent?.getStringExtra(VenmoConstants.INTENT_EXTRA_CUSTOM_URL_SCHEME)
-        val profileIdIntent = intent?.getStringExtra(VenmoConstants.INTENT_EXTRA_PROFILE_ID)
-        val displayAmountIntent = intent?.getStringExtra(VenmoConstants.INTENT_EXTRA_AMOUNT)
-
-        if (sessionTokenIntent == null || clientTokenIntent == null ||
-            customUrlSchemeIntent == null || displayAmountIntent == null
-        ) {
-            finishActivityWithResult(VenmoConstants.RESULT_FAILED, null)
-            return
-        }
-
-        sessionToken = sessionTokenIntent
-        clientToken = clientTokenIntent
-        customUrlScheme = customUrlSchemeIntent
-        profileId = profileIdIntent
-        displayAmount = displayAmountIntent
+        configuration = savedInstanceState?.let {
+            BundleCompat.getParcelable(
+                it, VenmoConstants.VENMO_CHECKOUT_CONFIGURATION_EXTRA,
+                VenmoWebCheckoutConfiguration::class.java
+            )
+        } ?: IntentCompat.getParcelableExtra(
+            intent, VenmoConstants.VENMO_CHECKOUT_CONFIGURATION_EXTRA,
+            VenmoWebCheckoutConfiguration::class.java
+        ) ?: throw IllegalStateException("Missing required configuration")
 
         lifecycle.addObserver(observer)
-    }
-
-    public override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
     }
 
     internal fun handleLifecycleObserverOnResume() {
         removeLifecycleObserver()
     }
 
-    fun launchVenmo() {
-        braintreeClient =
-            BraintreeClient(
-                context = this,
-                authorization = clientToken,
-                returnUrlScheme = customUrlScheme
+    private fun restorePendingRequest() {
+        val venmoRequestString = venmoStorageManger.fetch(this)
+        if (!venmoRequestString.isNullOrEmpty()) {
+            try {
+                venmoLauncher.restorePendingRequest(venmoRequestString)
+            } catch (_: Exception) {
+                venmoStorageManger.clear(this)
+            }
+        }
+    }
+
+    internal fun startPaymentAuth() {
+        val request = VenmoRequest(VenmoPaymentMethodUsage.MULTI_USE).apply {
+            collectCustomerBillingAddress = true
+            collectCustomerShippingAddress = true
+            profileId = this@VenmoWebCheckoutActivity.configuration.profileId
+            shouldVault = false
+            totalAmount = configuration.amount
+        }
+
+        venmoClient.createPaymentAuthRequest(this, request) { paymentAuthRequest ->
+            when (paymentAuthRequest) {
+                is VenmoPaymentAuthRequest.ReadyToLaunch -> handleReadyToLaunch(paymentAuthRequest)
+                is VenmoPaymentAuthRequest.Failure -> onVenmoFailure(paymentAuthRequest.error)
+            }
+        }
+    }
+
+    private fun handleReadyToLaunch(paymentAuthRequest: VenmoPaymentAuthRequest.ReadyToLaunch) {
+        when (val pendingRequest = venmoLauncher.launch(this, paymentAuthRequest)) {
+            is VenmoPendingRequest.Started ->
+                venmoStorageManger.store(this, pendingRequest.pendingRequestString)
+
+            is VenmoPendingRequest.Failure -> onVenmoFailure(pendingRequest.error)
+        }
+    }
+
+    internal fun launchVenmo(intent: Intent) {
+        if (!::venmoLauncher.isInitialized || !::venmoClient.isInitialized) {
+            return
+        }
+
+        venmoStorageManger.fetch(this)?.let {
+            handleStartedAuthRequest(it, intent)
+        } ?: startPaymentAuth()
+    }
+
+    private fun handleStartedAuthRequest(string: String, intent: Intent) {
+        when (
+            val paymentAuthResult = venmoLauncher.handleReturnToApp(
+                VenmoPendingRequest.Started(string),
+                intent
             )
-        venmoClient = VenmoClient(this, braintreeClient)
-        venmoClient.setListener(this)
+        ) {
+            is VenmoPaymentAuthResult.Success -> {
+                venmoStorageManger.clear(this)
+                completeVenmoFlow(paymentAuthResult)
+            }
 
-        val request = VenmoRequest(VenmoPaymentMethodUsage.MULTI_USE)
+            is VenmoPaymentAuthResult.NoResult -> {
+                venmoStorageManger.clear(this)
+                finishActivityWithResult(VenmoConstants.RESULT_CANCELED, null)
+            }
 
-        request.collectCustomerBillingAddress = true
-        request.collectCustomerShippingAddress = true
-        request.profileId = profileId
-        request.shouldVault = false
-        request.totalAmount = displayAmount
-
-        if (venmoClient.isVenmoAppSwitchAvailable(this)) {
-            venmoClient.tokenizeVenmoAccount(this, request)
-        } else if (!isAppInstalled(this)) {
-            finishActivityWithResult(VenmoConstants.RESULT_VENMO_APP_IS_NOT_INSTALLED, null)
-            venmoClient.showVenmoInGooglePlayStore(this)
-        } else {
-            venmoClient.tokenizeVenmoAccount(this, request)
+            is VenmoPaymentAuthResult.Failure -> {
+                venmoStorageManger.clear(this)
+                onVenmoFailure(paymentAuthResult.error)
+            }
         }
     }
 
-    override fun onVenmoSuccess(venmoAccountNonce: VenmoAccountNonce) {
+    private fun completeVenmoFlow(paymentAuthResult: VenmoPaymentAuthResult.Success) {
+        venmoClient.tokenize(paymentAuthResult) { result ->
+            when (result) {
+                is VenmoResult.Success -> onVenmoSuccess(result.nonce)
+                is VenmoResult.Failure -> onVenmoFailure(result.error)
+                is VenmoResult.Cancel -> finishActivityWithResult(
+                    VenmoConstants.RESULT_CANCELED,
+                    null
+                )
+            }
+        }
+    }
 
+    private fun onVenmoSuccess(venmoAccountNonce: VenmoAccountNonce) {
         val resultIntent = Intent().apply {
-            putExtra("VENMO_ACCOUNT_NONCE", venmoAccountNonce.string)
-            putExtra("JWT_SESSION_TOKEN", sessionToken)
-            putExtra("USER_NAME", venmoAccountNonce.username)
-            putExtra("FIRST_NAME", venmoAccountNonce.firstName)
-            putExtra("LAST_NAME", venmoAccountNonce.lastName)
-            putExtra("PHONE_NUMBER", venmoAccountNonce.phoneNumber)
-            putExtra("EMAIL", venmoAccountNonce.email)
-            putExtra("EXTERNAL_ID", venmoAccountNonce.externalId)
+            putExtra(
+                VenmoConstants.VENMO_DATA_EXTRA, BraintreeDetailsConfiguration(
+                    account = venmoAccountNonce.string,
+                    userName = venmoAccountNonce.username,
+                    firstName = venmoAccountNonce.firstName,
+                    lastName = venmoAccountNonce.lastName,
+                    phoneNumber = venmoAccountNonce.phoneNumber,
+                    email = venmoAccountNonce.email,
+                    externalId = venmoAccountNonce.externalId,
+                    sessionToken = configuration.sessionToken,
+                    deviceDataCorrelationId = configuration.deviceDataCorrelationId,
+                )
+            )
         }
-        setResult(VenmoConstants.RESULT_SUCCESS, resultIntent)
-        finish()
 
+        finishActivityWithResult(VenmoConstants.RESULT_SUCCESS, resultIntent)
     }
 
-    override fun onVenmoFailure(error: Exception) {
-
+    private fun onVenmoFailure(error: Exception) {
         val resultIntent = Intent().apply {
             putExtra("ERROR_MESSAGE", error.message)
         }
-        setResult(VenmoConstants.RESULT_FAILED, resultIntent)
+
         finishActivityWithResult(VenmoConstants.RESULT_FAILED, resultIntent)
-        finish()
     }
 
     fun removeLifecycleObserver() {
         lifecycle.removeObserver(this@VenmoWebCheckoutActivity.observer)
     }
 
-    private fun provideOnBackPressedCallback(): OnBackPressedCallback =
+    internal fun provideOnBackPressedCallback(): OnBackPressedCallback =
         object : OnBackPressedCallback(true) {
 
             override fun handleOnBackPressed() {
+                venmoStorageManger.clear(this@VenmoWebCheckoutActivity)
                 finishActivityWithResult(VenmoConstants.RESULT_FAILED, null)
             }
-
         }
 
     internal fun finishActivityWithResult(result: Int, intent: Intent?) {
@@ -147,16 +233,22 @@ internal class VenmoWebCheckoutActivity : AppCompatActivity(), VenmoListener {
         finish()
     }
 
-    fun isAppInstalled(context: Context): Boolean {
-        val packageManager = context.packageManager
-        return try {
-            packageManager.getPackageInfo(
-                VenmoConstants.VENMO_PACKAGE,
-                PackageManager.GET_ACTIVITIES
+    class Open :
+        ActivityResultContract<VenmoWebCheckoutConfiguration, VenmoWebCheckoutActivityResult>() {
+        override fun createIntent(
+            context: Context,
+            input: VenmoWebCheckoutConfiguration
+        ): Intent = Intent(context, VenmoWebCheckoutActivity::class.java)
+            .putExtras(
+                bundleOf(
+                    VenmoConstants.VENMO_CHECKOUT_CONFIGURATION_EXTRA to input
+                )
             )
-            true
-        } catch (e: PackageManager.NameNotFoundException) {
-            false
-        }
+
+        override fun parseResult(
+            resultCode: Int,
+            intent: Intent?
+        ): VenmoWebCheckoutActivityResult =
+            VenmoWebCheckoutActivityResultParser().parseResult(resultCode, intent)
     }
 }

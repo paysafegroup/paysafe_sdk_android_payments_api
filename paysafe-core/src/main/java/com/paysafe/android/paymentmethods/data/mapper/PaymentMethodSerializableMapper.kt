@@ -36,7 +36,8 @@ internal fun AccountConfigurationSerializable.toDomain() = AccountConfiguration(
     cardTypeConfig = cardTypeConfig?.toDomain(),
     isGooglePay = isGooglePay,
     googlePayConfig = googlePay?.toDomain(),
-    clientId = clientId
+    clientId = clientId,
+    isStcFlagEnabled = stcFlag,
 )
 
 internal fun GooglePaySerializable.toDomain() = GooglePayConfig(

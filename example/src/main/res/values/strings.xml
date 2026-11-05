@@ -5,6 +5,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">PaysafeAndroidSDK</string>
     <string name="sample_app">Sample App</string>
+    <string name="demo_app_host" translatable="false">paysafegroup.github.io</string>
 
     <string name="product_categories">Product Categories</string>
     <string name="lottery_tickets">Lottery Tickets</string>

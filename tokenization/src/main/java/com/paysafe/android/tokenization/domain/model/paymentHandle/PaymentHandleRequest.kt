@@ -54,6 +54,9 @@ data class PaymentHandleRequest(
     val simulatorType: SimulatorType = SimulatorType.EXTERNAL,
 
     /** List of return links information for payment. */
-    val returnLinks: List<PaymentHandleReturnLink>? = null
+    val returnLinks: List<PaymentHandleReturnLink>? = null,
 
-) : PSTokenizeOptions
+    /** Flag for enabling the new implementation of Venmo*/
+    val isMobileSdk: Boolean = false,
+
+    ) : PSTokenizeOptions

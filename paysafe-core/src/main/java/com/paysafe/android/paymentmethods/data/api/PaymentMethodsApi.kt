@@ -14,7 +14,7 @@ internal class PaymentMethodsApi(httpClient: PSHttpClient) : PaysafeApi(httpClie
     suspend fun getPaymentMethods(code: String) = makeRequest<PaymentMethodsResponse>(
         PSApiRequest(
             requestType = PSApiRequestType.GET,
-            path = "paymenthub/v1/paymentmethods",
+            path = "paymenthub/v1/configuration",
             queryParams = mapOf("currencyCode" to code)
         )
     )

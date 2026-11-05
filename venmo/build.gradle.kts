@@ -93,6 +93,7 @@ dependencies {
     api(project(":paysafe-core"))
     api(project(":tokenization"))
     implementation(Venmo.venmoPayments)
+    implementation(Venmo.dataCollector)
 
     implementation(AndroidBase.appCompat)
     implementation(AndroidBase.lifecycleRuntimeKtx)

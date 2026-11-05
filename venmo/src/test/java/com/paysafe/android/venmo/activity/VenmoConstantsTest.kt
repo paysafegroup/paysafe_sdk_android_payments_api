@@ -8,24 +8,16 @@ class VenmoConstantsTest {
     private val venmoServiceConstants = VenmoServiceConstants()
 
     @Test
-    fun `test INTENT_EXTRA_SESSION_TOKEN constant value`() {
-        Assert.assertEquals("SESSION_TOKEN", venmoServiceConstants.getIntentExtraSessionToken())
-    }
-
-
-    @Test
-    fun `test INTENT_EXTRA_CLIENT_TOKEN constant value`() {
-        Assert.assertEquals("CLIENT_TOKEN", venmoServiceConstants.getIntentExtraClientToken())
+    fun `test VENMO_CHECKOUT_CONFIGURATION_EXTRA constant value`() {
+        Assert.assertEquals(
+            "VENMO_CHECKOUT_CONFIGURATION_EXTRA",
+            VenmoConstants.VENMO_CHECKOUT_CONFIGURATION_EXTRA
+        )
     }
 
     @Test
-    fun `test INTENT_EXTRA_CUSTOM_URL_SCHEME constant value`() {
-        Assert.assertEquals("CUSTOM_URL_SCHEME", venmoServiceConstants.getIntentExtraCustomUrlSchemeToken())
-    }
-
-    @Test
-    fun `test INTENT_EXTRA_PROFILE_ID constant value`() {
-        Assert.assertEquals("PROFILE_ID", venmoServiceConstants.getIntentExtraProfileId())
+    fun `test VENMO_DATA_EXTRA constant value`() {
+        Assert.assertEquals("VENMO_DATA_EXTRA", VenmoConstants.VENMO_DATA_EXTRA)
     }
 
     @Test
@@ -36,5 +28,10 @@ class VenmoConstantsTest {
     @Test
     fun `test RESULT_FAILED constant value`() {
         Assert.assertEquals(1_001, venmoServiceConstants.getResultFailed())
+    }
+
+    @Test
+    fun `test RESULT_CANCELED constant value`() {
+        Assert.assertEquals(1_002, venmoServiceConstants.getResultCanceled())
     }
 }

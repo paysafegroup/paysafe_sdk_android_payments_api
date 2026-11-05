@@ -84,6 +84,8 @@ data class PaymentHandleRequestSerializable(
     val googlePay: GooglePayRequest? = null,
 
     @SerialName("venmo")
-    val venmo: VenmoRequestSerializable? = null
+    val venmo: VenmoRequestSerializable? = null,
 
+    @SerialName("mobileSdk")
+    val isMobileSdk: Boolean? = null,
 )

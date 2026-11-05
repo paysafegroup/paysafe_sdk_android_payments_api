@@ -15,8 +15,7 @@ internal class PaymentMethodsRepositoryImpl(
     private val paymentMethodsApi: PaymentMethodsApi
 ) : PaymentMethodsRepository {
     override suspend fun getPaymentMethodList(currencyCode: String): PSResult<List<PaymentMethod>> {
-        val response = paymentMethodsApi.getPaymentMethods(currencyCode)
-        val result = when (response) {
+        val result = when (val response = paymentMethodsApi.getPaymentMethods(currencyCode)) {
             is PSResult.Success -> {
                 try {
                     val supportedPaymentMethods =

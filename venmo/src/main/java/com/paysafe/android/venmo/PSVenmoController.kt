@@ -7,6 +7,7 @@ import androidx.lifecycle.LifecycleCoroutineScope
 import com.paysafe.android.brainTreeDetails.data.BrainTreeDetailsService
 import com.paysafe.android.brainTreeDetails.data.BrainTreeDetailsServiceImpl
 import com.paysafe.android.brainTreeDetails.domain.models.BraintreeDetailsRequest
+import com.paysafe.android.brainTreeDetails.domain.models.DeviceData
 import com.paysafe.android.core.data.entity.PSResult
 import com.paysafe.android.core.data.entity.value
 import com.paysafe.android.core.data.service.PSApiClient
@@ -21,11 +22,14 @@ import com.paysafe.android.paymentmethods.domain.model.PaymentMethodType
 import com.paysafe.android.tokenization.PSTokenizationService
 import com.paysafe.android.tokenization.domain.model.paymentHandle.PaymentHandle
 import com.paysafe.android.tokenization.domain.model.paymentHandle.PaymentHandleReturnLink
-import com.paysafe.android.tokenization.domain.model.paymentHandle.PaymentHandleTokenStatus
 import com.paysafe.android.tokenization.domain.model.paymentHandle.ReturnLinkRelation
+import com.paysafe.android.venmo.data.BraintreeDeviceDataCollector
+import com.paysafe.android.venmo.data.DeviceDataCollector
+import com.paysafe.android.venmo.domain.mapper.VenmoCheckoutRouteMapper
 import com.paysafe.android.venmo.domain.mapper.toPaymentHandleRequest
 import com.paysafe.android.venmo.domain.model.PSVenmoConfig
 import com.paysafe.android.venmo.domain.model.PSVenmoTokenizeOptions
+import com.paysafe.android.venmo.domain.model.VenmoCheckoutRoute
 import com.paysafe.android.venmo.exception.amountShouldBePositiveException
 import com.paysafe.android.venmo.exception.currencyCodeInvalidIsoException
 import com.paysafe.android.venmo.exception.errorName
@@ -34,7 +38,6 @@ import com.paysafe.android.venmo.exception.improperlyCreatedMerchantAccountConfi
 import com.paysafe.android.venmo.exception.invalidAccountIdForPaymentMethodException
 import com.paysafe.android.venmo.exception.paymentHandleStatusExpiredOrFailedException
 import com.paysafe.android.venmo.exception.tokenizationAlreadyInProgressException
-import com.paysafe.android.venmo.exception.venmoAppIsNotInstalledFailedException
 import com.paysafe.android.venmo.exception.venmoFailedAuthorizationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -46,13 +49,15 @@ internal abstract class PSVenmoController internal constructor(
     lifecycleScope: LifecycleCoroutineScope,
     private val psApiClient: PSApiClient,
     private val tokenizationService: PSTokenizationService,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
 
     internal val lifecycleScopeWeakRef: WeakReference<LifecycleCoroutineScope> = WeakReference(lifecycleScope)
     internal var tokenizeCallback: PSVenmoTokenizeCallback? = null
     internal var paymentHandle: PaymentHandle? = null
     internal var tokenizationAlreadyInProgress = false
+    internal var deviceDataCollector: DeviceDataCollector = BraintreeDeviceDataCollector()
+    internal var venmoCheckoutRouteMapper: VenmoCheckoutRouteMapper = VenmoCheckoutRouteMapper()
 
     companion object {
         suspend fun initialize(
@@ -82,7 +87,7 @@ internal abstract class PSVenmoController internal constructor(
                 currencyCode = currencyCode,
                 accountId = config.accountId,
                 paymentMethodService = paymentMethodService,
-                psApiClient = psApiClient
+                psApiClient = psApiClient,
             )
 
             return when (validatePaymentMethodsResult) {
@@ -144,15 +149,6 @@ internal abstract class PSVenmoController internal constructor(
                 PSResult.Failure(paysafeException)
             }
         }
-    }
-
-    internal fun onVenmoAppNotExist() {
-        LocalLog.d("PSVenmoController", "onVenmoIsNotInstalledFailure")
-        val paysafeException =
-            venmoAppIsNotInstalledFailedException()
-        psApiClient.logErrorEvent(paysafeException.errorName(), paysafeException)
-        tokenizationAlreadyInProgress = false
-        tokenizeCallback?.onFailure(paysafeException)
     }
 
     internal fun onVenmoFailure(request: BraintreeDetailsRequest) {
@@ -311,6 +307,7 @@ internal abstract class PSVenmoController internal constructor(
                         context,
                         venmoTokenizeOptions.venmoRequest?.profileId,
                         venmoTokenizeOptions.amount,
+                        venmoTokenizeOptions.appLinkReturnUrl,
                         venmoTokenizeOptions.customUrlScheme,
                         result
                     )
@@ -320,12 +317,23 @@ internal abstract class PSVenmoController internal constructor(
     }
 
     //Checkout process implementation needed
-    abstract fun startVenmoCheckout(context: Context, orderId: String, sessionToken: String, clientToken: String, profileId: String?, amount: Int, customUrlScheme: String?)
+    abstract fun startVenmoCheckout(
+        context: Context,
+        orderId: String,
+        sessionToken: String,
+        clientToken: String,
+        profileId: String?,
+        amount: Int,
+        appLinkReturnUrl: String,
+        customUrlScheme: String?,
+        clientMetadataId: String?
+    )
 
     internal fun handleTokenizeResultSuccess(
         context: Context,
         profileId: String?,
         amount: Int,
+        appLinkReturnUrl: String,
         customUrlScheme:String?,
         result: PSResult.Success<PaymentHandle>
     ) {
@@ -339,47 +347,135 @@ internal abstract class PSVenmoController internal constructor(
             return
         }
 
-        when (paymentHandle?.status) {
-            PaymentHandleTokenStatus.PAYABLE.status -> {
-                tokenizationAlreadyInProgress = false
-                tokenizeCallback?.onSuccess(paymentHandle?.paymentHandleToken ?: "")
-                return
-            }
-
-            PaymentHandleTokenStatus.COMPLETED.status,
-            PaymentHandleTokenStatus.INITIATED.status,
-            PaymentHandleTokenStatus.PROCESSING.status -> {
-                tokenizationAlreadyInProgress = false
-            }
-
-            PaymentHandleTokenStatus.FAILED.status,
-            PaymentHandleTokenStatus.EXPIRED.status -> {
-                tokenizationAlreadyInProgress = false
-                val paysafeException =
-                    paymentHandleStatusExpiredOrFailedException(
-                        status = paymentHandle?.status ?: "",
-                        correlationId = psApiClient.getCorrelationId()
-                    )
-                psApiClient.logErrorEvent(paysafeException.errorName(), paysafeException)
-                tokenizeCallback?.onFailure(paysafeException)
-                return
-            }
+        val route = paymentHandle?.gatewayResponse.run {
+            venmoCheckoutRouteMapper(
+                status = paymentHandle?.status,
+                action = paymentHandle?.action,
+                brainTreeCustomerId = this?.brainTreeCustomerId,
+                clientToken = this?.clientToken,
+                sessionToken = this?.sessionToken,
+                clientMetadataId = this?.clientMetadataId,
+            )
         }
 
-        val orderId = paymentHandle?.id ?:""
-        val sessionToken = paymentHandle?.gatewayResponse?.sessionToken ?: ""
-        val clientToken = paymentHandle?.gatewayResponse?.clientToken ?: ""
-        if (orderId.isEmpty()) {
-            val paysafeException = genericApiErrorException(psApiClient.getCorrelationId())
-            psApiClient.logErrorEvent(paysafeException.errorName(), paysafeException)
-            tokenizationAlreadyInProgress = false
-            tokenizeCallback?.onFailure(paysafeException)
+        when (route) {
+            VenmoCheckoutRoute.Payable -> returnPaymentHandleToken()
+            is VenmoCheckoutRoute.Failed -> failForTerminalStatus(route.status)
+            VenmoCheckoutRoute.NoVenmoCheckout -> {
+                if (paymentHandle?.id.isNullOrEmpty()) {
+                    failWithGenericError()
+                } else {
+                    returnPaymentHandleToken()
+                }
+            }
+
+            is VenmoCheckoutRoute.Recurring -> route.handleExistingUser(
+                paymentHandle = paymentHandle,
+                context = context
+            )
+
+            is VenmoCheckoutRoute.FirstTime -> route.handleNewUser(
+                paymentHandle = paymentHandle,
+                context = context,
+                profileId = profileId,
+                amount = amount,
+                appLinkReturnUrl = appLinkReturnUrl,
+                customUrlScheme = customUrlScheme,
+            )
+        }
+    }
+
+    private fun VenmoCheckoutRoute.FirstTime.handleNewUser(
+        paymentHandle: PaymentHandle?,
+        context: Context,
+        profileId: String?,
+        amount: Int,
+        appLinkReturnUrl: String,
+        customUrlScheme: String?,
+    ) {
+        val orderId = paymentHandle?.id
+        if (orderId.isNullOrEmpty()) {
+            failWithGenericError()
             return
         }
 
-        // Checkout process implementation needed
         tokenizationAlreadyInProgress = false
-        startVenmoCheckout(context, orderId, sessionToken, clientToken, profileId, amount, customUrlScheme)
+        startVenmoCheckout(
+            context,
+            orderId,
+            sessionToken,
+            clientToken,
+            profileId,
+            amount,
+            appLinkReturnUrl,
+            customUrlScheme,
+            clientMetadataId,
+        )
+    }
+
+    private fun VenmoCheckoutRoute.Recurring.handleExistingUser(
+        paymentHandle: PaymentHandle?,
+        context: Context,
+    ) {
+        if (paymentHandle?.id.isNullOrEmpty()) {
+            failWithGenericError()
+            return
+        }
+        collectDeviceData(context, clientToken, clientMetadataId) { deviceData ->
+            onVenmoListenerSuccess(
+                BraintreeDetailsRequest(
+                    paymentMethodJwtToken = sessionToken,
+                    paymentMethodDeviceData = deviceData?.let { DeviceData(correlationId = it) }
+                )
+            )
+        }
+    }
+
+    internal fun collectDeviceData(
+        context: Context,
+        clientToken: String,
+        clientMetadataId: String?,
+        onCollected: (String?) -> Unit
+    ) {
+        deviceDataCollector.collect(
+            context = context,
+            authorization = clientToken,
+            clientMetadataId = clientMetadataId
+        ) { result ->
+            result.onFailure { error ->
+                LocalLog.e("PSVenmoController", "Device data collection failed: ${error.message}")
+                psApiClient.logErrorEvent(
+                    error.message.orEmpty(),
+                    PaysafeException(
+                        displayMessage = error.stackTraceToString(),
+                        correlationId = psApiClient.getCorrelationId()
+                    )
+                )
+            }
+            onCollected(result.getOrNull()?.takeIf { it.isNotBlank() })
+        }
+    }
+
+    private fun returnPaymentHandleToken() {
+        tokenizationAlreadyInProgress = false
+        tokenizeCallback?.onSuccess(paymentHandle?.paymentHandleToken ?: "")
+    }
+
+    private fun failForTerminalStatus(status: String) {
+        tokenizationAlreadyInProgress = false
+        val paysafeException = paymentHandleStatusExpiredOrFailedException(
+            status = status,
+            correlationId = psApiClient.getCorrelationId()
+        )
+        psApiClient.logErrorEvent(paysafeException.errorName(), paysafeException)
+        tokenizeCallback?.onFailure(paysafeException)
+    }
+
+    private fun failWithGenericError() {
+        val paysafeException = genericApiErrorException(psApiClient.getCorrelationId())
+        psApiClient.logErrorEvent(paysafeException.errorName(), paysafeException)
+        tokenizationAlreadyInProgress = false
+        tokenizeCallback?.onFailure(paysafeException)
     }
 
     internal fun handleTokenizeResultFailure(result: PSResult.Failure) {

@@ -21,6 +21,8 @@ internal data class AccountConfigurationSerializable(
     val googlePay: GooglePaySerializable? = null,
 
     @SerialName("clientId")
-    val clientId: String? = null
+    val clientId: String? = null,
 
+    @SerialName("stcFlag")
+    val stcFlag: Boolean? = null,
 )

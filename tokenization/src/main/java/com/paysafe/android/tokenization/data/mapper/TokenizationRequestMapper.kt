@@ -444,5 +444,6 @@ internal fun PaymentHandleRequest.toData(cardRequest: CardRequest? = null) =
         singleUseCustomerToken = singleUseCustomerToken,
         paymentHandleTokenFrom = paymentHandleTokenFrom,
         googlePay = googlePayPaymentToken?.let { GooglePayRequest(it.toData()) },
-        venmo = venmoRequest?.toData()
+        venmo = venmoRequest?.toData(),
+        isMobileSdk = isMobileSdk
     )

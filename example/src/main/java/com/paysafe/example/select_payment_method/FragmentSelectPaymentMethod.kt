@@ -39,6 +39,7 @@ import com.paysafe.android.venmo.PSVenmoContext
 import com.paysafe.android.venmo.PSVenmoTokenizeCallback
 import com.paysafe.android.venmo.domain.model.PSVenmoConfig
 import com.paysafe.android.venmo.domain.model.PSVenmoTokenizeOptions
+import com.paysafe.example.BuildConfig
 import com.paysafe.example.R
 import com.paysafe.example.databinding.FragmentSelectPaymentMethodBinding
 import com.paysafe.example.successful.SuccessDisplay
@@ -287,9 +288,10 @@ class FragmentSelectPaymentMethod : Fragment() {
             accountId = Consts.VENMO_ACCOUNT_ID,
             merchantDescriptor = provideMerchantDescriptor(),
             shippingDetails = provideShippingDetails(),
-            customUrlScheme = "customScheme",
+            customUrlScheme = "${BuildConfig.APPLICATION_ID}.braintree",
+            appLinkReturnUrl = "https://${getString(R.string.demo_app_host)}/braintree-payments",
             venmoRequest = VenmoRequest(
-                consumerId = "consumerrr@mail.com",
+                consumerId = "consumer@mail.com",
                 merchantAccountId = "merch-acc-id",
                 profileId = "profile-di"
             )

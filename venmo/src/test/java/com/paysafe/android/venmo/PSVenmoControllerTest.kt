@@ -5,11 +5,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.lifecycleScope
-import com.braintreepayments.api.BraintreeClient
-import com.braintreepayments.api.VenmoClient
 import com.paysafe.android.PaysafeSDK
 import com.paysafe.android.brainTreeDetails.data.BrainTreeDetailsService
+import com.paysafe.android.brainTreeDetails.data.BrainTreeDetailsServiceImpl
 import com.paysafe.android.brainTreeDetails.data.entity.BrainTreeDetailsResponse
+import com.paysafe.android.brainTreeDetails.domain.models.BraintreeDetailsRequest
 import com.paysafe.android.core.data.entity.PSResult
 import com.paysafe.android.core.data.service.PSApiClient
 import com.paysafe.android.paymentmethods.PaymentMethodsServiceImpl
@@ -62,20 +62,28 @@ import com.paysafe.android.tokenization.domain.model.paymentHandle.profile.Profi
 import com.paysafe.android.tokenization.domain.model.paymentHandle.venmo.VenmoRequest
 import com.paysafe.android.venmo.domain.model.PSVenmoConfig
 import com.paysafe.android.venmo.domain.model.PSVenmoTokenizeOptions
+import com.paysafe.android.venmo.data.DeviceDataCollector
 import com.paysafe.android.venmo.exception.amountShouldBePositiveException
 import com.paysafe.android.venmo.exception.currencyCodeInvalidIsoException
+import com.paysafe.android.venmo.exception.errorName
 import com.paysafe.android.venmo.exception.genericApiErrorException
 import com.paysafe.android.venmo.exception.improperlyCreatedMerchantAccountConfigException
 import com.paysafe.android.venmo.exception.invalidAccountIdForPaymentMethodException
+import com.paysafe.android.venmo.exception.paymentHandleStatusExpiredOrFailedException
 import com.paysafe.android.venmo.exception.tokenizationAlreadyInProgressException
+import com.paysafe.android.venmo.exception.venmoFailedAuthorizationException
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
+import io.mockk.mockkConstructor
 import io.mockk.mockkObject
+import io.mockk.spyk
 import io.mockk.unmockkAll
 import io.mockk.verify
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -115,6 +123,7 @@ class PSVenmoControllerTest {
             merchantAccountId = "merchantAccountId",
             profileId = "profileId"
         ),
+        appLinkReturnUrl = "https://merchant.example.com",
         customUrlScheme = "customUrlScheme"
     )
 
@@ -123,8 +132,6 @@ class PSVenmoControllerTest {
     private lateinit var mockLifecycleScope: LifecycleCoroutineScope
     private lateinit var mockActivityResultCaller: ActivityResultCaller
     private lateinit var mockPSTokenizationService: PSTokenizationService
-    private lateinit var mockVenmoClient: VenmoClient
-    private lateinit var mockBraintreeClient: BraintreeClient
     private lateinit var mockPSVenmoTokenizeCallback: PSVenmoTokenizeCallback
     private lateinit var mockBrainTreeDetailsService: BrainTreeDetailsService
 
@@ -142,8 +149,6 @@ class PSVenmoControllerTest {
         mockActivity = Robolectric.buildActivity(AppCompatActivity::class.java).create().get()
         mockLifecycleScope = mockk<LifecycleCoroutineScope>(relaxed = true)
         mockActivityResultCaller = mockk<ActivityResultCaller>(relaxed = true)
-        mockVenmoClient = mockk(relaxed = true)
-        mockBraintreeClient = mockk(relaxed = true)
         mockBrainTreeDetailsService = mockk<BrainTreeDetailsService>()
 
         mockPSTokenizationService = mockk<PSTokenization>()
@@ -377,6 +382,57 @@ class PSVenmoControllerTest {
         }
 
     @Test
+    fun `IF validatePaymentMethods returns no payment methods THEN validatePaymentMethods RETURNS merchant config failure`() =
+        runTest {
+            val mockPaymentMethodsService = mockk<PaymentMethodsServiceImpl>()
+            coEvery {
+                mockPaymentMethodsService.getPaymentMethods(currencyCodeInput)
+            } returns PSResult.Success(null)
+
+            val result = PSVenmoController.validatePaymentMethods(
+                currencyCode = currencyCodeInput,
+                accountId = accountIdInput,
+                paymentMethodService = mockPaymentMethodsService,
+                psApiClient = mockPSApiClient
+            )
+
+            Assert.assertEquals(
+                improperlyCreatedMerchantAccountConfigException(correlationId),
+                (result as PSResult.Failure).exception
+            )
+        }
+
+    @Test
+    fun `IF validatePaymentMethods matches Venmo for another currency THEN validatePaymentMethods RETURNS merchant config failure`() =
+        runTest {
+            val mockPaymentMethodsService = mockk<PaymentMethodsServiceImpl>()
+            coEvery {
+                mockPaymentMethodsService.getPaymentMethods(currencyCodeInput)
+            } returns PSResult.Success(
+                listOf(
+                    PaymentMethod(
+                        paymentMethod = PaymentMethodType.VENMO,
+                        accountId = accountIdInput,
+                        currencyCode = "EUR",
+                        accountConfiguration = AccountConfiguration(clientId = clientIdInput)
+                    )
+                )
+            )
+
+            val result = PSVenmoController.validatePaymentMethods(
+                currencyCode = currencyCodeInput,
+                accountId = accountIdInput,
+                paymentMethodService = mockPaymentMethodsService,
+                psApiClient = mockPSApiClient
+            )
+
+            Assert.assertEquals(
+                improperlyCreatedMerchantAccountConfigException(correlationId),
+                (result as PSResult.Failure).exception
+            )
+        }
+
+    @Test
     fun `IF tokenize and tokenizationAlreadyInProgress THEN tokenize RETURNS via callback on Failure with tokenizationAlreadyInProgressException`() =
         runTest {
             // Arrange
@@ -495,8 +551,13 @@ class PSVenmoControllerTest {
             val expectedPaymentHandle = PaymentHandle(
                 merchantRefNum = "",
                 paymentHandleToken = "",
-                status = "",
-                action = "NONE"
+                status = "PROCESSING",
+                id = null,
+                action = "NONE",
+                gatewayResponse = GatewayResponseSerializable(
+                    sessionToken = "session-token",
+                    clientToken = "client-token"
+                )
             )
             coEvery {
                 mockPSTokenizationService.tokenize(any())
@@ -527,6 +588,7 @@ class PSVenmoControllerTest {
                 context = mockActivity,
                 profileId = "profile-id",
                 amount = 1000,
+                appLinkReturnUrl = "https://merchant.example.com",
                 customUrlScheme = "",
                 result = PSResult.Success(null)
             )
@@ -547,6 +609,7 @@ class PSVenmoControllerTest {
                 context = mockActivity,
                 profileId = "profile-id",
                 amount = 1000,
+                appLinkReturnUrl = "https://merchant.example.com",
                 customUrlScheme = "",
                 result = PSResult.Success(
                     PaymentHandle(
@@ -575,6 +638,7 @@ class PSVenmoControllerTest {
                 context = mockActivity,
                 profileId = "profile-id",
                 amount = 1000,
+                appLinkReturnUrl = "https://merchant.example.com",
                 customUrlScheme = "",
                 result = PSResult.Success(
                     PaymentHandle(
@@ -602,6 +666,7 @@ class PSVenmoControllerTest {
                 context = mockActivity,
                 profileId = "profile-id",
                 amount = 1000,
+                appLinkReturnUrl = "https://merchant.example.com",
                 customUrlScheme = "",
                 result = PSResult.Success(
                     PaymentHandle(
@@ -629,6 +694,7 @@ class PSVenmoControllerTest {
                 context = mockActivity,
                 profileId = null,
                 amount = 1000,
+                appLinkReturnUrl = "https://merchant.example.com",
                 customUrlScheme = "",
                 result = PSResult.Success(
                     PaymentHandle(
@@ -657,6 +723,7 @@ class PSVenmoControllerTest {
                 context = mockActivity,
                 profileId = "profile-id",
                 amount = 1000,
+                appLinkReturnUrl = "https://merchant.example.com",
                 customUrlScheme = "",
                 result = PSResult.Success(
                     PaymentHandle(
@@ -687,6 +754,7 @@ class PSVenmoControllerTest {
                 context = mockActivity,
                 profileId = null,
                 amount = 1000,
+                appLinkReturnUrl = "https://merchant.example.com",
                 customUrlScheme = "",
                 result = PSResult.Success(
                     PaymentHandle(
@@ -715,6 +783,7 @@ class PSVenmoControllerTest {
                 context = mockActivity,
                 profileId = "profile-id",
                 amount = 1000,
+                appLinkReturnUrl = "https://merchant.example.com",
                 customUrlScheme = "",
                 result = PSResult.Success(
                     PaymentHandle(
@@ -746,6 +815,389 @@ class PSVenmoControllerTest {
             Assert.assertNull(psVenmoController.tokenizeCallback)
             Assert.assertFalse(psVenmoController.tokenizationAlreadyInProgress)
         }
+
+    @Test
+    fun `IF handleTokenizeResultFailure THEN callback receives the tokenize error and authorization failure`() =
+        runTest {
+            val psVenmoController = providePSVenmoNativeController()
+            val tokenizeException = Exception("tokenize failed")
+            psVenmoController.tokenizeCallback = mockPSVenmoTokenizeCallback
+            psVenmoController.tokenizationAlreadyInProgress = true
+            psVenmoController.lifecycleScopeWeakRef.clear()
+
+            psVenmoController.handleTokenizeResultFailure(PSResult.Failure(tokenizeException))
+
+            verify { mockPSVenmoTokenizeCallback.onFailure(tokenizeException) }
+            verify {
+                mockPSVenmoTokenizeCallback.onFailure(
+                    venmoFailedAuthorizationException(correlationId)
+                )
+            }
+            Assert.assertFalse(psVenmoController.tokenizationAlreadyInProgress)
+        }
+
+    @Test
+    fun `IF payment handle status is FAILED THEN callback receives the terminal status error`() {
+        val psVenmoController = providePSVenmoNativeController()
+        psVenmoController.tokenizeCallback = mockPSVenmoTokenizeCallback
+        psVenmoController.tokenizationAlreadyInProgress = true
+
+        psVenmoController.handleTokenizeResultSuccess(
+            context = mockActivity,
+            profileId = "profile-id",
+            amount = 1000,
+            appLinkReturnUrl = "https://merchant.example.com",
+            customUrlScheme = "customUrlScheme",
+            result = PSResult.Success(checkoutPaymentHandle(status = "FAILED"))
+        )
+
+        verify {
+            mockPSVenmoTokenizeCallback.onFailure(
+                paymentHandleStatusExpiredOrFailedException("FAILED", correlationId)
+            )
+        }
+        Assert.assertFalse(psVenmoController.tokenizationAlreadyInProgress)
+    }
+
+    @Test
+    fun `IF checkout has no order id THEN callback receives a generic error`() {
+        val psVenmoController = providePSVenmoNativeController()
+        psVenmoController.tokenizeCallback = mockPSVenmoTokenizeCallback
+        psVenmoController.deviceDataCollector = DeviceDataCollector { _, _, _, _ ->
+            Assert.fail("Device data should not be collected without an order id")
+        }
+
+        psVenmoController.handleTokenizeResultSuccess(
+            context = mockActivity,
+            profileId = "profile-id",
+            amount = 1000,
+            appLinkReturnUrl = "https://merchant.example.com",
+            customUrlScheme = "customUrlScheme",
+            result = PSResult.Success(checkoutPaymentHandle(id = ""))
+        )
+
+        verify {
+            mockPSVenmoTokenizeCallback.onFailure(genericApiErrorException(correlationId))
+        }
+        verify(exactly = 0) { psVenmoController.activityResultLauncher.launch(any()) }
+    }
+
+    @Test
+    fun `IF recurring shopper has no order id THEN callback receives a generic error`() {
+        val psVenmoController = spyk(providePSVenmoNativeController())
+        psVenmoController.tokenizeCallback = mockPSVenmoTokenizeCallback
+        justRun { psVenmoController.onVenmoListenerSuccess(any()) }
+
+        psVenmoController.handleTokenizeResultSuccess(
+            context = mockActivity,
+            profileId = "profile-id",
+            amount = 1000,
+            appLinkReturnUrl = "https://merchant.example.com",
+            customUrlScheme = "customUrlScheme",
+            result = PSResult.Success(
+                checkoutPaymentHandle(id = null, brainTreeCustomerId = "customer-1")
+            )
+        )
+
+        verify {
+            mockPSVenmoTokenizeCallback.onFailure(genericApiErrorException(correlationId))
+        }
+        verify(exactly = 0) { psVenmoController.onVenmoListenerSuccess(any()) }
+        verify(exactly = 0) { psVenmoController.activityResultLauncher.launch(any()) }
+    }
+
+    @Test
+    fun `IF recurring device data is blank THEN details omit device data`() {
+        val psVenmoController = spyk(providePSVenmoNativeController())
+        psVenmoController.deviceDataCollector = DeviceDataCollector { _, _, _, callback ->
+            callback(Result.success(" "))
+        }
+        justRun { psVenmoController.onVenmoListenerSuccess(any()) }
+
+        psVenmoController.handleTokenizeResultSuccess(
+            context = mockActivity,
+            profileId = "profile-id",
+            amount = 1000,
+            appLinkReturnUrl = "https://merchant.example.com",
+            customUrlScheme = "customUrlScheme",
+            result = PSResult.Success(
+                checkoutPaymentHandle(brainTreeCustomerId = "customer-1", clientMetadataId = "meta-123")
+            )
+        )
+
+        verify(exactly = 0) { mockPSApiClient.logErrorEvent(any(), any()) }
+        verify {
+            psVenmoController.onVenmoListenerSuccess(
+                withArg { request ->
+                    Assert.assertEquals("session-token", request.paymentMethodJwtToken)
+                    Assert.assertNull(request.paymentMethodDeviceData)
+                }
+            )
+        }
+    }
+
+    @Test
+    fun `IF recurring device data collection fails THEN the error is logged and details omit device data`() {
+        val psVenmoController = spyk(providePSVenmoNativeController())
+        psVenmoController.deviceDataCollector = DeviceDataCollector { _, _, _, callback ->
+            callback(Result.failure(IllegalStateException("collection failed")))
+        }
+        justRun { psVenmoController.onVenmoListenerSuccess(any()) }
+
+        psVenmoController.handleTokenizeResultSuccess(
+            context = mockActivity,
+            profileId = "profile-id",
+            amount = 1000,
+            appLinkReturnUrl = "https://merchant.example.com",
+            customUrlScheme = "customUrlScheme",
+            result = PSResult.Success(
+                checkoutPaymentHandle(brainTreeCustomerId = "customer-1", clientMetadataId = "meta-123")
+            )
+        )
+
+        verify {
+            mockPSApiClient.logErrorEvent(
+                "collection failed",
+                withArg { exception ->
+                    Assert.assertEquals(correlationId, exception.correlationId)
+                    Assert.assertTrue(exception.displayMessage.contains("collection failed"))
+                }
+            )
+        }
+        verify {
+            psVenmoController.onVenmoListenerSuccess(
+                withArg { request ->
+                    Assert.assertNull(request.paymentMethodDeviceData)
+                    Assert.assertEquals("session-token", request.paymentMethodJwtToken)
+                }
+            )
+        }
+    }
+
+    @Test
+    fun `IF no Venmo checkout is required and the order id is missing THEN callback receives a generic error`() {
+        val psVenmoController = providePSVenmoNativeController()
+        psVenmoController.tokenizeCallback = mockPSVenmoTokenizeCallback
+
+        psVenmoController.handleTokenizeResultSuccess(
+            context = mockActivity,
+            profileId = "profile-id",
+            amount = 1000,
+            appLinkReturnUrl = "https://merchant.example.com",
+            customUrlScheme = "customUrlScheme",
+            result = PSResult.Success(checkoutPaymentHandle(id = null, action = "NONE"))
+        )
+
+        verify {
+            mockPSVenmoTokenizeCallback.onFailure(genericApiErrorException(correlationId))
+        }
+        verify(exactly = 0) { psVenmoController.activityResultLauncher.launch(any()) }
+    }
+
+    @Test
+    fun `IF collectDeviceData succeeds THEN the payload is returned`() {
+        val psVenmoController = providePSVenmoNativeController()
+        val deviceData = """{"correlation_id":"corr-1"}"""
+        psVenmoController.deviceDataCollector =
+            DeviceDataCollector { _, authorization, clientMetadataId, callback ->
+                Assert.assertEquals("client-token", authorization)
+                Assert.assertEquals("meta-123", clientMetadataId)
+                callback(Result.success(deviceData))
+            }
+        var collected: String? = "unset"
+
+        psVenmoController.collectDeviceData(mockActivity, "client-token", "meta-123") {
+            collected = it
+        }
+
+        Assert.assertEquals(deviceData, collected)
+        verify(exactly = 0) { mockPSApiClient.logErrorEvent(any(), any()) }
+    }
+
+    @Test
+    fun `IF collectDeviceData returns blank THEN null is returned`() {
+        val psVenmoController = providePSVenmoNativeController()
+        psVenmoController.deviceDataCollector = DeviceDataCollector { _, _, _, callback ->
+            callback(Result.success("   "))
+        }
+        var collected: String? = "unset"
+
+        psVenmoController.collectDeviceData(mockActivity, "client-token", null) { collected = it }
+
+        Assert.assertNull(collected)
+        verify(exactly = 0) { mockPSApiClient.logErrorEvent(any(), any()) }
+    }
+
+    @Test
+    fun `IF collectDeviceData fails without a message THEN an empty error name is logged`() {
+        val psVenmoController = providePSVenmoNativeController()
+        psVenmoController.deviceDataCollector = DeviceDataCollector { _, _, _, callback ->
+            callback(Result.failure(IllegalStateException()))
+        }
+        var collected: String? = "unset"
+
+        psVenmoController.collectDeviceData(mockActivity, "client-token", "meta-123") {
+            collected = it
+        }
+
+        Assert.assertNull(collected)
+        verify(exactly = 1) {
+            mockPSApiClient.logErrorEvent(
+                "",
+                withArg { exception ->
+                    Assert.assertEquals(correlationId, exception.correlationId)
+                }
+            )
+        }
+    }
+
+    @Test
+    fun `IF onVenmoFailure and lifecycleScope is null THEN callback receives authorization failure`() {
+        val psVenmoController = providePSVenmoNativeController()
+        val expected = venmoFailedAuthorizationException(correlationId)
+        psVenmoController.tokenizeCallback = mockPSVenmoTokenizeCallback
+        psVenmoController.tokenizationAlreadyInProgress = true
+        psVenmoController.lifecycleScopeWeakRef.clear()
+
+        psVenmoController.onVenmoFailure(BraintreeDetailsRequest(errorCode = "VENMO_CANCELED"))
+
+        verify { mockPSApiClient.logErrorEvent(expected.errorName(), expected) }
+        verify { mockPSVenmoTokenizeCallback.onFailure(expected) }
+        Assert.assertFalse(psVenmoController.tokenizationAlreadyInProgress)
+    }
+
+    @Test
+    fun `IF onVenmoListenerSuccess and lifecycleScope is null THEN generic error is logged without a callback`() {
+        val psVenmoController = providePSVenmoNativeController()
+        val expected = genericApiErrorException(correlationId)
+        psVenmoController.tokenizeCallback = mockPSVenmoTokenizeCallback
+        psVenmoController.lifecycleScopeWeakRef.clear()
+
+        psVenmoController.onVenmoListenerSuccess(BraintreeDetailsRequest())
+
+        verify { mockPSApiClient.logErrorEvent(expected.errorName(), expected) }
+        verify(exactly = 0) { mockPSVenmoTokenizeCallback.onFailure(any()) }
+        verify(exactly = 0) { mockPSVenmoTokenizeCallback.onSuccess(any()) }
+    }
+
+    @Test
+    fun `IF onVenmoListenerSuccess loads details THEN the payment handle token is refreshed`() {
+        mockkConstructor(BrainTreeDetailsServiceImpl::class)
+        val detailsLoaded = CountDownLatch(1)
+        coEvery {
+            anyConstructed<BrainTreeDetailsServiceImpl>().getBraintreeDetails(any())
+        } coAnswers {
+            detailsLoaded.countDown()
+            PSResult.Success(BrainTreeDetailsResponse(status = "success"))
+        }
+        val psVenmoController = spyk(providePSVenmoNativeController())
+        val tokenRefreshed = CountDownLatch(1)
+        every { psVenmoController.onRefreshToken() } answers { tokenRefreshed.countDown() }
+        psVenmoController.paymentHandle = checkoutPaymentHandle()
+
+        psVenmoController.onVenmoListenerSuccess(BraintreeDetailsRequest(paymentMethodJwtToken = "session-token"))
+
+        Assert.assertTrue(detailsLoaded.await(3, TimeUnit.SECONDS))
+        Assert.assertTrue(tokenRefreshed.await(3, TimeUnit.SECONDS))
+    }
+
+    @Test
+    fun `IF onVenmoListenerSuccess details call throws PaysafeException THEN callback receives that exception`() {
+        mockkConstructor(BrainTreeDetailsServiceImpl::class)
+        val paysafeException = genericApiErrorException(correlationId)
+        val completed = CountDownLatch(1)
+        coEvery {
+            anyConstructed<BrainTreeDetailsServiceImpl>().getBraintreeDetails(any())
+        } throws paysafeException
+        val psVenmoController = providePSVenmoNativeController()
+        psVenmoController.tokenizeCallback = mockPSVenmoTokenizeCallback
+        psVenmoController.tokenizationAlreadyInProgress = true
+        every { mockPSVenmoTokenizeCallback.onFailure(paysafeException) } answers {
+            completed.countDown()
+        }
+
+        psVenmoController.onVenmoListenerSuccess(BraintreeDetailsRequest())
+
+        Assert.assertTrue(completed.await(3, TimeUnit.SECONDS))
+        Assert.assertFalse(psVenmoController.tokenizationAlreadyInProgress)
+        verify(exactly = 0) { mockPSApiClient.logErrorEvent(any(), paysafeException) }
+    }
+
+    @Test
+    fun `IF onVenmoListenerSuccess details call throws THEN callback receives a generic error`() {
+        mockkConstructor(BrainTreeDetailsServiceImpl::class)
+        val completed = CountDownLatch(1)
+        coEvery {
+            anyConstructed<BrainTreeDetailsServiceImpl>().getBraintreeDetails(any())
+        } throws IllegalStateException("details failed")
+        val psVenmoController = providePSVenmoNativeController()
+        psVenmoController.tokenizeCallback = mockPSVenmoTokenizeCallback
+        every { mockPSVenmoTokenizeCallback.onFailure(genericApiErrorException(correlationId)) } answers {
+            completed.countDown()
+        }
+
+        psVenmoController.onVenmoListenerSuccess(BraintreeDetailsRequest())
+
+        Assert.assertTrue(completed.await(3, TimeUnit.SECONDS))
+        verify {
+            mockPSApiClient.logErrorEvent(
+                genericApiErrorException(correlationId).errorName(),
+                genericApiErrorException(correlationId)
+            )
+        }
+    }
+
+    @Test
+    fun `IF onVenmoFailure loads details THEN the payment handle token is refreshed`() {
+        mockkConstructor(BrainTreeDetailsServiceImpl::class)
+        val detailsLoaded = CountDownLatch(1)
+        coEvery {
+            anyConstructed<BrainTreeDetailsServiceImpl>().getBraintreeDetails(any())
+        } coAnswers {
+            detailsLoaded.countDown()
+            PSResult.Success(BrainTreeDetailsResponse(status = "success"))
+        }
+        val psVenmoController = spyk(providePSVenmoNativeController())
+        val tokenRefreshed = CountDownLatch(1)
+        every { psVenmoController.onRefreshToken() } answers { tokenRefreshed.countDown() }
+
+        psVenmoController.onVenmoFailure(BraintreeDetailsRequest(errorCode = "VENMO_CANCELED"))
+
+        Assert.assertTrue(detailsLoaded.await(3, TimeUnit.SECONDS))
+        Assert.assertTrue(tokenRefreshed.await(3, TimeUnit.SECONDS))
+    }
+
+    @Test
+    fun `IF onVenmoFailure details call throws THEN the error is ignored`() {
+        mockkConstructor(BrainTreeDetailsServiceImpl::class)
+        val completed = CountDownLatch(1)
+        coEvery {
+            anyConstructed<BrainTreeDetailsServiceImpl>().getBraintreeDetails(any())
+        } coAnswers {
+            completed.countDown()
+            throw IllegalStateException("details failed")
+        }
+        val psVenmoController = providePSVenmoNativeController()
+        psVenmoController.tokenizeCallback = mockPSVenmoTokenizeCallback
+
+        psVenmoController.onVenmoFailure(BraintreeDetailsRequest(errorCode = "VENMO_CANCELED"))
+
+        Assert.assertTrue(completed.await(3, TimeUnit.SECONDS))
+        verify(exactly = 0) { mockPSVenmoTokenizeCallback.onFailure(any()) }
+    }
+
+    @Test
+    fun `IF dispose THEN callback payment handle and lifecycle scope are cleared`() {
+        val psVenmoController = providePSVenmoNativeController()
+        psVenmoController.tokenizeCallback = mockPSVenmoTokenizeCallback
+        psVenmoController.paymentHandle = checkoutPaymentHandle()
+
+        psVenmoController.dispose()
+
+        Assert.assertNull(psVenmoController.tokenizeCallback)
+        Assert.assertNull(psVenmoController.paymentHandle)
+        Assert.assertNull(psVenmoController.lifecycleScopeWeakRef.get())
+    }
 
     @Test
     fun `IF onRefreshToken and paymentHandle null THEN onRefreshToken RETURNS via callback onFailure with genericApiErrorException`() =
@@ -968,6 +1420,94 @@ class PSVenmoControllerTest {
         }
 
     @Test
+    fun `IF onRefreshToken and refreshToken throws THEN callback receives a generic error`() =
+        runTest {
+            val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+            Dispatchers.setMain(testDispatcher)
+            val paymentHandle = checkoutPaymentHandle()
+            coEvery { mockPSTokenizationService.refreshToken(paymentHandle) } throws
+                IllegalStateException("refresh failed")
+            val psVenmoController = providePSVenmoNativeController()
+            psVenmoController.tokenizeCallback = mockPSVenmoTokenizeCallback
+            psVenmoController.paymentHandle = paymentHandle
+            psVenmoController.tokenizationAlreadyInProgress = true
+
+            psVenmoController.onRefreshToken(
+                ioDispatcher = testDispatcher,
+                mainDispatcher = testDispatcher
+            )
+
+            verify {
+                mockPSVenmoTokenizeCallback.onFailure(genericApiErrorException(correlationId))
+            }
+            verify {
+                mockPSApiClient.logErrorEvent(
+                    genericApiErrorException(correlationId).errorName(),
+                    genericApiErrorException(correlationId)
+                )
+            }
+            Assert.assertFalse(psVenmoController.tokenizationAlreadyInProgress)
+        }
+
+    @Test
+    fun `IF tokenize returns a first time redirect THEN Venmo checkout starts with collected device data`() =
+        runTest {
+            Dispatchers.setMain(UnconfinedTestDispatcher(testScheduler))
+            val paymentHandle = checkoutPaymentHandle(clientMetadataId = "meta-123")
+            coEvery { mockPSTokenizationService.tokenize(any()) } returns PSResult.Success(paymentHandle)
+            val psVenmoController = providePSVenmoNativeController()
+            psVenmoController.deviceDataCollector = DeviceDataCollector { _, _, clientMetadataId, callback ->
+                Assert.assertEquals("meta-123", clientMetadataId)
+                callback(Result.success("""{"correlation_id":"corr-1"}"""))
+            }
+
+            psVenmoController.tokenize(
+                context = mockActivity,
+                venmoTokenizeOptions = psVenmoTokenizeOptions,
+                callback = mockPSVenmoTokenizeCallback
+            )
+
+            verify { mockPSApiClient.customSDKSource = null }
+            verify {
+                psVenmoController.activityResultLauncher.launch(
+                    withArg { configuration ->
+                        Assert.assertEquals(
+                            """{"correlation_id":"corr-1"}""",
+                            configuration.deviceDataCorrelationId
+                        )
+                        Assert.assertEquals("profileId", configuration.profileId)
+                        Assert.assertEquals("1.0", configuration.amount)
+                        Assert.assertEquals("meta-123", configuration.clientMetadataId)
+                    }
+                )
+            }
+            Assert.assertFalse(psVenmoController.tokenizationAlreadyInProgress)
+            Assert.assertEquals(paymentHandle, psVenmoController.paymentHandle)
+        }
+
+    private fun checkoutPaymentHandle(
+        status: String = "PROCESSING",
+        id: String? = "order-id",
+        action: String = "REDIRECT",
+        brainTreeCustomerId: String? = null,
+        clientMetadataId: String? = null,
+        sessionToken: String? = "session-token",
+        clientToken: String? = "client-token"
+    ) = PaymentHandle(
+        merchantRefNum = "merchantRefNum",
+        paymentHandleToken = "paymentHandleToken",
+        status = status,
+        id = id,
+        gatewayResponse = GatewayResponseSerializable(
+            sessionToken = sessionToken,
+            clientToken = clientToken,
+            clientMetadataId = clientMetadataId,
+            brainTreeCustomerId = brainTreeCustomerId
+        ),
+        action = action
+    )
+
+    @Test
     fun `test BrainTreeDetailsResponse serialization`() {
         val response = BrainTreeDetailsResponse(status = "success")
         val json = Json.encodeToString(response)
@@ -981,10 +1521,13 @@ class PSVenmoControllerTest {
             orderId = "123",
             sessionToken = "jwt123",
             clientToken = "client123",
-            processor = "processor123"
+            processor = "processor123",
+            clientMetadataId = "metadata123",
+            brainTreeCustomerId = "btCustomer123"
         )
         val json = Json.encodeToString(response)
-        val expectedJson = """{"id":"123","sessionToken":"jwt123","clientToken":"client123","processor":"processor123"}"""
+        val expectedJson =
+            """{"id":"123","sessionToken":"jwt123","clientToken":"client123","processor":"processor123","clientMetadataId":"metadata123","brainTreeCustomerId":"btCustomer123"}"""
         Assert.assertEquals(expectedJson, json)
     }
 
@@ -1208,19 +1751,4 @@ class PSVenmoControllerTest {
         Assert.assertEquals(expected, domain.toData())
     }
 
-    @Test
-    fun `IF onVenmoAppNotExist THEN callback RETURNS onFailure`() =
-        runTest {
-            // Arrange
-            val testDispatcher = UnconfinedTestDispatcher(testScheduler)
-            Dispatchers.setMain(testDispatcher)
-
-            val psVenmoController = providePSVenmoNativeController()
-
-            // Act
-            psVenmoController.onVenmoAppNotExist()
-
-            // Verify
-            Assert.assertFalse(psVenmoController.tokenizationAlreadyInProgress)
-        }
 }

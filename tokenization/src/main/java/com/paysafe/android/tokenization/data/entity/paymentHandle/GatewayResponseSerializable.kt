@@ -20,6 +20,11 @@ data class GatewayResponseSerializable(
     val clientToken: String? = null,
 
     @SerialName("processor")
-    val processor: String? = null
+    val processor: String? = null,
 
+    @SerialName("clientMetadataId")
+    val clientMetadataId: String? = null,
+
+    @SerialName("brainTreeCustomerId")
+    val brainTreeCustomerId: String? = null,
 )

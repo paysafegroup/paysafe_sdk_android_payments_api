@@ -1,5 +1,39 @@
 # Change Log
 
+## [3.0.0] - 2026-10-27
+
+### Breaking Changes
+
+- **Braintree Venmo SDK 5.x**: Upgraded Braintree Venmo from `4.45.0` to `5.33.0`.
+- Host apps must adopt Braintree 5.x Venmo APIs and return-handling (App Links / custom URL scheme).
+- **Required `appLinkReturnUrl`**: `PSVenmoTokenizeOptions` now requires an HTTPS `appLinkReturnUrl`
+- used as Braintree `VenmoClient.appLinkReturnUrl`. Configure verified Android App Links
+- (and Braintree Control Panel domain) so Venmo can return to the app; `customUrlScheme` remains the
+  fallback.
+- **Compile / target SDK 36**: `compileSdkVersion` and `targetSdkVersion` raised to 36 (Android 16);
+  Android Gradle Plugin updated to `8.9.1`.
+
+### Added
+
+- **Braintree Data Collector**: Integrated `com.braintreepayments.api:data-collector`
+- via `BraintreeDeviceDataCollector` to collect device data for Venmo fraud tools (location consent
+  left unset / `false`).
+- **Venmo checkout configurations**: Added typed `VenmoWebCheckoutConfiguration`
+- and `BraintreeDetailsConfiguration` models, plus `VenmoWebCheckoutActivityResult` /
+  `VenmoWebCheckoutActivityResultParser`
+- for parsing Venmo web checkout activity results.
+- **Gateway / configuration fields**: Support for `clientMetadataId` and `brainTreeCustomerId`
+- on gateway responses, `isStcFlagEnabled` on account configuration, and `mobileSdk` on
+  payment-handle requests for the updated Venmo mobile flow.
+
+### Updated
+
+- **Venmo result handling**: Updated native and web Venmo controllers and `VenmoWebCheckoutActivity`
+  for Braintree 5.x result delivery, request persistence (`VenmoRequestStorageManage`), and App
+  Link / custom-scheme returns.
+- **Payment methods API**: Replaced `paymenthub/v1/paymentmethods` with
+  `paymenthub/v1/configuration` for loading account / payment-method configuration.
+
 ## [2.3.0] - 2026-10-21
 
 ### Added

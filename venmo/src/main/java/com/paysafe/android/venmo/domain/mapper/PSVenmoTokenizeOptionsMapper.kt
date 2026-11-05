@@ -25,4 +25,5 @@ internal fun PSVenmoTokenizeOptions.toPaymentHandleRequest(
     venmoRequest = venmoRequest,
     simulatorType = simulator,
     returnLinks = returnLinks,
+    isMobileSdk = true,
 )

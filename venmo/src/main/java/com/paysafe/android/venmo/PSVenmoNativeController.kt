@@ -1,10 +1,8 @@
 package com.paysafe.android.venmo
 
 import android.content.Context
-import android.content.Intent
 import androidx.activity.result.ActivityResultCaller
 import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.LifecycleCoroutineScope
 import com.paysafe.android.brainTreeDetails.domain.models.BraintreeDetailsRequest
 import com.paysafe.android.brainTreeDetails.domain.models.DeviceData
@@ -14,8 +12,10 @@ import com.paysafe.android.core.util.LocalLog
 import com.paysafe.android.currencyConverter.CurrencyConverter
 import com.paysafe.android.tokenization.PSTokenization
 import com.paysafe.android.tokenization.PSTokenizationService
-import com.paysafe.android.venmo.activity.VenmoConstants
 import com.paysafe.android.venmo.activity.VenmoWebCheckoutActivity
+import com.paysafe.android.venmo.activity.VenmoWebCheckoutActivityResult
+import com.paysafe.android.venmo.domain.model.BraintreeDetailsConfiguration
+import com.paysafe.android.venmo.domain.model.VenmoWebCheckoutConfiguration
 import com.paysafe.android.venmo.exception.errorName
 import com.paysafe.android.venmo.exception.genericApiErrorException
 
@@ -30,10 +30,10 @@ internal class PSVenmoNativeController internal constructor(
     tokenizationService
 ) {
 
-    internal val activityResultLauncher: ActivityResultLauncher<Intent> =
+    internal val activityResultLauncher: ActivityResultLauncher<VenmoWebCheckoutConfiguration> =
         initializeActivityResult(activityResultCaller)
 
-    private var jwtToken:String = ""
+    private var jwtToken: String = ""
 
     companion object {
 
@@ -62,7 +62,9 @@ internal class PSVenmoNativeController internal constructor(
         clientToken: String,
         profileId: String?,
         amount: Int,
-        customUrlScheme: String?
+        appLinkReturnUrl: String,
+        customUrlScheme: String?,
+        clientMetadataId: String?,
     ) {
         LocalLog.d("PSVenmoNativeController", "startVenmoCheckout")
         jwtToken = sessionToken
@@ -71,57 +73,60 @@ internal class PSVenmoNativeController internal constructor(
         val amountString =
             currencyConverter.convert(amount = amount, forCurrency = "USD").toString()
 
-        val intent = Intent(context, VenmoWebCheckoutActivity::class.java).apply {
-            putExtra(VenmoConstants.INTENT_EXTRA_SESSION_TOKEN, sessionToken)
-            putExtra(VenmoConstants.INTENT_EXTRA_CLIENT_TOKEN, clientToken)
-            putExtra(VenmoConstants.INTENT_EXTRA_PROFILE_ID, profileId)
-            putExtra(VenmoConstants.INTENT_EXTRA_AMOUNT, amountString)
-            putExtra(VenmoConstants.INTENT_EXTRA_CUSTOM_URL_SCHEME, customUrlScheme)
+        collectDeviceData(context, clientToken, clientMetadataId) { deviceData ->
+
+            val configuration = VenmoWebCheckoutConfiguration(
+                orderId = orderId,
+                sessionToken = sessionToken,
+                clientToken = clientToken,
+                profileId = profileId,
+                amount = amountString,
+                appLinkReturnUrl = appLinkReturnUrl,
+                customUrlScheme = customUrlScheme,
+                clientMetadataId = clientMetadataId,
+                deviceDataCorrelationId = deviceData?.takeIf { it.isNotBlank() }
+            )
+
+            activityResultLauncher.launch(configuration)
         }
-        activityResultLauncher.launch(intent)
     }
 
     private fun initializeActivityResult(
         activityResultCaller: ActivityResultCaller
-    ): ActivityResultLauncher<Intent> = activityResultCaller
-        .registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            handleActivityResult(result.resultCode, result.data)
+    ): ActivityResultLauncher<VenmoWebCheckoutConfiguration> = activityResultCaller
+        .registerForActivityResult(VenmoWebCheckoutActivity.Open()) {
+            handleActivityResult(it)
         }
 
-    private fun createRequest(data: Intent?): BraintreeDetailsRequest {
+    internal fun createRequest(data: BraintreeDetailsConfiguration?): BraintreeDetailsRequest {
         return BraintreeDetailsRequest(
-            paymentMethodNonce = data?.getStringExtra("VENMO_ACCOUNT_NONCE") ?: "",
-            paymentMethodDeviceData = DeviceData(correlationId = psApiClient.getCorrelationId()),
-            paymentMethodJwtToken = data?.getStringExtra("JWT_SESSION_TOKEN") ?: jwtToken,
+            paymentMethodNonce = data?.account.orEmpty(),
+            paymentMethodDeviceData = data?.deviceDataCorrelationId?.let { DeviceData(correlationId = it) },
+            paymentMethodJwtToken = data?.sessionToken ?: jwtToken,
             paymentMethodPayerInfo = PayerInfo(
-                firstName = data?.getStringExtra("FIRST_NAME") ?: "",
-                lastName = data?.getStringExtra("LAST_NAME") ?: "",
-                phoneNumber = data?.getStringExtra("PHONE_NUMBER") ?: "",
-                email = data?.getStringExtra("EMAIL") ?: "",
-                userName = data?.getStringExtra("USER_NAME") ?: "",
-                externalId = data?.getStringExtra("EXTERNAL_ID") ?: ""
+                firstName = data?.firstName.orEmpty(),
+                lastName = data?.lastName.orEmpty(),
+                phoneNumber = data?.phoneNumber.orEmpty(),
+                email = data?.email.orEmpty(),
+                userName = data?.userName.orEmpty(),
+                externalId = data?.externalId.orEmpty()
             ),
             errorCode = if (data != null) null else "VENMO_CANCELED"
         )
     }
 
-    fun handleActivityResult(resultCode: Int, data: Intent?) {
-        when (resultCode) {
-            VenmoConstants.RESULT_SUCCESS -> {
+    internal fun handleActivityResult(result: VenmoWebCheckoutActivityResult) {
+        when (result) {
+            is VenmoWebCheckoutActivityResult.Success -> {
                 LocalLog.d("PSVenmoNativeController", "activity result RESULT_SUCCESS")
-                val request = createRequest(data)
+                val request = createRequest(result.configuration)
                 onVenmoListenerSuccess(request)
             }
 
-            VenmoConstants.RESULT_FAILED -> {
-                val request = createRequest(data = null)
-                onVenmoFailure(request)
-            }
-            VenmoConstants.RESULT_VENMO_APP_IS_NOT_INSTALLED -> {
-                onVenmoAppNotExist()
-            }
-            else -> {
-                LocalLog.d("PSVenmoNativeController", "Unknown result code $resultCode received!")
+            VenmoWebCheckoutActivityResult.Failure -> onVenmoFailure(createRequest(data = null))
+
+            VenmoWebCheckoutActivityResult.Canceled -> {
+                LocalLog.d("PSVenmoNativeController", "Venmo returns RESULT_CANCEL")
                 val paysafeException = genericApiErrorException(psApiClient.getCorrelationId())
                 psApiClient.logErrorEvent(paysafeException.errorName(), paysafeException)
                 tokenizationAlreadyInProgress = false

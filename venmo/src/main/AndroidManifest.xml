@@ -18,11 +18,12 @@
             android:permission="">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-                <data android:scheme="com.paysafe.android.venmo" />
+                <data android:scheme="${applicationId}.braintree" />
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
             </intent-filter>
+
         </activity>
     </application>
 

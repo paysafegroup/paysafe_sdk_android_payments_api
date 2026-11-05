@@ -43,6 +43,7 @@ class PSVenmoTokenizeOptionsMapperTest {
             merchantDescriptorInput,
             shippingDetailsInput,
             simulator,
+            "https://merchant.example.com",
             VenmoRequest(
                 consumerIdInput,
                 recipientDescriptionInput,
@@ -68,5 +69,6 @@ class PSVenmoTokenizeOptionsMapperTest {
         Assert.assertNotNull(output.venmoRequest)
         Assert.assertNotNull(output.returnLinks)
         Assert.assertTrue(output.returnLinks?.isEmpty()!!)
+        Assert.assertTrue(output.isMobileSdk)
     }
 }

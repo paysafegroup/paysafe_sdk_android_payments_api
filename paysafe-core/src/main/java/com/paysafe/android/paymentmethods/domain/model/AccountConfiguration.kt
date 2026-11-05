@@ -10,7 +10,8 @@ data class AccountConfiguration(
     val cardTypeConfig: CardTypeConfig? = null,
     val isGooglePay: Boolean? = null,
     val googlePayConfig: GooglePayConfig? = null,
-    val clientId: String? = null
+    val clientId: String? = null,
+    val isStcFlagEnabled: Boolean? = null,
 ) {
     fun getAvailableCardTypes() = cardTypeConfig?.keys?.toList()?.filter {
         it != PSCreditCardType.UNKNOWN
