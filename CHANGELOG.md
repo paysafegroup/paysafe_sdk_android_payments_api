@@ -1,5 +1,11 @@
 # Change Log
 
+## [3.0.1] - 2026-11-10
+
+### Updated
+
+- **Cardholder name**: Names may include hyphens, apostrophes, and accented Latin-1 characters.
+
 ## [3.0.0] - 2026-10-27
 
 ### Breaking Changes

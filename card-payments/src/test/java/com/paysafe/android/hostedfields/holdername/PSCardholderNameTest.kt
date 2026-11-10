@@ -110,7 +110,7 @@ class PSCardholderNameTest {
     }
 
     @Test
-    fun `IF PSCardholderName PERFORMING invalid chars input RETURNS invalid value`() {
+    fun `IF PSCardholderName PERFORMING trailing space input RETURNS valid value`() {
         // Arrange
         val holderNameStateInput = PSCardholderNameStateImpl()
         sut(holderNameStateInput)
@@ -119,18 +119,15 @@ class PSCardholderNameTest {
         holderNameField().performTextInput("Space at the end ")
 
         // Assert
-        assertFalse(holderNameStateInput.isValid())
+        assertTrue(holderNameStateInput.isValid())
+        assertEquals("Space at the end ", holderNameStateInput.value)
     }
 
     @Test
     fun `IF PSCardholderName PERFORMING click TRIGGER onFocus call`() {
         // Arrange
         var onFocusCalled = false
-        val eventHandler = object : PSCardFieldEventHandler {
-            override fun handleEvent(event: PSCardFieldInputEvent) {
-                if (event == PSCardFieldInputEvent.FOCUS) onFocusCalled = true
-            }
-        }
+        val eventHandler = PSCardFieldEventHandler { event -> if (event == PSCardFieldInputEvent.FOCUS) onFocusCalled = true }
         sut(eventHandler = eventHandler)
 
         // Act
@@ -146,11 +143,7 @@ class PSCardholderNameTest {
     fun `IF PSCardholderName PERFORMING click doesn't TRIGGER unwanted calls`() {
         // Arrange
         var unwantedEventsCalled = false
-        val eventHandler = object : PSCardFieldEventHandler {
-            override fun handleEvent(event: PSCardFieldInputEvent) {
-                if (event != PSCardFieldInputEvent.FOCUS && event != PSCardFieldInputEvent.BLUR) unwantedEventsCalled = true
-            }
-        }
+        val eventHandler = PSCardFieldEventHandler { event -> if (event != PSCardFieldInputEvent.FOCUS && event != PSCardFieldInputEvent.BLUR) unwantedEventsCalled = true }
         sut(eventHandler = eventHandler)
 
         // Act
@@ -161,17 +154,15 @@ class PSCardholderNameTest {
     }
 
     @Test
-    fun `IF PSCardholderName PERFORMING one char input TRIGGER onFieldValueChange and onValid call`() {
+    fun `IF PSCardholderName PERFORMING one char input TRIGGER onFieldValueChange and onInvalid call`() {
         // Arrange
         var onFieldValueChangeCalled = false
-        var onValidCalled = false
-        val eventHandler = object : PSCardFieldEventHandler {
-            override fun handleEvent(event: PSCardFieldInputEvent) {
-                when (event) {
-                    PSCardFieldInputEvent.FIELD_VALUE_CHANGE -> onFieldValueChangeCalled = true
-                    PSCardFieldInputEvent.VALID -> onValidCalled = true
-                    else -> {}
-                }
+        var onInvalidCalled = false
+        val eventHandler = PSCardFieldEventHandler { event ->
+            when (event) {
+                PSCardFieldInputEvent.FIELD_VALUE_CHANGE -> onFieldValueChangeCalled = true
+                PSCardFieldInputEvent.INVALID -> onInvalidCalled = true
+                else -> {}
             }
         }
         sut(eventHandler = eventHandler)
@@ -181,18 +172,16 @@ class PSCardholderNameTest {
 
         // Assert
         assertEquals(eventInvoked, onFieldValueChangeCalled)
-        assertEquals(eventInvoked, onValidCalled)
+        assertEquals(eventInvoked, onInvalidCalled)
     }
 
     @Test
     fun `IF PSCardholderName PERFORMING one char input doesn't TRIGGER unwanted calls`() {
         // Arrange
         var unwantedEventsCalled = false
-        val eventHandler = object : PSCardFieldEventHandler {
-            override fun handleEvent(event: PSCardFieldInputEvent) {
-                if (event == PSCardFieldInputEvent.INVALID || event == PSCardFieldInputEvent.INVALID_CHARACTER) {
-                    unwantedEventsCalled = true
-                }
+        val eventHandler = PSCardFieldEventHandler { event ->
+            if (event == PSCardFieldInputEvent.VALID || event == PSCardFieldInputEvent.INVALID_CHARACTER) {
+                unwantedEventsCalled = true
             }
         }
         sut(eventHandler = eventHandler)
@@ -208,11 +197,9 @@ class PSCardholderNameTest {
     fun `IF PSCardholderName PERFORMING one incorrect char input TRIGGER onInvalidCharacter call`() {
         // Arrange
         var onInvalidCharacterCalled = false
-        val eventHandler = object : PSCardFieldEventHandler {
-            override fun handleEvent(event: PSCardFieldInputEvent) {
-                if (event == PSCardFieldInputEvent.INVALID_CHARACTER) {
-                    onInvalidCharacterCalled = true
-                }
+        val eventHandler = PSCardFieldEventHandler { event ->
+            if (event == PSCardFieldInputEvent.INVALID_CHARACTER) {
+                onInvalidCharacterCalled = true
             }
         }
         sut(eventHandler = eventHandler)
@@ -225,14 +212,17 @@ class PSCardholderNameTest {
     }
 
     @Test
-    fun `IF PSCardholderName PERFORMING one incorrect char input TRIGGER unwanted calls`() {
+    fun `IF PSCardholderName PERFORMING one incorrect char input TRIGGER onFieldValueChange and onInvalid call`() {
         // Arrange
-        var unwantedEventsCalled = false
-        val eventHandler = object : PSCardFieldEventHandler {
-            override fun handleEvent(event: PSCardFieldInputEvent) {
-                if (event == PSCardFieldInputEvent.VALID || event == PSCardFieldInputEvent.INVALID || event == PSCardFieldInputEvent.FIELD_VALUE_CHANGE) {
-                    unwantedEventsCalled = true
-                }
+        var onFieldValueChangeCalled = false
+        var onInvalidCalled = false
+        var onValidCalled = false
+        val eventHandler = PSCardFieldEventHandler { event ->
+            when (event) {
+                PSCardFieldInputEvent.FIELD_VALUE_CHANGE -> onFieldValueChangeCalled = true
+                PSCardFieldInputEvent.INVALID -> onInvalidCalled = true
+                PSCardFieldInputEvent.VALID -> onValidCalled = true
+                else -> {}
             }
         }
         sut(eventHandler = eventHandler)
@@ -241,21 +231,21 @@ class PSCardholderNameTest {
         holderNameField().performTextInput("1")
 
         // Assert
-        assertEquals(eventsNotInvoked, unwantedEventsCalled)
+        assertEquals(eventInvoked, onFieldValueChangeCalled)
+        assertEquals(eventInvoked, onInvalidCalled)
+        assertEquals(eventsNotInvoked, onValidCalled)
     }
 
     @Test
-    fun `IF PSCardholderName PERFORMING space at end input TRIGGER onFieldValueChange and onInvalid call`() {
+    fun `IF PSCardholderName PERFORMING space at end input TRIGGER onFieldValueChange and onValid call`() {
         // Arrange
         var onFieldValueChangeCalled = false
-        var onInvalidCalled = false
-        val eventHandler = object : PSCardFieldEventHandler {
-            override fun handleEvent(event: PSCardFieldInputEvent) {
-                when (event) {
-                    PSCardFieldInputEvent.FIELD_VALUE_CHANGE -> onFieldValueChangeCalled = true
-                    PSCardFieldInputEvent.INVALID -> onInvalidCalled = true
-                    else -> {}
-                }
+        var onValidCalled = false
+        val eventHandler = PSCardFieldEventHandler { event ->
+            when (event) {
+                PSCardFieldInputEvent.FIELD_VALUE_CHANGE -> onFieldValueChangeCalled = true
+                PSCardFieldInputEvent.VALID -> onValidCalled = true
+                else -> {}
             }
         }
         sut(eventHandler = eventHandler)
@@ -265,18 +255,14 @@ class PSCardholderNameTest {
 
         // Assert
         assertEquals(eventInvoked, onFieldValueChangeCalled)
-        assertEquals(eventInvoked, onInvalidCalled)
+        assertEquals(eventInvoked, onValidCalled)
     }
 
     @Test
     fun `IF focus changes to focused state THEN trigger onFocus event`() {
         // Arrange
         var onFocusCalled = false
-        val eventHandler = object : PSCardFieldEventHandler {
-            override fun handleEvent(event: PSCardFieldInputEvent) {
-                if (event == PSCardFieldInputEvent.FOCUS) onFocusCalled = true
-            }
-        }
+        val eventHandler = PSCardFieldEventHandler { event -> if (event == PSCardFieldInputEvent.FOCUS) onFocusCalled = true }
         val holderNameState = PSCardholderNameStateImpl()
         sut(holderNameState, eventHandler)
 
@@ -291,11 +277,7 @@ class PSCardholderNameTest {
     fun `IF focus changes to focused state THEN doesn't trigger unwanted events`() {
         // Arrange
         var unwantedEventsCalled = false
-        val eventHandler = object : PSCardFieldEventHandler {
-            override fun handleEvent(event: PSCardFieldInputEvent) {
-                if (event != PSCardFieldInputEvent.FOCUS && event != PSCardFieldInputEvent.BLUR) unwantedEventsCalled = true
-            }
-        }
+        val eventHandler = PSCardFieldEventHandler { event -> if (event != PSCardFieldInputEvent.FOCUS && event != PSCardFieldInputEvent.BLUR) unwantedEventsCalled = true }
         val holderNameState = PSCardholderNameStateImpl()
         sut(holderNameState, eventHandler)
 

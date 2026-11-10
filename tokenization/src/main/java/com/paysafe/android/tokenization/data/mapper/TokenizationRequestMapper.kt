@@ -173,7 +173,7 @@ internal fun CardRequest.toData() = CardRequestSerializable(
     cardNum = cardNum,
     cardExpiry = cardExpiry?.toData(),
     cvv = cvv,
-    holderName = holderName,
+    holderName = holderName?.trim(),
 )
 
 internal fun PaymentType.toData() = when (this) {
