@@ -18,7 +18,6 @@ plugins {
     id(TopLevelGradle.jetbrainsKotlinPlugin) version Versions.jetbrainsKotlinPlugin apply false
     id(TopLevelGradle.androidLibPlugin) version Versions.androidPlugins apply false
     id(TopLevelGradle.jetbrainsSerializationPlugin) version Versions.jetbrainsSerializationPlugin apply false
-    id(TopLevelGradle.dokkaPlugin) version Versions.dokka apply false
 
 }
 
@@ -26,6 +25,26 @@ plugins {
 
 subprojects {
     apply(plugin = "maven-publish")
+
+    configurations.configureEach {
+        resolutionStrategy.eachDependency {
+            when {
+                requested.group == "io.netty" -> useVersion(Versions.netty)
+
+                requested.group == "com.google.guava" && requested.name == "guava" ->
+                    useVersion(Versions.guava)
+
+                requested.group == "com.google.protobuf" && requested.name.startsWith("protobuf-") ->
+                    useVersion(Versions.protobuf)
+
+                requested.group == "com.google.android.gms" && requested.name == "play-services-basement" ->
+                    useVersion(Versions.playServicesBasement)
+
+                requested.group == "com.google.code.gson" && requested.name == "gson" ->
+                    useVersion(Versions.gson)
+            }
+        }
+    }
 }
 
 subprojects {

@@ -25,7 +25,6 @@ object TopLevelGradle {
     val kotlinSerializationPlugin by lazy { "kotlinx-serialization" }
     val jetbrainsKotlinPlugin by lazy { "org.jetbrains.kotlin.android" }
     val jetbrainsSerializationPlugin by lazy { "org.jetbrains.kotlin.plugin.serialization" }
-    val dokkaPlugin by lazy { "org.jetbrains.dokka" }
     val navigationSafeArgsPlugin by lazy { "androidx.navigation.safeargs.kotlin" }
     val navigationSafeArgsClasspath by lazy { "androidx.navigation:navigation-safe-args-gradle-plugin:${Versions.safeArgs}" }
     val mavenPublishPlugin by lazy { "maven-publish" }
@@ -61,7 +60,6 @@ object Versions {
     const val androidPlugins = "8.9.1"
     const val jetbrainsKotlinPlugin = "1.8.22"
     const val jetbrainsSerializationPlugin = "1.6.10"
-    const val dokka = "1.9.0"
     const val ktxCompilerExt = "1.4.8"
     const val androidFragment = "1.8.9"
 
@@ -91,6 +89,7 @@ object Versions {
     const val wallet = "19.2.1"
     const val gPayButton = "0.1.1"
     const val playServicesTask = "18.0.1"
+    const val playServicesBasement = "18.0.2"
     const val coroutinesPlayServices = "1.6.4"
 
     // Kotlin
@@ -100,7 +99,11 @@ object Versions {
     const val kotlinReflectNew = "1.9.20"
 
     // Network
-    const val okHttp3Bom = "4.10.0"
+    const val okHttp3Bom = "4.12.0"
+    const val netty = "4.1.140.Final"
+    const val guava = "33.7.2-jre"
+    const val protobuf = "3.25.5"
+    const val gson = "2.13.2"
 
     // Retrofit
     const val retrofit = "2.9.0"
@@ -112,7 +115,7 @@ object Versions {
     const val jUnit = "4.13.2"
     const val mockK = "1.13.7"
     const val archCoreTesting = "2.2.0"
-    const val robolectric = "4.11.1"
+    const val robolectric = "4.18"
     const val lifecycleRuntimeTesting = "2.7.0"
 
     // Android Testing

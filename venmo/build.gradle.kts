@@ -27,7 +27,6 @@ fun getVersionFromProperties(): String {
 plugins {
     id(TopLevelGradle.androidLibPlugin)
     id(TopLevelGradle.jetbrainsKotlinPlugin)
-    id(TopLevelGradle.dokkaPlugin)
     id(TopLevelGradle.kotlinParcelizePlugin)
     id(TopLevelGradle.kotlinSerializationPlugin)
     id(TopLevelGradle.mavenPublishPlugin)

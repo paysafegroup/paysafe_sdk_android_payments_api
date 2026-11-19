@@ -1,5 +1,25 @@
 # Change Log
 
+## [3.0.2] - 2026-11-16
+
+### Security
+
+- **Transitive dependency vulnerabilities**: Cleared the GitLab SBoM findings.
+  - Removed the unused Dokka plugin (`org.jetbrains.dokka` 1.9.0). It was applied in six
+    modules but never wired to publishing or CI, and the `withJavadocJar()` artifacts come
+    from AGP's `javaDocReleaseJar`, not Dokka.
+  - Netty pinned to 4.1.140.Final. It is transitive via `grpc-netty`, which the AGP build
+    tooling brings in, so `netty-codec-http` and `netty-codec-http2` are covered without any
+    module declaring Netty directly.
+  - `play-services-basement` 18.0.0 → 18.0.2. It is transitive via `play-services-wallet`,
+    `play-services-base`, `play-services-identity`, `play-services-maps` and
+    `play-services-tasks` in `google-pay` and the `example` app.
+  - OkHttp 4.10.0 → 4.12.0, bringing `okio`/`okio-jvm` 3.0.0 → 3.6.0 (shipping classpath).
+  - Guava 32.0.1 → 33.7.2-jre and protobuf 3.24.4 → 3.25.5 for the AGP tooling classpath.
+  - Robolectric 4.17 → 4.18, bringing `bcprov-jdk18on` 1.85 → 1.86 (test scope).
+  - Gson 2.8.5 → 2.13.2 (transitive via `converter-gson` in the `example` app).
+
+
 ## [3.0.1] - 2026-11-10
 
 ### Updated

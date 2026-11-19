@@ -28,7 +28,6 @@ plugins {
     id(TopLevelGradle.androidLibPlugin)
     id(TopLevelGradle.jetbrainsKotlinPlugin)
     id(TopLevelGradle.kotlinSerializationPlugin)
-    id(TopLevelGradle.dokkaPlugin)
 }
 
 android {
